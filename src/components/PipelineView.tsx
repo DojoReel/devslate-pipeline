@@ -1,14 +1,27 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { PipelineIdea } from '@/types/devslate';
-import { Loader2, FileText, ChevronRight } from 'lucide-react';
+import { PipelineIdea, BuildRoomDocument } from '@/types/devslate';
+import { Loader2, FileText, ChevronRight, Hammer } from 'lucide-react';
 import { useState } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
+import { BuildRoomModal } from './BuildRoomModal';
+
+const DOC_TYPES = [
+  { type: 'pitchDocument', label: 'Pitch Document' },
+  { type: 'budgetEstimate', label: 'Budget Estimate' },
+  { type: 'productionSchedule', label: 'Production Schedule' },
+  { type: 'keyContacts', label: 'Key Contacts' },
+  { type: 'fundingSources', label: 'Funding Sources' },
+  { type: 'sponsorshipDeck', label: 'Sponsorship Deck' },
+];
 
 export function PipelineView() {
   const { activeSlate, slates, updatePipelineIdea } = useDevSlate();
   const slate = slates[activeSlate];
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
+  const [buildRoomIdea, setBuildRoomIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [buildingId, setBuildingId] = useState<string | null>(null);
+  const [buildDocs, setBuildDocs] = useState<BuildRoomDocument[]>([]);
 
   const accentBgClasses: Record<string, string> = {
     abc: 'bg-slate_accent-abc/10 border-slate_accent-abc/20',
@@ -53,6 +66,67 @@ export function PipelineView() {
     }
   };
 
+  const runBuildRoom = async (idea: PipelineIdea) => {
+    if (!idea.report) return;
+    setBuildingId(idea.id);
+    updatePipelineIdea(activeSlate, idea.id, { status: 'building' });
+
+    const initialDocs: BuildRoomDocument[] = DOC_TYPES.map(d => ({
+      documentType: d.type,
+      label: d.label,
+      content: '',
+      status: 'pending' as const,
+    }));
+    setBuildDocs(initialDocs);
+    setBuildRoomIdea(idea);
+
+    const ideaPayload = {
+      title: idea.title,
+      logline: idea.logline,
+      format: idea.format,
+      targetBroadcaster: idea.targetBroadcaster,
+      genre: idea.genre,
+    };
+
+    // Generate each document individually
+    const completedDocs: BuildRoomDocument[] = [...initialDocs];
+
+    for (let i = 0; i < DOC_TYPES.length; i++) {
+      const dt = DOC_TYPES[i];
+      completedDocs[i] = { ...completedDocs[i], status: 'generating' };
+      setBuildDocs([...completedDocs]);
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/build-room`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            idea: ideaPayload,
+            report: idea.report,
+            documentType: dt.type,
+          }),
+        });
+
+        if (!response.ok) throw new Error(`Failed: ${dt.label}`);
+        const result = await response.json();
+        completedDocs[i] = { ...completedDocs[i], content: result.content, status: 'complete' };
+      } catch (err) {
+        console.error(`Build room error for ${dt.type}:`, err);
+        completedDocs[i] = { ...completedDocs[i], status: 'error' };
+      }
+      setBuildDocs([...completedDocs]);
+    }
+
+    updatePipelineIdea(activeSlate, idea.id, {
+      status: 'complete',
+      buildRoomDocs: completedDocs,
+    });
+    setBuildingId(null);
+  };
+
   if (slate.pipeline.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
@@ -69,6 +143,10 @@ export function PipelineView() {
     'PASS': 'text-red-400 bg-red-500/10 border-red-500/20',
   };
 
+  const canBuild = (idea: PipelineIdea) =>
+    idea.report && (idea.report.verdict === 'GREENLIGHT' || idea.report.verdict === 'DEVELOP FURTHER') &&
+    idea.status === 'researched';
+
   return (
     <>
       <div className="grid gap-3 animate-fade-in">
@@ -76,7 +154,14 @@ export function PipelineView() {
           <div
             key={idea.id}
             className={`p-4 rounded-xl border ${accentBgClasses[activeSlate]} transition-all hover:bg-surface-3 cursor-pointer`}
-            onClick={() => idea.report && setSelectedIdea(idea)}
+            onClick={() => {
+              if (idea.buildRoomDocs) {
+                setBuildDocs(idea.buildRoomDocs);
+                setBuildRoomIdea(idea);
+              } else if (idea.report) {
+                setSelectedIdea(idea);
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
@@ -85,6 +170,11 @@ export function PipelineView() {
                   {idea.report && (
                     <span className={`px-2 py-0.5 rounded text-xs font-bold border ${verdictColors[idea.report.verdict]}`}>
                       {idea.report.verdict}
+                    </span>
+                  )}
+                  {idea.status === 'complete' && (
+                    <span className="px-2 py-0.5 rounded text-xs font-bold border text-primary bg-primary/10 border-primary/20">
+                      BUILT
                     </span>
                   )}
                 </div>
@@ -106,7 +196,22 @@ export function PipelineView() {
                     Researching…
                   </div>
                 )}
-                {idea.report && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                {canBuild(idea) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); runBuildRoom(idea); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    <Hammer className="w-3.5 h-3.5" />
+                    Build Room
+                  </button>
+                )}
+                {idea.status === 'building' && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Building…
+                  </div>
+                )}
+                {(idea.report || idea.buildRoomDocs) && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
               </div>
             </div>
           </div>
@@ -118,6 +223,16 @@ export function PipelineView() {
           idea={selectedIdea}
           report={selectedIdea.report}
           onClose={() => setSelectedIdea(null)}
+        />
+      )}
+
+      {buildRoomIdea?.report && (
+        <BuildRoomModal
+          idea={buildRoomIdea}
+          report={buildRoomIdea.report}
+          documents={buildDocs}
+          isGenerating={buildingId !== null}
+          onClose={() => { setBuildRoomIdea(null); setBuildingId(null); }}
         />
       )}
     </>
