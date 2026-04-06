@@ -30,9 +30,17 @@ export interface DeepDiveReport {
   generatedAt: string;
 }
 
+export interface BuildRoomDocument {
+  documentType: string;
+  label: string;
+  content: string;
+  status: 'pending' | 'generating' | 'complete' | 'error';
+}
+
 export interface PipelineIdea extends ShowIdea {
   status: 'swiped' | 'researching' | 'researched' | 'building' | 'complete';
   report?: DeepDiveReport;
+  buildRoomDocs?: BuildRoomDocument[];
   notes: string[];
 }
 
