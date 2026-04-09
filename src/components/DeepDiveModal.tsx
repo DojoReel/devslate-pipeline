@@ -1,5 +1,6 @@
 import { PipelineIdea, DeepDiveReport } from '@/types/devslate';
 import { X, Globe, Users, Sparkles, UserCheck } from 'lucide-react';
+import { getUnsplashUrl } from '@/hooks/useUnsplashImage';
 
 interface DeepDiveModalProps {
   idea: PipelineIdea;
@@ -7,20 +8,14 @@ interface DeepDiveModalProps {
   onClose: () => void;
 }
 
-const SECTION_ICONS = {
-  'Competitive Landscape': Globe,
-  'Commissioner Fit': Sparkles,
-  'Target Audience': Users,
-  'Talent & Access': UserCheck,
-};
-
 export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
+  const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 1200, 500);
+
   const verdictConfig: Record<string, { bg: string; label: string }> = {
     'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },
     'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER' },
     'PASS': { bg: 'bg-verdict-red', label: 'PASS' },
   };
-
   const verdict = verdictConfig[report.verdict] || verdictConfig['PASS'];
 
   const sections = [
@@ -31,19 +26,28 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 backdrop-blur-sm p-4" onClick={onClose}>
       <div
-        className="bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto animate-fade-in card-shadow-lg"
+        className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
-        {/* Verdict banner — full width, bold */}
-        <div className={`${verdict.bg} px-8 py-8 rounded-t-2xl relative`}>
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors">
+        {/* Cinematic image header */}
+        <div className="relative w-full h-52 overflow-hidden rounded-t-2xl">
+          <img src={imgUrl} alt={idea.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 gradient-scrim" />
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-foreground/20 hover:bg-foreground/40 text-primary-foreground transition-colors backdrop-blur-sm">
             <X className="w-5 h-5" />
           </button>
-          <p className="text-white/70 text-sm font-medium mb-1">{idea.title}</p>
-          <h2 className="text-4xl font-extrabold text-white tracking-tight">{verdict.label}</h2>
-          <p className="text-white/80 text-sm mt-3 leading-relaxed max-w-lg">{report.verdictRationale}</p>
+          <div className="absolute bottom-4 left-6 right-6">
+            <p className="text-primary-foreground/70 text-sm font-medium">{idea.format} · {idea.targetBroadcaster}</p>
+            <h2 className="text-2xl font-extrabold text-primary-foreground mt-1">{idea.title}</h2>
+          </div>
+        </div>
+
+        {/* Verdict stamp banner */}
+        <div className={`${verdict.bg} px-8 py-8`}>
+          <h3 className="text-4xl md:text-5xl font-black text-primary-foreground tracking-tight">{verdict.label}</h3>
+          <p className="text-primary-foreground/80 text-sm mt-3 leading-relaxed max-w-lg">{report.verdictRationale}</p>
         </div>
 
         {/* Section cards */}
@@ -51,12 +55,12 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
           {sections.map(section => {
             const Icon = section.icon;
             return (
-              <div key={section.title} className="p-5 rounded-xl bg-background border border-border">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-4.5 h-4.5 text-primary" />
+              <div key={section.title} className="p-6 rounded-xl bg-background border border-border shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">{section.title}</h3>
+                  <h4 className="text-sm font-bold text-foreground uppercase tracking-wide">{section.title}</h4>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{section.content}</p>
               </div>

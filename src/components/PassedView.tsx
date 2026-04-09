@@ -1,5 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { X } from 'lucide-react';
+import { Archive } from 'lucide-react';
+import { getUnsplashUrl } from '@/hooks/useUnsplashImage';
 
 export function PassedView() {
   const { activeSlate, slates } = useDevSlate();
@@ -8,26 +9,30 @@ export function PassedView() {
   if (slate.passed.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-          <X className="w-8 h-8" />
+        <div className="w-20 h-20 rounded-2xl bg-card border border-border flex items-center justify-center mb-5 shadow-md">
+          <Archive className="w-10 h-10 text-muted-foreground/50" />
         </div>
-        <p className="text-lg font-semibold text-foreground">No passed ideas</p>
-        <p className="text-sm mt-1">Ideas you swipe left on will appear here</p>
+        <p className="text-xl font-bold text-foreground">No passed ideas</p>
+        <p className="text-sm mt-2">Ideas you skip in Discover will appear here</p>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3 animate-fade-in">
-      {slate.passed.map(idea => (
-        <div key={idea.id} className="p-4 rounded-xl bg-card border border-border opacity-60">
-          <h3 className="font-semibold text-foreground">{idea.title}</h3>
-          <p className="text-sm text-muted-foreground mt-1">{idea.logline}</p>
-          <div className="text-xs text-muted-foreground mt-2">
-            {idea.format} · {idea.targetBroadcaster}
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
+      {slate.passed.map(idea => {
+        const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 400, 600);
+        return (
+          <div key={idea.id} className="group relative">
+            <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-md opacity-60 grayscale group-hover:opacity-80 group-hover:grayscale-0 transition-all duration-300">
+              <img src={imgUrl} alt={idea.title} className="w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 gradient-scrim opacity-60" />
+            </div>
+            <h3 className="mt-2 text-sm font-bold text-foreground/60 leading-tight">{idea.title}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{idea.genre}</p>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

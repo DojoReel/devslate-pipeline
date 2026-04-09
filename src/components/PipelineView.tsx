@@ -1,9 +1,10 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { PipelineIdea, BuildRoomDocument, SLATE_CONFIGS } from '@/types/devslate';
-import { Loader2, FileText, ChevronRight, Hammer } from 'lucide-react';
+import { PipelineIdea, BuildRoomDocument } from '@/types/devslate';
+import { Loader2, FileText, Hammer, Telescope, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { BuildRoomModal } from './BuildRoomModal';
+import { getUnsplashUrl } from '@/hooks/useUnsplashImage';
 
 const DOC_TYPES = [
   { type: 'pitchDocument', label: 'Pitch Document' },
@@ -14,13 +15,121 @@ const DOC_TYPES = [
   { type: 'sponsorshipDeck', label: 'Sponsorship Deck' },
 ];
 
-const SLATE_BORDER_COLORS: Record<string, string> = {
-  'abc': 'border-l-slate_accent-abc',
-  'stan': 'border-l-slate_accent-stan',
-  'sport': 'border-l-slate_accent-sport',
-  'international': 'border-l-slate_accent-international',
-  'custom': 'border-l-slate_accent-custom',
+const VERDICT_STYLES: Record<string, string> = {
+  'GREENLIGHT': 'bg-verdict-green',
+  'DEVELOP FURTHER': 'bg-verdict-amber',
+  'PASS': 'bg-verdict-red',
 };
+
+const VERDICT_STRIPE: Record<string, string> = {
+  'GREENLIGHT': 'bg-verdict-green',
+  'DEVELOP FURTHER': 'bg-verdict-amber',
+  'PASS': 'bg-verdict-red',
+};
+
+function PipelineCard({
+  idea,
+  onClickCard,
+  onDeepDive,
+  onBuildRoom,
+  isLoading,
+  isBuilding,
+}: {
+  idea: PipelineIdea;
+  onClickCard: () => void;
+  onDeepDive: () => void;
+  onBuildRoom: () => void;
+  isLoading: boolean;
+  isBuilding: boolean;
+}) {
+  const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 600, 400);
+  const canBuild =
+    idea.report &&
+    (idea.report.verdict === 'GREENLIGHT' || idea.report.verdict === 'DEVELOP FURTHER') &&
+    idea.status === 'researched';
+
+  return (
+    <div
+      onClick={onClickCard}
+      className="flex flex-col md:flex-row bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+    >
+      {/* Image side */}
+      <div className="relative w-full md:w-[280px] h-48 md:h-auto shrink-0">
+        <img src={imgUrl} alt={idea.title} className="w-full h-full object-cover" loading="lazy" />
+        {/* Verdict stripe */}
+        {idea.report && (
+          <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${VERDICT_STRIPE[idea.report.verdict]}`} />
+        )}
+        {/* Status badge overlay */}
+        {idea.status === 'complete' && (
+          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+            BUILT
+          </div>
+        )}
+      </div>
+
+      {/* Content side */}
+      <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
+        <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h3 className="text-xl font-bold text-foreground leading-tight">{idea.title}</h3>
+              <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">{idea.logline}</p>
+            </div>
+            {idea.report && (
+              <span className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-primary-foreground ${VERDICT_STYLES[idea.report.verdict]}`}>
+                {idea.report.verdict}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{idea.format}</span>
+            <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{idea.targetBroadcaster}</span>
+            <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{idea.genre}</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 mt-5 pt-4 border-t border-border">
+          {idea.status === 'swiped' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDeepDive(); }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold hover:scale-105 transition-transform"
+            >
+              <Telescope className="w-4 h-4" />
+              Deep Dive
+            </button>
+          )}
+          {idea.status === 'researching' && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              Researching…
+            </div>
+          )}
+          {canBuild && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onBuildRoom(); }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-bold hover:scale-105 transition-transform"
+            >
+              <Hammer className="w-4 h-4" />
+              Build Room
+            </button>
+          )}
+          {idea.status === 'building' && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              Building…
+            </div>
+          )}
+          {(idea.report || idea.buildRoomDocs) && (
+            <ChevronRight className="w-5 h-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PipelineView() {
   const { activeSlate, slates, updatePipelineIdea } = useDevSlate();
@@ -103,97 +212,31 @@ export function PipelineView() {
   if (slate.pipeline.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-          <FileText className="w-8 h-8" />
+        <div className="w-20 h-20 rounded-2xl bg-card border border-border flex items-center justify-center mb-5 shadow-md">
+          <FileText className="w-10 h-10 text-muted-foreground/50" />
         </div>
-        <p className="text-lg font-semibold text-foreground">Pipeline empty</p>
-        <p className="text-sm mt-1">Swipe ideas right in Discover to add them here</p>
+        <p className="text-xl font-bold text-foreground">Pipeline empty</p>
+        <p className="text-sm mt-2 text-muted-foreground">Add ideas from Discover to start building your slate</p>
       </div>
     );
   }
 
-  const borderColor = SLATE_BORDER_COLORS[activeSlate] || 'border-l-primary';
-
-  const canBuild = (idea: PipelineIdea) =>
-    idea.report && (idea.report.verdict === 'GREENLIGHT' || idea.report.verdict === 'DEVELOP FURTHER') &&
-    idea.status === 'researched';
-
   return (
     <>
-      <div className="grid gap-4 animate-fade-in">
+      <div className="grid gap-6 animate-fade-in">
         {slate.pipeline.map(idea => (
-          <div
+          <PipelineCard
             key={idea.id}
-            className={`p-5 rounded-xl bg-card border border-border border-l-4 ${borderColor} transition-all hover:card-shadow-lg cursor-pointer`}
-            onClick={() => {
+            idea={idea}
+            isLoading={loadingId === idea.id}
+            isBuilding={buildingId === idea.id}
+            onClickCard={() => {
               if (idea.buildRoomDocs) { setBuildDocs(idea.buildRoomDocs); setBuildRoomIdea(idea); }
               else if (idea.report) setSelectedIdea(idea);
             }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-foreground text-lg leading-snug">{idea.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{idea.logline}</p>
-                <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                  <span>{idea.format}</span>
-                  <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>{idea.targetBroadcaster}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Verdict badge */}
-                {idea.report && (
-                  <span className={`px-3 py-1 rounded-md text-xs font-bold text-white ${
-                    idea.report.verdict === 'GREENLIGHT' ? 'bg-verdict-green' :
-                    idea.report.verdict === 'DEVELOP FURTHER' ? 'bg-verdict-amber' :
-                    'bg-verdict-red'
-                  }`}>
-                    {idea.report.verdict}
-                  </span>
-                )}
-                {idea.status === 'complete' && (
-                  <span className="px-3 py-1 rounded-md text-xs font-bold bg-primary text-primary-foreground">BUILT</span>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
-              {idea.status === 'swiped' && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); runDeepDive(idea); }}
-                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                >
-                  Deep Dive
-                </button>
-              )}
-              {idea.status === 'researching' && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  Researching…
-                </div>
-              )}
-              {canBuild(idea) && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); runBuildRoom(idea); }}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                >
-                  <Hammer className="w-3.5 h-3.5" />
-                  Build Room
-                </button>
-              )}
-              {idea.status === 'building' && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  Building…
-                </div>
-              )}
-              {(idea.report || idea.buildRoomDocs) && (
-                <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
-              )}
-            </div>
-          </div>
+            onDeepDive={() => runDeepDive(idea)}
+            onBuildRoom={() => runBuildRoom(idea)}
+          />
         ))}
       </div>
 
