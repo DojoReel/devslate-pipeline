@@ -98,8 +98,8 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
                       )}
                     </button>
                   </div>
-                  <div className="text-sm text-secondary-foreground leading-relaxed whitespace-pre-wrap font-mono">
-                    {doc.content}
+                  <div className="prose prose-invert prose-sm max-w-none text-secondary-foreground">
+                    <ReactMarkdown>{doc.content}</ReactMarkdown>
                   </div>
                 </div>
               )}
