@@ -1,6 +1,6 @@
 import { PipelineIdea, DeepDiveReport } from '@/types/devslate';
 import { X, Globe, Users, Sparkles, UserCheck } from 'lucide-react';
-import { getUnsplashUrl } from '@/hooks/useUnsplashImage';
+import { UnsplashImage } from './UnsplashImage';
 
 interface DeepDiveModalProps {
   idea: PipelineIdea;
@@ -9,8 +9,6 @@ interface DeepDiveModalProps {
 }
 
 export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
-  const imgUrl = getUnsplashUrl(idea.genre, idea.title, 1200, 500);
-
   const verdictConfig: Record<string, { bg: string; label: string }> = {
     'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },
     'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER' },
@@ -27,13 +25,9 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 backdrop-blur-sm p-4" onClick={onClose}>
-      <div
-        className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Cinematic image header */}
+      <div className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="relative w-full h-52 overflow-hidden rounded-t-2xl">
-          <img src={imgUrl} alt={idea.title} className="w-full h-full object-cover" />
+          <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" className="w-full h-full object-cover" alt={idea.title} />
           <div className="absolute inset-0 gradient-scrim" />
           <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-foreground/20 hover:bg-foreground/40 text-primary-foreground transition-colors backdrop-blur-sm">
             <X className="w-5 h-5" />
@@ -43,14 +37,10 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
             <h2 className="text-2xl font-extrabold text-primary-foreground mt-1">{idea.title}</h2>
           </div>
         </div>
-
-        {/* Verdict stamp banner */}
         <div className={`${verdict.bg} px-8 py-8`}>
           <h3 className="text-4xl md:text-5xl font-black text-primary-foreground tracking-tight">{verdict.label}</h3>
           <p className="text-primary-foreground/80 text-sm mt-3 leading-relaxed max-w-lg">{report.verdictRationale}</p>
         </div>
-
-        {/* Section cards */}
         <div className="p-6 grid gap-4">
           {sections.map(section => {
             const Icon = section.icon;
@@ -66,10 +56,7 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
               </div>
             );
           })}
-
-          <p className="text-xs text-muted-foreground pt-2 text-center">
-            Generated {new Date(report.generatedAt).toLocaleString()}
-          </p>
+          <p className="text-xs text-muted-foreground pt-2 text-center">Generated {new Date(report.generatedAt).toLocaleString()}</p>
         </div>
       </div>
     </div>
