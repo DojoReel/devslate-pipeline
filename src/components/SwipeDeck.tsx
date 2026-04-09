@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ShowIdea, SlateId } from '@/types/devslate';
 import { useDevSlate } from '@/context/DevSlateContext';
 import { Check, X, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -6,6 +6,26 @@ import { Check, X, ArrowRight, ArrowLeft } from 'lucide-react';
 interface SwipeDeckProps {
   ideas: ShowIdea[];
   slateId: SlateId;
+}
+
+function useUnsplashImage(query: string) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!query) return;
+    // Use Unsplash Source for a reliable random image based on keywords
+    const encoded = encodeURIComponent(query);
+    setUrl(`https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&h=600&fit=crop&q=80`);
+    
+    // Try fetching a relevant image via Unsplash source redirect
+    const img = new Image();
+    const sourceUrl = `https://source.unsplash.com/800x600/?${encoded}`;
+    img.onload = () => setUrl(sourceUrl);
+    img.onerror = () => {}; // keep fallback
+    img.src = sourceUrl;
+  }, [query]);
+
+  return url;
 }
 
 export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
@@ -16,29 +36,15 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const startX = useRef(0);
 
   const currentIdea = ideas[0];
-
-  const accentClasses: Record<string, string> = {
-    abc: 'border-slate_accent-abc/30',
-    stan: 'border-slate_accent-stan/30',
-    sport: 'border-slate_accent-sport/30',
-    international: 'border-slate_accent-international/30',
-    custom: 'border-slate_accent-custom/30',
-  };
-
-  const accentBgClasses: Record<string, string> = {
-    abc: 'bg-slate_accent-abc',
-    stan: 'bg-slate_accent-stan',
-    sport: 'bg-slate_accent-sport',
-    international: 'bg-slate_accent-international',
-    custom: 'bg-slate_accent-custom',
-  };
+  const imageQuery = currentIdea ? `${currentIdea.genre} ${currentIdea.title} television` : '';
+  const heroImage = useUnsplashImage(imageQuery);
 
   if (!currentIdea) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
         <div className="text-6xl mb-4">✓</div>
         <p className="text-lg font-medium">Deck complete</p>
-        <p className="text-sm mt-1">All ideas have been reviewed for this slate</p>
+        <p className="text-sm mt-1 text-muted-foreground">All ideas have been reviewed for this slate</p>
       </div>
     );
   }
@@ -79,29 +85,29 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
     }
   };
 
-  const rotation = isDragging ? dragX * 0.05 : 0;
-  const opacity = isDragging ? Math.max(0.5, 1 - Math.abs(dragX) / 400) : 1;
+  const rotation = isDragging ? dragX * 0.04 : 0;
+  const opacity = isDragging ? Math.max(0.6, 1 - Math.abs(dragX) / 400) : 1;
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-8">
       {/* Card stack */}
-      <div className="relative w-full max-w-md h-[420px]">
+      <div className="relative w-full max-w-md h-[480px]">
         {/* Background cards */}
         {ideas.slice(1, 3).map((idea, i) => (
           <div
             key={idea.id}
-            className="absolute inset-0 rounded-xl bg-surface-2 border border-border"
+            className="absolute inset-0 rounded-2xl bg-surface-2 border border-border card-shadow"
             style={{
-              transform: `scale(${0.95 - i * 0.03}) translateY(${(i + 1) * 8}px)`,
+              transform: `scale(${0.95 - i * 0.03}) translateY(${(i + 1) * 10}px)`,
               zIndex: 2 - i,
-              opacity: 0.5 - i * 0.2,
+              opacity: 0.4 - i * 0.15,
             }}
           />
         ))}
 
         {/* Active card */}
         <div
-          className={`absolute inset-0 rounded-xl bg-surface-2 border-2 ${accentClasses[slateId]} p-6 cursor-grab active:cursor-grabbing select-none touch-none ${
+          className={`absolute inset-0 rounded-2xl overflow-hidden card-shadow cursor-grab active:cursor-grabbing select-none touch-none ${
             swipeDirection === 'right' ? 'animate-card-swipe-right' :
             swipeDirection === 'left' ? 'animate-card-swipe-left' :
             'animate-card-enter'
@@ -116,40 +122,54 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
+          {/* Hero image background */}
+          <div className="absolute inset-0 bg-surface-3">
+            {heroImage && (
+              <img
+                src={heroImage}
+                alt={currentIdea.title}
+                className="w-full h-full object-cover"
+                loading="eager"
+              />
+            )}
+          </div>
+
+          {/* Gradient scrim */}
+          <div className="absolute inset-0 gradient-scrim" />
+
           {/* Swipe indicators */}
           {dragX > 50 && (
-            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50 text-green-400 text-sm font-bold rotate-12">
+            <div className="absolute top-6 right-6 px-4 py-2 rounded-xl bg-[hsl(var(--verdict-green))]/20 border-2 border-[hsl(var(--verdict-green))]/60 text-[hsl(var(--verdict-green))] text-sm font-bold tracking-wide rotate-12 backdrop-blur-sm">
               PIPELINE →
             </div>
           )}
           {dragX < -50 && (
-            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold -rotate-12">
+            <div className="absolute top-6 left-6 px-4 py-2 rounded-xl bg-destructive/20 border-2 border-destructive/60 text-destructive text-sm font-bold tracking-wide -rotate-12 backdrop-blur-sm">
               ← PASS
             </div>
           )}
 
-          <div className="flex flex-col h-full justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`px-2 py-0.5 rounded text-xs font-medium ${accentBgClasses[slateId]} text-primary-foreground`}>
-                  {currentIdea.genre}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {currentIdea.format}
-                </span>
-              </div>
-
-              <h2 className="text-2xl font-bold text-foreground mb-3">
-                {currentIdea.title}
-              </h2>
-
-              <p className="text-base text-secondary-foreground leading-relaxed">
-                {currentIdea.logline}
-              </p>
+          {/* Card content overlay */}
+          <div className="absolute inset-0 flex flex-col justify-end p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="px-3 py-1 rounded-lg bg-primary/90 text-primary-foreground text-xs font-semibold tracking-wide uppercase">
+                {currentIdea.genre}
+              </span>
+              <span className="px-3 py-1 rounded-lg bg-foreground/10 backdrop-blur-md text-foreground/90 text-xs font-medium">
+                {currentIdea.format}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border">
-              <span>Target: {currentIdea.targetBroadcaster}</span>
+            <h2 className="text-3xl font-bold text-foreground mb-2 leading-tight drop-shadow-lg">
+              {currentIdea.title}
+            </h2>
+
+            <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3 mb-4">
+              {currentIdea.logline}
+            </p>
+
+            <div className="flex items-center justify-between text-xs text-foreground/50 pt-3 border-t border-foreground/10">
+              <span>{currentIdea.targetBroadcaster}</span>
               <span>{ideas.length} remaining</span>
             </div>
           </div>
@@ -160,20 +180,18 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={() => handleSwipe('left')}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-surface-2 border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 transition-all"
+          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-surface-2 border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/5 transition-all card-shadow"
         >
-          <ArrowLeft className="w-4 h-4" />
           <X className="w-5 h-5" />
-          <span className="text-sm font-medium">Pass</span>
+          <span className="text-sm font-semibold">Pass</span>
         </button>
 
         <button
           onClick={() => handleSwipe('right')}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-surface-2 border border-border text-muted-foreground hover:text-green-400 hover:border-green-500/30 transition-all"
+          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary text-primary-foreground hover:opacity-90 transition-all card-shadow"
         >
-          <span className="text-sm font-medium">Pipeline</span>
+          <span className="text-sm font-semibold">Pipeline</span>
           <Check className="w-5 h-5" />
-          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 

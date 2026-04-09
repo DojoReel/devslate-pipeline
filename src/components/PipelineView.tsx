@@ -23,14 +23,6 @@ export function PipelineView() {
   const [buildingId, setBuildingId] = useState<string | null>(null);
   const [buildDocs, setBuildDocs] = useState<BuildRoomDocument[]>([]);
 
-  const accentBgClasses: Record<string, string> = {
-    abc: 'bg-slate_accent-abc/10 border-slate_accent-abc/20',
-    stan: 'bg-slate_accent-stan/10 border-slate_accent-stan/20',
-    sport: 'bg-slate_accent-sport/10 border-slate_accent-sport/20',
-    international: 'bg-slate_accent-international/10 border-slate_accent-international/20',
-    custom: 'bg-slate_accent-custom/10 border-slate_accent-custom/20',
-  };
-
   const runDeepDive = async (idea: PipelineIdea) => {
     setLoadingId(idea.id);
     updatePipelineIdea(activeSlate, idea.id, { status: 'researching' });
@@ -88,7 +80,6 @@ export function PipelineView() {
       genre: idea.genre,
     };
 
-    // Generate each document individually
     const completedDocs: BuildRoomDocument[] = [...initialDocs];
 
     for (let i = 0; i < DOC_TYPES.length; i++) {
@@ -130,17 +121,20 @@ export function PipelineView() {
   if (slate.pipeline.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
-        <FileText className="w-12 h-12 mb-4 opacity-50" />
+        <FileText className="w-12 h-12 mb-4 opacity-40" />
         <p className="text-lg font-medium">Pipeline empty</p>
         <p className="text-sm mt-1">Swipe ideas right in Discover to add them here</p>
       </div>
     );
   }
 
-  const verdictColors: Record<string, string> = {
-    'GREENLIGHT': 'text-green-400 bg-green-500/10 border-green-500/20',
-    'DEVELOP FURTHER': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    'PASS': 'text-red-400 bg-red-500/10 border-red-500/20',
+  const verdictBadge = (verdict: string) => {
+    const styles: Record<string, string> = {
+      'GREENLIGHT': 'bg-[hsl(var(--verdict-green))]/15 text-[hsl(var(--verdict-green))] border-[hsl(var(--verdict-green))]/30',
+      'DEVELOP FURTHER': 'bg-[hsl(var(--verdict-amber))]/15 text-[hsl(var(--verdict-amber))] border-[hsl(var(--verdict-amber))]/30',
+      'PASS': 'bg-destructive/15 text-destructive border-destructive/30',
+    };
+    return styles[verdict] || '';
   };
 
   const canBuild = (idea: PipelineIdea) =>
@@ -153,7 +147,7 @@ export function PipelineView() {
         {slate.pipeline.map(idea => (
           <div
             key={idea.id}
-            className={`p-4 rounded-xl border ${accentBgClasses[activeSlate]} transition-all hover:bg-surface-3 cursor-pointer`}
+            className="p-5 rounded-2xl bg-surface-2 border border-border transition-all hover:border-primary/20 hover:shadow-lg cursor-pointer card-shadow"
             onClick={() => {
               if (idea.buildRoomDocs) {
                 setBuildDocs(idea.buildRoomDocs);
@@ -165,41 +159,46 @@ export function PipelineView() {
           >
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-semibold text-foreground truncate">{idea.title}</h3>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h3 className="font-bold text-foreground text-base">{idea.title}</h3>
                   {idea.report && (
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${verdictColors[idea.report.verdict]}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${verdictBadge(idea.report.verdict)}`}>
                       {idea.report.verdict}
                     </span>
                   )}
                   {idea.status === 'complete' && (
-                    <span className="px-2 py-0.5 rounded text-xs font-bold border text-primary bg-primary/10 border-primary/20">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-primary/15 text-primary border-primary/30">
                       BUILT
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1 truncate">{idea.logline}</p>
+                <p className="text-sm text-muted-foreground mt-1.5 truncate">{idea.logline}</p>
+                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                  <span>{idea.format}</span>
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                  <span>{idea.targetBroadcaster}</span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 ml-4">
+              <div className="flex items-center gap-2 ml-4 shrink-0">
                 {idea.status === 'swiped' && (
                   <button
                     onClick={(e) => { e.stopPropagation(); runDeepDive(idea); }}
-                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
                   >
                     Deep Dive
                   </button>
                 )}
                 {idea.status === 'researching' && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     Researching…
                   </div>
                 )}
                 {canBuild(idea) && (
                   <button
                     onClick={(e) => { e.stopPropagation(); runBuildRoom(idea); }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
                   >
                     <Hammer className="w-3.5 h-3.5" />
                     Build Room
@@ -207,7 +206,7 @@ export function PipelineView() {
                 )}
                 {idea.status === 'building' && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     Building…
                   </div>
                 )}
