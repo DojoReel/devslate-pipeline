@@ -15,7 +15,7 @@ interface BuildRoomModalProps {
 export function BuildRoomModal({ idea, report, documents, isGenerating, onClose }: BuildRoomModalProps) {
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
-  const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 1200, 400);
+  const imgUrl = getUnsplashUrl(idea.genre, idea.title, 1200, 400);
 
   const handleCopy = async (content: string, docType: string) => {
     await navigator.clipboard.writeText(content);
