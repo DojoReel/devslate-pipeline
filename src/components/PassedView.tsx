@@ -21,7 +21,7 @@ export function PassedView() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
       {slate.passed.map(idea => {
-        const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 400, 600);
+        const imgUrl = getUnsplashUrl(idea.genre, idea.title, 400, 600);
         return (
           <div key={idea.id} className="group relative">
             <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-md opacity-60 grayscale group-hover:opacity-80 group-hover:grayscale-0 transition-all duration-300">

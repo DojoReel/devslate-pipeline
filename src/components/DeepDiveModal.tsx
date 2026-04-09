@@ -9,7 +9,7 @@ interface DeepDiveModalProps {
 }
 
 export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
-  const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 1200, 500);
+  const imgUrl = getUnsplashUrl(idea.genre, idea.title, 1200, 500);
 
   const verdictConfig: Record<string, { bg: string; label: string }> = {
     'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },

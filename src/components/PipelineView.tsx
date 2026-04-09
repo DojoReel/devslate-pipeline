@@ -42,7 +42,7 @@ function PipelineCard({
   isLoading: boolean;
   isBuilding: boolean;
 }) {
-  const imgUrl = getUnsplashUrl(`${idea.genre} ${idea.title} cinematic`, 600, 400);
+  const imgUrl = getUnsplashUrl(idea.genre, idea.title, 600, 400);
   const canBuild =
     idea.report &&
     (idea.report.verdict === 'GREENLIGHT' || idea.report.verdict === 'DEVELOP FURTHER') &&
