@@ -1,8 +1,9 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { ShowIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Plus, Search, ChevronLeft, ChevronRight, Telescope } from 'lucide-react';
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { getUnsplashUrl, getGenreGradient } from '@/hooks/useUnsplashImage';
+import { Search, ChevronLeft, ChevronRight, Telescope, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { UnsplashImage } from './UnsplashImage';
+import { getGenreGradient } from '@/hooks/useUnsplashImage';
 
 const GENRE_PILL_COLORS: Record<string, string> = {
   'Documentary': 'bg-primary',
@@ -28,29 +29,8 @@ function getGenrePillColor(genre: string) {
   return GENRE_PILL_COLORS[genre] || 'bg-primary';
 }
 
-/* ─── Image with gradient fallback ─── */
-function CardImage({ genre, title, w, h, className }: { genre: string; title: string; w: number; h: number; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  const imgUrl = getUnsplashUrl(genre, title, w, h);
-  const gradient = getGenreGradient(genre);
-
-  if (failed) {
-    return <div className={className} style={{ background: gradient }} />;
-  }
-
-  return (
-    <img
-      src={imgUrl}
-      alt={title}
-      className={className}
-      loading="lazy"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
-/* ─── Show Card (280×380 min, portrait, full-bleed) ─── */
-function ShowCard({ idea, onAdd }: { idea: ShowIdea; onAdd: (idea: ShowIdea) => void }) {
+/* ─── Show Card (400px tall, portrait, full-bleed) ─── */
+function ShowCard({ idea, onAdd, onPass }: { idea: ShowIdea; onAdd: (idea: ShowIdea) => void; onPass: (idea: ShowIdea) => void }) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -59,13 +39,13 @@ function ShowCard({ idea, onAdd }: { idea: ShowIdea; onAdd: (idea: ShowIdea) => 
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="relative h-[380px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
-        <CardImage
+      <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
+        <UnsplashImage
           genre={idea.genre}
-          title={idea.title}
-          w={400}
-          h={600}
+          keyword={idea.title}
+          orientation="portrait"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          alt={idea.title}
         />
 
         {/* Genre pill — top left */}
@@ -75,23 +55,31 @@ function ShowCard({ idea, onAdd }: { idea: ShowIdea; onAdd: (idea: ShowIdea) => 
           </span>
         </div>
 
-        {/* Dark gradient scrim — bottom 50% */}
+        {/* Dark gradient scrim — bottom 40% */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
         {/* Text overlay — bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
           <h3 className="text-lg font-bold text-white leading-snug line-clamp-2">{idea.title}</h3>
-          <p className="text-xs text-white/70 mt-1.5">{idea.format}</p>
+          <p className="text-xs text-white/60 mt-1 line-clamp-2">{idea.logline}</p>
+          <p className="text-[11px] text-white/40 mt-1">{idea.format}</p>
         </div>
 
-        {/* Hover overlay with action */}
-        <div className={`absolute inset-0 z-20 bg-black/50 backdrop-blur-[2px] flex items-center justify-center transition-opacity duration-200 ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {/* Hover overlay with thumbs */}
+        <div className={`absolute inset-0 z-20 bg-black/50 backdrop-blur-[2px] flex items-center justify-center gap-6 transition-opacity duration-200 ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onPass(idea); }}
+            className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-verdict-red hover:border-transparent hover:scale-110 transition-all"
+            title="Pass"
+          >
+            <ThumbsDown className="w-6 h-6" />
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onAdd(idea); }}
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-xl hover:scale-105 transition-transform"
+            className="w-14 h-14 rounded-full bg-primary border border-primary flex items-center justify-center text-primary-foreground hover:scale-110 transition-all shadow-xl"
+            title="Add to Pipeline"
           >
-            <Plus className="w-4 h-4" />
-            Add to Pipeline
+            <ThumbsUp className="w-6 h-6" />
           </button>
         </div>
       </div>
@@ -99,49 +87,91 @@ function ShowCard({ idea, onAdd }: { idea: ShowIdea; onAdd: (idea: ShowIdea) => 
   );
 }
 
-/* ─── Hero Banner ─── */
-function HeroBanner({ idea, onAdd }: { idea: ShowIdea; onAdd: (idea: ShowIdea) => void }) {
+/* ─── Hero Banner with rotation ─── */
+function HeroBanner({ ideas, onAdd, onPass }: { ideas: ShowIdea[]; onAdd: (idea: ShowIdea) => void; onPass: (idea: ShowIdea) => void }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (ideas.length <= 1) return;
+    const timer = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setCurrentIndex(prev => (prev + 1) % ideas.length);
+        setFading(false);
+      }, 500);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [ideas.length]);
+
+  const idea = ideas[currentIndex];
+  if (!idea) return null;
+
   return (
     <div className="relative w-full h-[460px] rounded-2xl overflow-hidden mb-12 shadow-2xl">
-      <CardImage
-        genre={idea.genre}
-        title={idea.title}
-        w={1400}
-        h={600}
-        className="w-full h-full object-cover"
-      />
+      <div className={`absolute inset-0 transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+        <UnsplashImage
+          genre={idea.genre}
+          keyword={idea.title}
+          orientation="landscape"
+          className="w-full h-full object-cover"
+          alt={idea.title}
+        />
+      </div>
       <div className="absolute inset-0 gradient-scrim" />
       <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-        <div className="flex items-center gap-3 mb-3">
-          <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md ${getGenrePillColor(idea.genre)}`}>
-            {idea.genre}
-          </span>
-          <span className="text-sm text-white/60">{idea.format} · {idea.targetBroadcaster}</span>
-        </div>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-2xl drop-shadow-lg">{idea.title}</h2>
-        <p className="text-base text-white/80 mt-3 max-w-xl leading-relaxed">{idea.logline}</p>
-        <div className="flex items-center gap-3 mt-6">
-          <button
-            onClick={() => onAdd(idea)}
-            className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-xl hover:scale-105 transition-transform"
-          >
-            <Plus className="w-4 h-4" />
-            Add to Pipeline
-          </button>
-          <button
-            className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 backdrop-blur-sm text-white font-bold text-sm border border-white/20 hover:bg-white/25 transition-colors"
-          >
-            <Telescope className="w-4 h-4" />
-            Deep Dive
-          </button>
+        <div className={`transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="flex items-center gap-3 mb-3">
+            <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md ${getGenrePillColor(idea.genre)}`}>
+              {idea.genre}
+            </span>
+            <span className="text-sm text-white/60">{idea.format} · {idea.targetBroadcaster}</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-2xl drop-shadow-lg">{idea.title}</h2>
+          <p className="text-base text-white/80 mt-3 max-w-xl leading-relaxed">{idea.logline}</p>
+          <div className="flex items-center gap-3 mt-6">
+            <button
+              onClick={() => onAdd(idea)}
+              className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-xl hover:scale-105 transition-transform"
+            >
+              <ThumbsUp className="w-4 h-4" />
+              Add to Pipeline
+            </button>
+            <button
+              onClick={() => onPass(idea)}
+              className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 backdrop-blur-sm text-white font-bold text-sm border border-white/20 hover:bg-verdict-red hover:border-transparent transition-colors"
+            >
+              <ThumbsDown className="w-4 h-4" />
+              Pass
+            </button>
+            <button
+              className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/15 backdrop-blur-sm text-white font-bold text-sm border border-white/20 hover:bg-white/25 transition-colors"
+            >
+              <Telescope className="w-4 h-4" />
+              Deep Dive
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Progress dots */}
+      {ideas.length > 1 && (
+        <div className="absolute bottom-4 right-6 flex gap-1.5">
+          {ideas.slice(0, Math.min(ideas.length, 5)).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => { setFading(true); setTimeout(() => { setCurrentIndex(i); setFading(false); }, 300); }}
+              className={`w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-white w-6' : 'bg-white/40'}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── Carousel Row ─── */
-function SlateRow({ slateId, label, ideas, onAdd }: { slateId: SlateId; label: string; ideas: ShowIdea[]; onAdd: (idea: ShowIdea) => void }) {
+function SlateRow({ label, ideas, onAdd, onPass }: { slateId: SlateId; label: string; ideas: ShowIdea[]; onAdd: (idea: ShowIdea) => void; onPass: (idea: ShowIdea) => void }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -156,8 +186,7 @@ function SlateRow({ slateId, label, ideas, onAdd }: { slateId: SlateId; label: s
   const scroll = (dir: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
-    const amount = 300;
-    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+    el.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' });
     setTimeout(checkScroll, 400);
   };
 
@@ -170,33 +199,26 @@ function SlateRow({ slateId, label, ideas, onAdd }: { slateId: SlateId; label: s
       </div>
 
       <div className="relative">
-        {/* Left arrow */}
         {canScrollLeft && (
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors opacity-0 group-hover/row:opacity-100 md:opacity-0 md:group-hover/row:opacity-100 max-md:opacity-100"
+          <button onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors opacity-0 group-hover/row:opacity-100 max-md:opacity-100"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         )}
-
-        {/* Right arrow */}
         {canScrollRight && (
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors opacity-0 group-hover/row:opacity-100 md:opacity-0 md:group-hover/row:opacity-100 max-md:opacity-100"
+          <button onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors opacity-0 group-hover/row:opacity-100 max-md:opacity-100"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
         )}
 
-        <div
-          ref={scrollRef}
-          onScroll={checkScroll}
+        <div ref={scrollRef} onScroll={checkScroll}
           className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-pl-2"
         >
           {ideas.map(idea => (
-            <ShowCard key={idea.id} idea={idea} onAdd={onAdd} />
+            <ShowCard key={idea.id} idea={idea} onAdd={onAdd} onPass={onPass} />
           ))}
         </div>
       </div>
@@ -206,7 +228,7 @@ function SlateRow({ slateId, label, ideas, onAdd }: { slateId: SlateId; label: s
 
 /* ─── Main Library ─── */
 export function DiscoverLibrary() {
-  const { slates, swipeRight } = useDevSlate();
+  const { slates, swipeRight, swipeLeft } = useDevSlate();
   const [activeFilter, setActiveFilter] = useState<SlateId | 'all'>('all');
 
   const allIdeas = useMemo(() => {
@@ -217,10 +239,14 @@ export function DiscoverLibrary() {
     return ideas;
   }, [slates]);
 
-  const heroIdea = allIdeas[0];
+  // Pick first 5 for hero rotation
+  const heroIdeas = allIdeas.slice(0, 5);
 
   const handleAdd = (idea: ShowIdea) => {
     swipeRight(idea.slateId, idea);
+  };
+  const handlePass = (idea: ShowIdea) => {
+    swipeLeft(idea.slateId, idea);
   };
 
   const filteredConfigs = activeFilter === 'all'
@@ -231,33 +257,22 @@ export function DiscoverLibrary() {
     <div className="animate-fade-in max-w-[1400px] mx-auto">
       {/* Filter pills */}
       <div className="flex items-center gap-2.5 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-        <button
-          onClick={() => setActiveFilter('all')}
+        <button onClick={() => setActiveFilter('all')}
           className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
-            activeFilter === 'all'
-              ? 'bg-primary text-primary-foreground shadow-md'
-              : 'bg-card text-muted-foreground hover:text-foreground border border-border'
+            activeFilter === 'all' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card text-muted-foreground hover:text-foreground border border-border'
           }`}
-        >
-          All Slates
-        </button>
+        >All Slates</button>
         {SLATE_CONFIGS.map(config => (
-          <button
-            key={config.id}
-            onClick={() => setActiveFilter(config.id)}
+          <button key={config.id} onClick={() => setActiveFilter(config.id)}
             className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
-              activeFilter === config.id
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'bg-card text-muted-foreground hover:text-foreground border border-border'
+              activeFilter === config.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card text-muted-foreground hover:text-foreground border border-border'
             }`}
-          >
-            {config.label}
-          </button>
+          >{config.label}</button>
         ))}
       </div>
 
       {/* Hero banner */}
-      {heroIdea && <HeroBanner idea={heroIdea} onAdd={handleAdd} />}
+      {heroIdeas.length > 0 && <HeroBanner ideas={heroIdeas} onAdd={handleAdd} onPass={handlePass} />}
 
       {/* Slate rows */}
       {filteredConfigs.map(config => (
@@ -267,6 +282,7 @@ export function DiscoverLibrary() {
           label={config.label}
           ideas={slates[config.id].deck}
           onAdd={handleAdd}
+          onPass={handlePass}
         />
       ))}
 
