@@ -1,6 +1,7 @@
 import { PipelineIdea, DeepDiveReport, BuildRoomDocument } from '@/types/devslate';
 import { X, Loader2, FileText, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface BuildRoomModalProps {
   idea: PipelineIdea;
