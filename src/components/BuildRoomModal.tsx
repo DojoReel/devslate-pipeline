@@ -16,8 +16,8 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
 
   const verdictColors: Record<string, string> = {
-    'GREENLIGHT': 'text-green-400 bg-green-500/10 border-green-500/30',
-    'DEVELOP FURTHER': 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+    'GREENLIGHT': 'text-[hsl(var(--verdict-green))] bg-[hsl(var(--verdict-green))]/10 border-[hsl(var(--verdict-green))]/30',
+    'DEVELOP FURTHER': 'text-[hsl(var(--verdict-amber))] bg-[hsl(var(--verdict-amber))]/10 border-[hsl(var(--verdict-amber))]/30',
   };
 
   const handleCopy = async (content: string, docType: string) => {
@@ -32,27 +32,27 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
       <div
-        className="bg-surface-2 border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in"
+        className="bg-surface-2 border border-border rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in card-shadow"
         onClick={e => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-surface-2 border-b border-border p-6 flex items-start justify-between z-10">
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-foreground">Build Room</h2>
-              <span className={`px-2 py-0.5 rounded text-xs font-bold border ${verdictColors[report.verdict]}`}>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${verdictColors[report.verdict]}`}>
                 {report.verdict}
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">{idea.title} · {idea.format}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-3 text-muted-foreground transition-colors">
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-3 text-muted-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 space-y-4">
           {isGenerating && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20">
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Generating documents… {completedCount}/{totalCount}</p>
@@ -62,20 +62,22 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
           )}
 
           {documents.map(doc => (
-            <div key={doc.documentType} className="border border-border rounded-xl overflow-hidden">
+            <div key={doc.documentType} className="border border-border rounded-2xl overflow-hidden bg-surface-1">
               <button
-                className="w-full flex items-center justify-between p-4 hover:bg-surface-3 transition-colors"
+                className="w-full flex items-center justify-between p-4 hover:bg-surface-3/50 transition-colors"
                 onClick={() => setExpandedDoc(expandedDoc === doc.documentType ? null : doc.documentType)}
                 disabled={doc.status !== 'complete'}
               >
                 <div className="flex items-center gap-3">
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground text-sm">{doc.label}</span>
+                  <div className="w-8 h-8 rounded-xl bg-surface-3 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="font-semibold text-foreground text-sm">{doc.label}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {doc.status === 'pending' && <span className="text-xs text-muted-foreground">Waiting…</span>}
                   {doc.status === 'generating' && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                  {doc.status === 'error' && <span className="text-xs text-red-400">Failed</span>}
+                  {doc.status === 'error' && <span className="text-xs text-destructive">Failed</span>}
                   {doc.status === 'complete' && (
                     expandedDoc === doc.documentType
                       ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -85,11 +87,11 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
               </button>
 
               {expandedDoc === doc.documentType && doc.status === 'complete' && (
-                <div className="border-t border-border p-4 bg-surface-1">
-                  <div className="flex justify-end mb-3">
+                <div className="border-t border-border p-5 bg-surface-0">
+                  <div className="flex justify-end mb-4">
                     <button
                       onClick={() => handleCopy(doc.content, doc.documentType)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {copiedDoc === doc.documentType ? (
                         <><Check className="w-3 h-3" /> Copied</>
@@ -98,7 +100,7 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
                       )}
                     </button>
                   </div>
-                  <div className="prose prose-invert prose-sm max-w-none text-secondary-foreground">
+                  <div className="prose prose-invert prose-sm max-w-none text-secondary-foreground prose-headings:text-foreground prose-headings:font-bold prose-strong:text-foreground prose-table:border-border prose-td:border-border prose-th:border-border prose-th:p-2 prose-td:p-2 prose-th:text-left prose-thead:border-b prose-thead:border-border">
                     <ReactMarkdown>{doc.content}</ReactMarkdown>
                   </div>
                 </div>
