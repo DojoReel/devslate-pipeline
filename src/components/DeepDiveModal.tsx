@@ -1,5 +1,5 @@
 import { PipelineIdea, DeepDiveReport } from '@/types/devslate';
-import { X } from 'lucide-react';
+import { X, Globe, Users, Sparkles, UserCheck } from 'lucide-react';
 
 interface DeepDiveModalProps {
   idea: PipelineIdea;
@@ -7,58 +7,65 @@ interface DeepDiveModalProps {
   onClose: () => void;
 }
 
+const SECTION_ICONS = {
+  'Competitive Landscape': Globe,
+  'Commissioner Fit': Sparkles,
+  'Target Audience': Users,
+  'Talent & Access': UserCheck,
+};
+
 export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
-  const verdictColors: Record<string, string> = {
-    'GREENLIGHT': 'text-[hsl(var(--verdict-green))] bg-[hsl(var(--verdict-green))]/10 border-[hsl(var(--verdict-green))]/30',
-    'DEVELOP FURTHER': 'text-[hsl(var(--verdict-amber))] bg-[hsl(var(--verdict-amber))]/10 border-[hsl(var(--verdict-amber))]/30',
-    'PASS': 'text-destructive bg-destructive/10 border-destructive/30',
+  const verdictConfig: Record<string, { bg: string; label: string }> = {
+    'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },
+    'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER' },
+    'PASS': { bg: 'bg-verdict-red', label: 'PASS' },
   };
 
+  const verdict = verdictConfig[report.verdict] || verdictConfig['PASS'];
+
   const sections = [
-    { title: 'Competitive Landscape', content: report.competitiveLandscape },
-    { title: 'Commissioner Fit', content: report.commissionerFit },
-    { title: 'Target Audience', content: report.audience },
-    { title: 'Talent & Access Requirements', content: report.talentAccess },
+    { title: 'Competitive Landscape', content: report.competitiveLandscape, icon: Globe },
+    { title: 'Commissioner Fit', content: report.commissionerFit, icon: Sparkles },
+    { title: 'Target Audience', content: report.audience, icon: Users },
+    { title: 'Talent & Access', content: report.talentAccess, icon: UserCheck },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm p-4" onClick={onClose}>
       <div
-        className="bg-surface-2 border border-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto animate-fade-in card-shadow"
+        className="bg-card border border-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto animate-fade-in card-shadow-lg"
         onClick={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-surface-2 border-b border-border p-6 flex items-start justify-between z-10">
-          <div>
-            <h2 className="text-xl font-bold text-foreground">{idea.title}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{idea.format} · {idea.targetBroadcaster}</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-surface-3 text-muted-foreground transition-colors">
+        {/* Verdict banner — full width, bold */}
+        <div className={`${verdict.bg} px-8 py-8 rounded-t-2xl relative`}>
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
+          <p className="text-white/70 text-sm font-medium mb-1">{idea.title}</p>
+          <h2 className="text-4xl font-extrabold text-white tracking-tight">{verdict.label}</h2>
+          <p className="text-white/80 text-sm mt-3 leading-relaxed max-w-lg">{report.verdictRationale}</p>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Verdict */}
-          <div className={`p-5 rounded-2xl border ${verdictColors[report.verdict]}`}>
-            <div className="text-lg font-bold">{report.verdict}</div>
-            <p className="text-sm mt-1.5 opacity-80">{report.verdictRationale}</p>
-          </div>
+        {/* Section cards */}
+        <div className="p-6 grid gap-4">
+          {sections.map(section => {
+            const Icon = section.icon;
+            return (
+              <div key={section.title} className="p-5 rounded-xl bg-background border border-border">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-4.5 h-4.5 text-primary" />
+                  </div>
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">{section.title}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{section.content}</p>
+              </div>
+            );
+          })}
 
-          {/* Report sections */}
-          {sections.map(section => (
-            <div key={section.title}>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-                {section.title}
-              </h3>
-              <p className="text-secondary-foreground leading-relaxed text-sm">
-                {section.content}
-              </p>
-            </div>
-          ))}
-
-          <div className="text-xs text-muted-foreground pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground pt-2 text-center">
             Generated {new Date(report.generatedAt).toLocaleString()}
-          </div>
+          </p>
         </div>
       </div>
     </div>

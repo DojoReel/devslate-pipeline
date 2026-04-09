@@ -74,6 +74,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        nav: {
+          bg: "hsl(var(--nav-bg))",
+        },
+        verdict: {
+          green: "hsl(var(--verdict-green))",
+          amber: "hsl(var(--verdict-amber))",
+          red: "hsl(var(--verdict-red))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
