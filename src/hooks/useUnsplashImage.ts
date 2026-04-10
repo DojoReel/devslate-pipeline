@@ -4,12 +4,10 @@ const UNSPLASH_ACCESS_KEY = 'lnJhQZFYk1uOwPaESHrAZG31qzN6FvqgQTAQeJTuAKs';
 const imageCache = new Map<string, string>();
 const pendingRequests = new Map<string, Promise<string | null>>();
 
-/** Build a highly specific search query from title + genre + logline */
+/** Build a search query from title + genre */
 export function buildUnsplashQuery(title: string, genre: string, logline?: string): string {
-  // Extract meaningful keywords from the title (drop short words)
   const titleWords = title.split(/\s+/).filter(w => w.length > 2).join(' ');
 
-  // Pull a location/context keyword from the logline if available
   let contextWords = '';
   if (logline) {
     const contextMatches = logline.match(/\b(Australia|Australian|Pacific|Asia|Sydney|Melbourne|outback|reef|ocean|island|urban|rural|remote|border|underground|desert)\b/gi);
@@ -21,7 +19,7 @@ export function buildUnsplashQuery(title: string, genre: string, logline?: strin
   return [titleWords, genre, contextWords].filter(Boolean).join(' ');
 }
 
-/** Fetch a random Unsplash image URL for a given query. Returns cached result if available. */
+/** Fetch a random Unsplash image URL. Returns cached result if available. */
 export async function fetchUnsplashImage(
   genre: string,
   keyword: string,
@@ -38,28 +36,46 @@ export async function fetchUnsplashImage(
     return pendingRequests.get(cacheKey)!;
   }
 
-  const query = encodeURIComponent(buildUnsplashQuery(keyword, genre, logline));
-  const url = `https://api.unsplash.com/photos/random?query=${query}&orientation=${orientation}&client_id=${UNSPLASH_ACCESS_KEY}`;
+  const fullQuery = buildUnsplashQuery(keyword, genre, logline);
 
-  const promise = fetch(url)
-    .then(res => {
-      if (!res.ok) throw new Error(`Unsplash API ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      const imgUrl = data?.urls?.regular || data?.urls?.small || null;
-      if (imgUrl) imageCache.set(cacheKey, imgUrl);
-      return imgUrl;
-    })
-    .catch(err => {
-      console.warn('Unsplash fetch failed:', err);
-      return null;
-    })
-    .finally(() => {
-      pendingRequests.delete(cacheKey);
-    });
+  // Try progressively simpler queries on failure
+  const queries = [
+    fullQuery,
+    keyword, // just title
+    genre,   // just genre
+  ];
+
+  const promise = (async () => {
+    for (const q of queries) {
+      const encoded = encodeURIComponent(q);
+      const url = `https://api.unsplash.com/photos/random?query=${encoded}&orientation=${orientation}&client_id=${UNSPLASH_ACCESS_KEY}`;
+      try {
+        console.log(`[Unsplash] Fetching: ${q}`);
+        const res = await fetch(url);
+        if (res.status === 403) {
+          console.warn('[Unsplash] Rate limited, using fallback');
+          return null;
+        }
+        if (!res.ok) {
+          console.warn(`[Unsplash] ${res.status} for "${q}", trying simpler query...`);
+          continue;
+        }
+        const data = await res.json();
+        const imgUrl = data?.urls?.regular || data?.urls?.small || null;
+        if (imgUrl) {
+          console.log(`[Unsplash] Got image for "${q}"`);
+          imageCache.set(cacheKey, imgUrl);
+          return imgUrl;
+        }
+      } catch (err) {
+        console.warn('[Unsplash] fetch error:', err);
+      }
+    }
+    return null;
+  })();
 
   pendingRequests.set(cacheKey, promise);
+  promise.finally(() => pendingRequests.delete(cacheKey));
   return promise;
 }
 

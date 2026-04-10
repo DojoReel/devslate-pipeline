@@ -1,7 +1,7 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { PipelineIdea, BuildRoomDocument } from '@/types/devslate';
+import { PipelineIdea, BuildRoomDocument, SLATE_CONFIGS, SlateId } from '@/types/devslate';
 import { Loader2, FileText, Hammer, Telescope, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { BuildRoomModal } from './BuildRoomModal';
 import { UnsplashImage } from './UnsplashImage';
@@ -21,6 +21,11 @@ const VERDICT_STYLES: Record<string, string> = {
   'PASS': 'bg-verdict-red',
 };
 
+const TAB_OPTIONS: { id: 'all' | SlateId; label: string }[] = [
+  { id: 'all', label: 'Show All' },
+  ...SLATE_CONFIGS.map(c => ({ id: c.id, label: c.label })),
+];
+
 function PipelineCard({
   idea, onClickCard, onDeepDive, onBuildRoom, isLoading, isBuilding,
 }: {
@@ -32,8 +37,8 @@ function PipelineCard({
     <div onClick={onClickCard}
       className="flex flex-col md:flex-row bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
     >
-      <div className="relative w-full md:w-[280px] h-48 md:h-auto shrink-0">
-        <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" className="w-full h-full object-cover" alt={idea.title} />
+      <div className="relative w-full md:w-[45%] min-h-[250px] md:min-h-[350px] shrink-0">
+        <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="w-full h-full object-cover" alt={idea.title} />
         {idea.report && (
           <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${VERDICT_STYLES[idea.report.verdict]}`} />
         )}
@@ -41,12 +46,13 @@ function PipelineCard({
           <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">BUILT</div>
         )}
       </div>
-      <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
+      <div className="flex-1 p-8 flex flex-col justify-between min-w-0">
         <div>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h3 className="text-xl font-bold text-foreground leading-tight">{idea.title}</h3>
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">{idea.logline}</p>
+              <h3 className="text-2xl font-bold text-foreground leading-tight">{idea.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{idea.format} · {idea.targetBroadcaster}</p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{idea.logline}</p>
             </div>
             {idea.report && (
               <span className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-primary-foreground ${VERDICT_STYLES[idea.report.verdict]}`}>
@@ -54,13 +60,11 @@ function PipelineCard({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-4">
-            <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{idea.format}</span>
-            <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{idea.targetBroadcaster}</span>
+          <div className="flex items-center gap-3 mt-4 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{idea.genre}</span>
           </div>
         </div>
-        <div className="flex items-center gap-3 mt-5 pt-4 border-t border-border">
+        <div className="flex items-center gap-3 mt-5 pt-4 border-t border-border flex-wrap">
           {idea.status === 'swiped' && (
             <button onClick={(e) => { e.stopPropagation(); onDeepDive(); }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
@@ -93,17 +97,26 @@ function PipelineCard({
 }
 
 export function PipelineView() {
-  const { activeSlate, slates, updatePipelineIdea } = useDevSlate();
-  const slate = slates[activeSlate];
+  const { slates, updatePipelineIdea } = useDevSlate();
+  const [activeTab, setActiveTab] = useState<'all' | SlateId>('all');
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
   const [buildRoomIdea, setBuildRoomIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [buildingId, setBuildingId] = useState<string | null>(null);
   const [buildDocs, setBuildDocs] = useState<BuildRoomDocument[]>([]);
 
+  // Gather all pipeline ideas across slates
+  const allPipelineIdeas = useMemo(() => {
+    return SLATE_CONFIGS.flatMap(c => slates[c.id].pipeline);
+  }, [slates]);
+
+  const filteredIdeas = activeTab === 'all'
+    ? allPipelineIdeas
+    : slates[activeTab].pipeline;
+
   const runDeepDive = async (idea: PipelineIdea) => {
     setLoadingId(idea.id);
-    updatePipelineIdea(activeSlate, idea.id, { status: 'researching' });
+    updatePipelineIdea(idea.slateId, idea.id, { status: 'researching' });
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deep-dive`, {
         method: 'POST',
@@ -112,17 +125,17 @@ export function PipelineView() {
       });
       if (!response.ok) throw new Error('Deep dive failed');
       const report = await response.json();
-      updatePipelineIdea(activeSlate, idea.id, { status: 'researched', report: { ...report, ideaId: idea.id, generatedAt: new Date().toISOString() } });
+      updatePipelineIdea(idea.slateId, idea.id, { status: 'researched', report: { ...report, ideaId: idea.id, generatedAt: new Date().toISOString() } });
     } catch (err) {
       console.error('Deep dive error:', err);
-      updatePipelineIdea(activeSlate, idea.id, { status: 'swiped' });
+      updatePipelineIdea(idea.slateId, idea.id, { status: 'swiped' });
     } finally { setLoadingId(null); }
   };
 
   const runBuildRoom = async (idea: PipelineIdea) => {
     if (!idea.report) return;
     setBuildingId(idea.id);
-    updatePipelineIdea(activeSlate, idea.id, { status: 'building' });
+    updatePipelineIdea(idea.slateId, idea.id, { status: 'building' });
     const initialDocs: BuildRoomDocument[] = DOC_TYPES.map(d => ({ documentType: d.type, label: d.label, content: '', status: 'pending' as const }));
     setBuildDocs(initialDocs);
     setBuildRoomIdea(idea);
@@ -147,32 +160,55 @@ export function PipelineView() {
       }
       setBuildDocs([...completedDocs]);
     }
-    updatePipelineIdea(activeSlate, idea.id, { status: 'complete', buildRoomDocs: completedDocs });
+    updatePipelineIdea(idea.slateId, idea.id, { status: 'complete', buildRoomDocs: completedDocs });
     setBuildingId(null);
   };
 
-  if (slate.pipeline.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
-        <div className="w-20 h-20 rounded-2xl bg-card border border-border flex items-center justify-center mb-5 shadow-md">
-          <FileText className="w-10 h-10 text-muted-foreground/50" />
-        </div>
-        <p className="text-xl font-bold text-foreground">Pipeline empty</p>
-        <p className="text-sm mt-2 text-muted-foreground">Add ideas from Discover to start building your slate</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="grid gap-6 animate-fade-in">
-        {slate.pipeline.map(idea => (
-          <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id} isBuilding={buildingId === idea.id}
-            onClickCard={() => { if (idea.buildRoomDocs) { setBuildDocs(idea.buildRoomDocs); setBuildRoomIdea(idea); } else if (idea.report) setSelectedIdea(idea); }}
-            onDeepDive={() => runDeepDive(idea)} onBuildRoom={() => runBuildRoom(idea)}
-          />
-        ))}
+      {/* Tab bar */}
+      <div className="flex items-center gap-2 mb-8 flex-wrap">
+        {TAB_OPTIONS.map(tab => {
+          const isActive = activeTab === tab.id;
+          const count = tab.id === 'all' ? allPipelineIdeas.length : slates[tab.id].pipeline.length;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {tab.label}
+              {count > 0 && (
+                <span className={`ml-2 text-xs ${isActive ? 'opacity-80' : 'opacity-60'}`}>({count})</span>
+              )}
+            </button>
+          );
+        })}
       </div>
+
+      {filteredIdeas.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
+          <div className="w-20 h-20 rounded-2xl bg-card border border-border flex items-center justify-center mb-5 shadow-md">
+            <FileText className="w-10 h-10 text-muted-foreground/50" />
+          </div>
+          <p className="text-xl font-bold text-foreground">Pipeline empty</p>
+          <p className="text-sm mt-2 text-muted-foreground">Add ideas from Discover to start building your slate</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 animate-fade-in">
+          {filteredIdeas.map(idea => (
+            <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id} isBuilding={buildingId === idea.id}
+              onClickCard={() => { if (idea.buildRoomDocs) { setBuildDocs(idea.buildRoomDocs); setBuildRoomIdea(idea); } else if (idea.report) setSelectedIdea(idea); }}
+              onDeepDive={() => runDeepDive(idea)} onBuildRoom={() => runBuildRoom(idea)}
+            />
+          ))}
+        </div>
+      )}
+
       {selectedIdea?.report && <DeepDiveModal idea={selectedIdea} report={selectedIdea.report} onClose={() => setSelectedIdea(null)} />}
       {buildRoomIdea?.report && (
         <BuildRoomModal idea={buildRoomIdea} report={buildRoomIdea.report} documents={buildDocs}

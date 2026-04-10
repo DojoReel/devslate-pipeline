@@ -28,14 +28,36 @@ function getGenrePillColor(genre: string) {
   return GENRE_PILL_COLORS[genre] || 'bg-primary';
 }
 
+function extractWhyNow(idea: ShowIdea): string {
+  const whyNowMap: Record<string, string> = {
+    'Outback Medics': 'Rural healthcare access is a growing national debate as climate events increase demand for remote medical services.',
+    'First Languages': 'UNESCO has declared this the Decade of Indigenous Languages — time is running out for documentation.',
+    'The Ballot': 'With record low trust in politicians, first-time voters are reshaping electoral engagement.',
+    'Reef Patrol': 'Back-to-back mass bleaching events make reef conservation the defining environmental story of our era.',
+    'New Roots': 'Australia\'s refugee intake is at its highest in a decade, transforming regional communities.',
+    'Cold Cases Reloaded': 'Advances in forensic DNA and AI are solving cases that were impossible just five years ago.',
+    'Hustle Sydney': 'The startup ecosystem is booming post-pandemic with record venture capital flowing into Australian founders.',
+    'Underground Kings': 'Global opal prices have surged, drawing a new generation of miners to Coober Pedy.',
+    'The Algorithm': 'Social media regulation is the hottest policy debate globally — audiences want to understand platform manipulation.',
+    'Fight Camp': 'Boxing is experiencing a mainstream revival with crossover events drawing massive audiences.',
+    'Grassroots': 'Community sport participation is rebounding post-COVID, but clubs face existential funding challenges.',
+    'The Draft': 'The AFL draft has become a cultural event, with millions following prospect journeys on social media.',
+    'Wave Hunters': 'Big wave surfing is gaining Olympic momentum and Southern Ocean conditions are producing record swells.',
+    'Pacific Rising': 'COP climate conferences have put Pacific Island nations at the centre of global climate justice debates.',
+    'Silk Road Kitchens': 'Central Asian cuisine is the next global food trend, driven by social media discovery.',
+    'Border Towns': 'Geopolitical tensions are at their highest in decades — border communities are the human face of these conflicts.',
+    'Pitch Lab': 'AI-assisted content development is transforming how producers create and pitch television concepts.',
+  };
+  return whyNowMap[idea.title] || 'This concept taps into current cultural conversations and audience demand for authentic, timely storytelling.';
+}
+
 function extractBullets(idea: ShowIdea): string[] {
   const bullets: string[] = [];
+  // Episode count from format
+  const epMatch = idea.format.match(/(\d+\s*×\s*\d+min)/);
+  if (epMatch) bullets.push(epMatch[1]);
   bullets.push(idea.format);
   bullets.push(`Target: ${idea.targetBroadcaster}`);
-  const logWords = idea.logline.split(/[,.]/).filter(s => s.trim().length > 10);
-  if (logWords.length > 1) {
-    bullets.push(logWords[logWords.length - 1].trim());
-  }
   return bullets;
 }
 
@@ -56,8 +78,7 @@ function SlateSection({
   featured: boolean;
 }) {
   const [index, setIndex] = useState(0);
-
-  const safeIndex = Math.min(index, ideas.length - 1);
+  const safeIndex = Math.min(index, Math.max(0, ideas.length - 1));
   const idea = ideas[safeIndex];
 
   const prev = useCallback(() => setIndex(i => Math.max(0, i - 1)), []);
@@ -65,23 +86,20 @@ function SlateSection({
 
   const handlePass = useCallback(() => {
     onPass(idea);
-    // After pass, the idea is removed from deck so index stays or wraps
-    // Don't change index — the next idea slides into this position
   }, [idea, onPass]);
 
   if (!idea) return null;
 
   const bullets = extractBullets(idea);
+  const whyNow = extractWhyNow(idea);
 
   return (
     <div>
-      {/* Section label */}
       <h2 className="text-[24px] font-bold text-foreground mb-6">{label}</h2>
 
-      {/* Card */}
       <div className={`relative flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-lg bg-card border border-border ${featured ? 'ring-2 ring-primary/30' : ''}`}>
         {/* Image — left 60% */}
-        <div className="relative w-full md:w-[60%] min-h-[280px] md:min-h-[400px]">
+        <div className="relative w-full md:w-[60%] min-h-[300px] md:min-h-[500px]">
           <UnsplashImage
             genre={idea.genre}
             keyword={idea.title}
@@ -97,7 +115,6 @@ function SlateSection({
             </div>
           )}
 
-          {/* Left/Right arrows on image */}
           {ideas.length > 1 && (
             <>
               <button
@@ -119,13 +136,13 @@ function SlateSection({
         </div>
 
         {/* Info — right 40% */}
-        <div className="w-full md:w-[40%] p-6 md:p-8 flex flex-col justify-between">
+        <div className="w-full md:w-[40%] p-8 md:p-10 flex flex-col justify-between">
           <div>
-            <span className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm mb-4 ${getGenrePillColor(idea.genre)}`}>
+            <span className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm mb-5 ${getGenrePillColor(idea.genre)}`}>
               {idea.genre}
             </span>
 
-            <h3 className="text-2xl md:text-[28px] font-extrabold text-foreground leading-tight mb-2">
+            <h3 className="text-[32px] font-extrabold text-foreground leading-tight mb-3">
               {idea.title}
             </h3>
 
@@ -137,7 +154,7 @@ function SlateSection({
               {idea.logline}
             </p>
 
-            <ul className="space-y-1.5 mb-6">
+            <ul className="space-y-1.5 mb-5">
               {bullets.map((b, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
@@ -145,6 +162,12 @@ function SlateSection({
                 </li>
               ))}
             </ul>
+
+            {/* Why Now */}
+            <div className="bg-muted/50 rounded-xl p-4 mb-6">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Why Now?</p>
+              <p className="text-sm text-foreground leading-relaxed">{whyNow}</p>
+            </div>
           </div>
 
           {/* Buttons */}
@@ -201,7 +224,7 @@ export function DiscoverLibrary() {
   let isFirst = true;
 
   return (
-    <div className="animate-fade-in max-w-[1400px] mx-auto space-y-12">
+    <div className="animate-fade-in space-y-12">
       {SLATE_CONFIGS.map(config => {
         const ideas = slates[config.id].deck;
         if (ideas.length === 0) return null;
