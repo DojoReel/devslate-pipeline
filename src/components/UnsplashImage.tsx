@@ -1,4 +1,4 @@
-import { getUnsplashUrl, getGenreGradient } from '@/hooks/useUnsplashImage';
+import { getPicsumUrl, getGenreGradient } from '@/hooks/useUnsplashImage';
 import { useState } from 'react';
 
 interface UnsplashImageProps {
@@ -13,7 +13,7 @@ interface UnsplashImageProps {
 export function UnsplashImage({ genre, keyword, className = '', alt = '' }: UnsplashImageProps) {
   const [failed, setFailed] = useState(false);
   const gradient = getGenreGradient(genre);
-  const src = getUnsplashUrl(keyword, genre);
+  const src = getPicsumUrl(keyword);
 
   if (failed) {
     return <div className={className} style={{ background: gradient }} />;
