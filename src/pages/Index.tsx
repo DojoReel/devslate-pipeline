@@ -7,11 +7,19 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { ViewSwitcher } from '@/components/ViewSwitcher';
 import { Clapperboard } from 'lucide-react';
+import CustomPage from '@/pages/CustomPage';
+import BuildRoomPage from '@/pages/BuildRoomPage';
 
 function DevSlateApp() {
   const { activeSlate, slates, currentView } = useDevSlate();
 
-  const viewTitles = { discover: 'Discover', pipeline: 'Pipeline', passed: 'Passed' };
+  const viewTitles: Record<string, string> = {
+    discover: 'Discover',
+    pipeline: 'Pipeline',
+    passed: 'Passed',
+    custom: 'Custom',
+    buildroom: 'Build Room',
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -49,6 +57,8 @@ function DevSlateApp() {
           {currentView === 'discover' && <DiscoverLibrary />}
           {currentView === 'pipeline' && <PipelineView />}
           {currentView === 'passed' && <PassedView />}
+          {currentView === 'custom' && <CustomPage />}
+          {currentView === 'buildroom' && <BuildRoomPage />}
         </main>
       </div>
 
