@@ -1,24 +1,23 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { ShowIdea, SLATE_CONFIGS } from '@/types/devslate';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { preloadImage } from './UnsplashImage';
 import { DiscoverIdeaCard } from './discover/DiscoverIdeaCard';
 
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const TRANSITION_DURATION = 350;
 
-type SwipeDirection = 'left' | 'right';
+type ActionType = 'add' | 'pass';
 
-interface PendingRemoval {
-  entryOffset: number;
-  ideaId: string;
-  nextIndex: number;
+interface ActionTransition {
+  cards: ShowIdea[];
+  transitionEnabled: boolean;
+  translateX: number;
 }
 
-interface ExitCardState {
-  active: boolean;
-  direction: SwipeDirection;
-  idea: ShowIdea;
+interface PendingMutation {
+  nextIndex: number;
+  removedIdeaId: string;
 }
 
 function SlateSection({
@@ -34,46 +33,37 @@ function SlateSection({
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [trackOffset, setTrackOffset] = useState(0);
   const [trackTransitionEnabled, setTrackTransitionEnabled] = useState(false);
-  const [exitCard, setExitCard] = useState<ExitCardState | null>(null);
+  const [actionTransition, setActionTransition] = useState<ActionTransition | null>(null);
 
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const animationTimeoutRef = useRef<number | null>(null);
-  const animationFrameRefs = useRef<number[]>([]);
-  const pendingRemovalRef = useRef<PendingRemoval | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const frameRefs = useRef<number[]>([]);
+  const pendingMutationRef = useRef<PendingMutation | null>(null);
 
   const clearAnimationHandles = useCallback(() => {
-    if (animationTimeoutRef.current !== null) {
-      window.clearTimeout(animationTimeoutRef.current);
-      animationTimeoutRef.current = null;
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
 
-    animationFrameRefs.current.forEach((frameId) => window.cancelAnimationFrame(frameId));
-    animationFrameRefs.current = [];
+    frameRefs.current.forEach((frameId) => window.cancelAnimationFrame(frameId));
+    frameRefs.current = [];
   }, []);
 
   const queueAnimationStep = useCallback((callback: () => void) => {
     const firstFrame = window.requestAnimationFrame(() => {
       const secondFrame = window.requestAnimationFrame(callback);
-      animationFrameRefs.current.push(secondFrame);
+      frameRefs.current.push(secondFrame);
     });
 
-    animationFrameRefs.current.push(firstFrame);
+    frameRefs.current.push(firstFrame);
   }, []);
-
-  const finishTrackAnimation = useCallback(() => {
-    clearAnimationHandles();
-    animationTimeoutRef.current = window.setTimeout(() => {
-      setIsAnimating(false);
-      setTrackTransitionEnabled(false);
-    }, TRANSITION_DURATION);
-  }, [clearAnimationHandles]);
 
   useEffect(() => () => clearAnimationHandles(), [clearAnimationHandles]);
 
   useEffect(() => {
-    if (pendingRemovalRef.current) return;
+    if (pendingMutationRef.current) return;
     setCurrentIndex((prev) => Math.min(prev, Math.max(ideas.length - 1, 0)));
   }, [ideas.length]);
 
@@ -85,46 +75,34 @@ function SlateSection({
   }, [currentIndex, ideas]);
 
   useEffect(() => {
-    const pendingRemoval = pendingRemovalRef.current;
-    if (!pendingRemoval) return;
-    if (ideas.some((idea) => idea.id === pendingRemoval.ideaId)) return;
+    const pendingMutation = pendingMutationRef.current;
+    if (!pendingMutation) return;
+    if (ideas.some((idea) => idea.id === pendingMutation.removedIdeaId)) return;
 
-    if (ideas.length === 0) {
-      pendingRemovalRef.current = null;
-      setExitCard(null);
-      setTrackOffset(0);
+    pendingMutationRef.current = null;
+    setCurrentIndex(Math.min(pendingMutation.nextIndex, Math.max(ideas.length - 1, 0)));
+    setActionTransition(null);
+    setTrackTransitionEnabled(false);
+    setIsAnimating(false);
+  }, [ideas]);
+
+  const finishTrackTransition = useCallback(() => {
+    clearAnimationHandles();
+    timeoutRef.current = window.setTimeout(() => {
       setTrackTransitionEnabled(false);
       setIsAnimating(false);
-      return;
-    }
-
-    clearAnimationHandles();
-    setCurrentIndex(Math.min(pendingRemoval.nextIndex, ideas.length - 1));
-    setTrackOffset(pendingRemoval.entryOffset);
-    setTrackTransitionEnabled(false);
-    setExitCard(null);
-
-    queueAnimationStep(() => {
-      setTrackTransitionEnabled(true);
-      setTrackOffset(0);
-      animationTimeoutRef.current = window.setTimeout(() => {
-        pendingRemovalRef.current = null;
-        setIsAnimating(false);
-        setTrackTransitionEnabled(false);
-      }, TRANSITION_DURATION);
-    });
-  }, [ideas, clearAnimationHandles, queueAnimationStep]);
+    }, TRANSITION_DURATION);
+  }, [clearAnimationHandles]);
 
   const navigateTo = useCallback((targetIndex: number) => {
-    if (isAnimating || pendingRemovalRef.current) return;
+    if (actionTransition || isAnimating) return;
     if (targetIndex < 0 || targetIndex > ideas.length - 1 || targetIndex === currentIndex) return;
 
     setIsAnimating(true);
-    setTrackOffset(0);
     setTrackTransitionEnabled(true);
     setCurrentIndex(targetIndex);
-    finishTrackAnimation();
-  }, [currentIndex, finishTrackAnimation, ideas.length, isAnimating]);
+    finishTrackTransition();
+  }, [actionTransition, currentIndex, finishTrackTransition, ideas.length, isAnimating]);
 
   const navigate = useCallback((dir: 'next' | 'prev') => {
     const targetIndex = dir === 'next'
@@ -134,43 +112,58 @@ function SlateSection({
     navigateTo(targetIndex);
   }, [currentIndex, ideas.length, navigateTo]);
 
-  const handleAction = useCallback((action: 'add' | 'pass') => {
-    if (isAnimating || pendingRemovalRef.current) return;
+  const handleAction = useCallback((action: ActionType) => {
+    if (actionTransition || isAnimating) return;
 
     const currentIdea = ideas[currentIndex];
     if (!currentIdea) return;
 
-    clearAnimationHandles();
-    pendingRemovalRef.current = {
-      entryOffset: action === 'add' ? -100 : 100,
-      ideaId: currentIdea.id,
-      nextIndex: currentIndex < ideas.length - 1 ? currentIndex : Math.max(0, currentIndex - 1),
-    };
+    const nextIdea = ideas[currentIndex + 1];
+    const previousIdea = ideas[currentIndex - 1];
+    const targetIdea = nextIdea ?? previousIdea;
+    const nextIndex = nextIdea ? currentIndex : Math.max(0, currentIndex - 1);
 
+    const cards = targetIdea
+      ? action === 'add'
+        ? [targetIdea, currentIdea]
+        : [currentIdea, targetIdea]
+      : [currentIdea];
+
+    const startTranslate = targetIdea ? (action === 'add' ? -100 : 0) : 0;
+    const endTranslate = targetIdea ? (action === 'add' ? 0 : -100) : action === 'add' ? 100 : -100;
+
+    clearAnimationHandles();
     setIsAnimating(true);
     setTrackTransitionEnabled(false);
-    setExitCard({
-      active: false,
-      direction: action === 'add' ? 'right' : 'left',
-      idea: currentIdea,
+    setActionTransition({
+      cards,
+      transitionEnabled: false,
+      translateX: startTranslate,
     });
 
     queueAnimationStep(() => {
-      setExitCard((prev) => (prev ? { ...prev, active: true } : prev));
+      setActionTransition((prev) => prev
+        ? { ...prev, transitionEnabled: true, translateX: endTranslate }
+        : prev);
     });
 
-    animationTimeoutRef.current = window.setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
+      pendingMutationRef.current = {
+        nextIndex,
+        removedIdeaId: currentIdea.id,
+      };
+
       if (action === 'add') onAdd(currentIdea);
       else onPass(currentIdea);
     }, TRANSITION_DURATION);
-  }, [clearAnimationHandles, currentIndex, ideas, isAnimating, onAdd, onPass, queueAnimationStep]);
+  }, [actionTransition, clearAnimationHandles, currentIndex, ideas, isAnimating, onAdd, onPass, queueAnimationStep]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchStartRef.current || isAnimating) return;
+    if (!touchStartRef.current || isAnimating || actionTransition) return;
 
     const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
     const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
@@ -179,11 +172,9 @@ function SlateSection({
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
     if (dx < 0) navigate('next');
     else navigate('prev');
-  }, [isAnimating, navigate]);
+  }, [actionTransition, isAnimating, navigate]);
 
   if (ideas.length === 0) return null;
-
-  const translateX = -(currentIndex * 100) + trackOffset;
 
   return (
     <div>
@@ -194,54 +185,61 @@ function SlateSection({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {exitCard && (
+        {actionTransition ? (
           <div
-            className="pointer-events-none absolute inset-0 z-20"
+            className="flex h-full"
             style={{
-              opacity: exitCard.active ? 0 : 1,
-              transform: `translateX(${exitCard.active ? (exitCard.direction === 'right' ? '100%' : '-100%') : '0%'})`,
-              transition: `transform ${TRANSITION_DURATION}ms ${EASING}, opacity ${TRANSITION_DURATION}ms ${EASING}`,
-              willChange: 'transform, opacity',
+              transform: `translateX(${actionTransition.translateX}%)`,
+              transition: actionTransition.transitionEnabled
+                ? `transform ${TRANSITION_DURATION}ms ${EASING}`
+                : 'none',
+              willChange: 'transform',
             }}
           >
-            <DiscoverIdeaCard
-              idea={exitCard.idea}
-              canGoPrev={currentIndex > 0}
-              canGoNext={currentIndex < ideas.length - 1}
-              isAnimating={true}
-              onPrev={() => undefined}
-              onNext={() => undefined}
-              onAdd={() => undefined}
-              onPass={() => undefined}
-              showNavigation={ideas.length > 1}
-            />
+            {actionTransition.cards.map((idea) => (
+              <div key={`transition-${idea.id}`} className="h-full w-full shrink-0">
+                <DiscoverIdeaCard
+                  idea={idea}
+                  canGoPrev={false}
+                  canGoNext={false}
+                  isAnimating={true}
+                  onPrev={() => undefined}
+                  onNext={() => undefined}
+                  onAdd={() => undefined}
+                  onPass={() => undefined}
+                  showNavigation={false}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            className="flex h-full"
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              transition: trackTransitionEnabled
+                ? `transform ${TRANSITION_DURATION}ms ${EASING}`
+                : 'none',
+              willChange: 'transform',
+            }}
+          >
+            {ideas.map((idea, index) => (
+              <div key={idea.id} className="h-full w-full shrink-0">
+                <DiscoverIdeaCard
+                  idea={idea}
+                  canGoPrev={index > 0}
+                  canGoNext={index < ideas.length - 1}
+                  isAnimating={isAnimating}
+                  onPrev={() => navigate('prev')}
+                  onNext={() => navigate('next')}
+                  onAdd={() => handleAction('add')}
+                  onPass={() => handleAction('pass')}
+                  showNavigation={ideas.length > 1}
+                />
+              </div>
+            ))}
           </div>
         )}
-
-        <div
-          className={`flex h-full ${exitCard ? 'opacity-0' : 'opacity-100'}`}
-          style={{
-            transform: `translateX(${translateX}%)`,
-            transition: trackTransitionEnabled ? `transform ${TRANSITION_DURATION}ms ${EASING}` : 'none',
-            willChange: 'transform',
-          }}
-        >
-          {ideas.map((idea, index) => (
-            <div key={idea.id} className="h-full w-full shrink-0">
-              <DiscoverIdeaCard
-                idea={idea}
-                canGoPrev={index > 0}
-                canGoNext={index < ideas.length - 1}
-                isAnimating={isAnimating}
-                onPrev={() => navigate('prev')}
-                onNext={() => navigate('next')}
-                onAdd={() => handleAction('add')}
-                onPass={() => handleAction('pass')}
-                showNavigation={ideas.length > 1}
-              />
-            </div>
-          ))}
-        </div>
       </div>
 
       {ideas.length > 1 && (
@@ -250,9 +248,10 @@ function SlateSection({
             <button
               key={idea.id}
               onClick={() => navigateTo(index)}
+              disabled={isAnimating || !!actionTransition}
               className={`h-2.5 w-2.5 rounded-full transition-all ${
                 index === currentIndex ? 'scale-125 bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
+              } disabled:pointer-events-none`}
             />
           ))}
         </div>
