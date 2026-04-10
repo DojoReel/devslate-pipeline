@@ -106,16 +106,12 @@ export function AppSidebar() {
           <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/30 mb-2">Tools</p>
           {renderButton({ id: 'custom', label: 'Custom Idea', icon: Palette }, 'custom')}
           {toolItems.map(v => renderButton(v, 'tool'))}
+
+          {/* Thin divider before Idea Bin */}
+          <div className="mx-3 my-2 border-t border-sidebar-foreground/8" />
+
+          {renderButton({ id: 'passed', label: 'Idea Bin', icon: PackageOpen, count: totalPassed }, 'bin')}
         </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Divider */}
-        <div className="mx-3 my-3 border-t border-sidebar-foreground/10" />
-
-        {/* Idea Bin — de-emphasised at bottom */}
-        {renderButton({ id: 'passed', label: 'Idea Bin', icon: PackageOpen, count: totalPassed }, 'bin')}
       </nav>
 
       {/* Reset */}
