@@ -1,14 +1,11 @@
-/** Build a simple comma-separated keyword query from title + genre */
-export function buildUnsplashQuery(title: string, genre: string): string {
-  const titleWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-  const genreWords = genre.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-  return [...titleWords, ...genreWords].join(',');
+/** Build a URL-safe slug from a title */
+function toSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-/** Get a static Unsplash Source URL — no API key, no rate limit */
-export function getUnsplashUrl(title: string, genre: string, width = 800, height = 500): string {
-  const query = buildUnsplashQuery(title, genre);
-  return `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(query)}`;
+/** Get a picsum.photos URL seeded by idea title (consistent image per idea) */
+export function getPicsumUrl(title: string, width = 800, height = 500): string {
+  return `https://picsum.photos/seed/${toSlug(title)}/${width}/${height}`;
 }
 
 /** Gradient fallback per genre family */
