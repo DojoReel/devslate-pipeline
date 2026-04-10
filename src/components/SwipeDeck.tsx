@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { getPicsumUrl } from '@/hooks/useUnsplashImage';
 import { ShowIdea, SlateId } from '@/types/devslate';
 import { useDevSlate } from '@/context/DevSlateContext';
 import { Check, X } from 'lucide-react';
@@ -15,10 +16,7 @@ const GENRE_COLORS: Record<string, string> = {
   'International': 'bg-slate_accent-international text-primary-foreground',
 };
 
-function usePicsumImage(title: string) {
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `https://picsum.photos/seed/${slug}/800/1000`;
-}
+// SwipeDeck uses UnsplashImage component directly — no local image helper needed
 
 export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const { swipeRight, swipeLeft } = useDevSlate();
@@ -28,7 +26,7 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const startX = useRef(0);
 
   const currentIdea = ideas[0];
-  const heroImage = currentIdea ? usePicsumImage(currentIdea.title) : null;
+  const heroImage = currentIdea ? getPicsumUrl(currentIdea.title, 800, 1000) : null;
 
   if (!currentIdea) {
     return (
