@@ -1,12 +1,11 @@
 import { PipelineIdea, DeepDiveReport } from '@/types/devslate';
-import { X, Globe, Users, Sparkles, UserCheck, Hammer } from 'lucide-react';
+import { X, Globe, Users, Sparkles, UserCheck } from 'lucide-react';
 import { UnsplashImage } from './UnsplashImage';
 
 interface DeepDiveModalProps {
   idea: PipelineIdea;
   report: DeepDiveReport;
   onClose: () => void;
-  onBuildRoom?: () => void;
 }
 
 function extractBullets(content: string): string[] {
@@ -19,7 +18,6 @@ function extractBullets(content: string): string[] {
     }
   }
 
-  // Fallback: split prose into sentences
   if (bullets.length === 0) {
     const sentences = content.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
     return sentences.slice(0, 4);
@@ -29,19 +27,17 @@ function extractBullets(content: string): string[] {
 }
 
 function extractRationaleBullets(text: string): string[] {
-  // Split rationale into individual sentences
   const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 5);
   return sentences.slice(0, 3);
 }
 
-export function DeepDiveModal({ idea, report, onClose, onBuildRoom }: DeepDiveModalProps) {
-  const verdictConfig: Record<string, { bg: string; label: string; border: string }> = {
-    'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT', border: 'border-t-green-500' },
-    'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER', border: 'border-t-amber-500' },
-    'PASS': { bg: 'bg-verdict-red', label: 'PASS', border: 'border-t-red-500' },
+export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
+  const verdictConfig: Record<string, { bg: string; label: string }> = {
+    'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },
+    'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER' },
+    'PASS': { bg: 'bg-verdict-red', label: 'PASS' },
   };
   const verdict = verdictConfig[report.verdict] || verdictConfig['PASS'];
-  const showBuildRoom = report.verdict === 'GREENLIGHT' || report.verdict === 'DEVELOP FURTHER';
   const rationaleBullets = extractRationaleBullets(report.verdictRationale);
 
   const sections = [
@@ -80,7 +76,7 @@ export function DeepDiveModal({ idea, report, onClose, onBuildRoom }: DeepDiveMo
           </ul>
         </div>
 
-        {/* Research sections */}
+        {/* Research sections — pure information, no verdict language */}
         <div className="p-6 space-y-4">
           {sections.map((section) => {
             const Icon = section.icon;
@@ -108,17 +104,6 @@ export function DeepDiveModal({ idea, report, onClose, onBuildRoom }: DeepDiveMo
               </div>
             );
           })}
-
-          {/* Build Room button */}
-          {showBuildRoom && onBuildRoom && (
-            <button
-              onClick={onBuildRoom}
-              className="w-full mt-4 flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-verdict-amber text-primary-foreground text-base font-bold hover:brightness-110 transition-all"
-            >
-              <Hammer className="w-5 h-5" />
-              Send to Build Room
-            </button>
-          )}
 
           <p className="text-xs text-muted-foreground pt-2 text-center">Generated {new Date(report.generatedAt).toLocaleString()}</p>
         </div>

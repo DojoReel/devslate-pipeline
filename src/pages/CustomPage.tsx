@@ -19,7 +19,7 @@ const BROADCASTERS = [
 ];
 
 export default function CustomPage() {
-  const { addCustomIdea } = useDevSlate();
+  const { addCustomIdea, setCurrentView } = useDevSlate();
   const [title, setTitle] = useState('');
   const [logline, setLogline] = useState('');
   const [format, setFormat] = useState('');
@@ -44,7 +44,12 @@ export default function CustomPage() {
     };
 
     addCustomIdea(idea);
-    toast.success('Idea added to Discover');
+    toast.success('Idea added to Pipeline', {
+      action: {
+        label: 'View Pipeline',
+        onClick: () => setCurrentView('pipeline'),
+      },
+    });
     setTitle('');
     setLogline('');
     setFormat('');
@@ -60,7 +65,7 @@ export default function CustomPage() {
         <h1 className="text-2xl font-extrabold text-foreground">Custom Slate</h1>
       </div>
       <p className="text-sm text-muted-foreground mb-8">
-        Add your own show ideas and run them through the DevSlate pipeline
+        Add your own show ideas — they go straight to Pipeline for research and development
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -111,7 +116,7 @@ export default function CustomPage() {
           disabled={!canSubmit}
           className="w-full py-3 rounded-xl bg-verdict-amber text-primary-foreground font-bold text-base hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Add to Discover
+          Add to Pipeline
         </button>
       </form>
     </div>
