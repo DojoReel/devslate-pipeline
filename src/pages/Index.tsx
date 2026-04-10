@@ -9,6 +9,8 @@ import { ViewSwitcher } from '@/components/ViewSwitcher';
 import { Clapperboard } from 'lucide-react';
 import CustomPage from '@/pages/CustomPage';
 import BuildRoomPage from '@/pages/BuildRoomPage';
+import MarketRadarPage from '@/pages/MarketRadarPage';
+import FundingCalendarPage from '@/pages/FundingCalendarPage';
 
 function DevSlateApp() {
   const { activeSlate, slates, currentView } = useDevSlate();
@@ -19,7 +21,11 @@ function DevSlateApp() {
     passed: 'Idea Bin',
     custom: 'Custom',
     buildroom: 'Build Room',
+    'market-radar': 'Market Radar',
+    'funding-calendar': 'Funding Calendar',
   };
+
+  const hideSubtitle = currentView === 'custom' || currentView === 'market-radar' || currentView === 'funding-calendar';
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -44,21 +50,25 @@ function DevSlateApp() {
           <ViewSwitcher />
         </div>
 
-        {/* Content header */}
-        <div className="px-6 md:px-10 pt-8 pb-2">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {slates[activeSlate].config.label} · {slates[activeSlate].config.description}
-          </p>
-        </div>
+        {/* Content header — only for views that don't have their own */}
+        {!hideSubtitle && (
+          <div className="px-6 md:px-10 pt-8 pb-2">
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {slates[activeSlate].config.label} · {slates[activeSlate].config.description}
+            </p>
+          </div>
+        )}
 
         {/* Main content */}
-        <main className="flex-1 px-4 md:px-10 py-6 pb-24 md:pb-6 max-w-5xl w-full">
+        <main className={`flex-1 px-4 md:px-10 pb-24 md:pb-6 max-w-5xl w-full ${hideSubtitle ? 'py-8' : 'py-6'}`}>
           {currentView === 'discover' && <DiscoverLibrary />}
           {currentView === 'pipeline' && <PipelineView />}
           {currentView === 'passed' && <PassedView />}
           {currentView === 'custom' && <CustomPage />}
           {currentView === 'buildroom' && <BuildRoomPage />}
+          {currentView === 'market-radar' && <MarketRadarPage />}
+          {currentView === 'funding-calendar' && <FundingCalendarPage />}
         </main>
       </div>
 
