@@ -15,10 +15,7 @@ const GENRE_COLORS: Record<string, string> = {
   'International': 'bg-slate_accent-international text-primary-foreground',
 };
 
-function usePicsumImage(title: string) {
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `https://picsum.photos/seed/${slug}/800/1000`;
-}
+// SwipeDeck uses UnsplashImage component directly — no local image helper needed
 
 export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const { swipeRight, swipeLeft } = useDevSlate();

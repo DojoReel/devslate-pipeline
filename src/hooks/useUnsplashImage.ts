@@ -3,9 +3,37 @@ function toSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-/** Get a picsum.photos URL seeded by idea title (consistent image per idea) */
+/** Picsum fallback URL */
 export function getPicsumUrl(title: string, width = 800, height = 500): string {
   return `https://picsum.photos/seed/${toSlug(title)}/${width}/${height}`;
+}
+
+/** Build a Pexels search query from title + genre */
+const KEYWORD_OVERRIDES: Record<string, string> = {
+  'Outback Medics': 'outback australia remote medical helicopter',
+  'First Languages': 'aboriginal indigenous australia language',
+  'The Ballot': 'australia election voting parliament',
+  'Reef Patrol': 'great barrier reef coral underwater',
+  'New Roots': 'refugee australia community multicultural',
+  'Cold Cases Reloaded': 'forensic detective crime investigation',
+  'Hustle Sydney': 'sydney entrepreneur business startup',
+  'Underground Kings': 'opal mining outback underground',
+  'The Algorithm': 'social media technology digital screen',
+  'Fight Camp': 'boxing training athlete ring',
+  'Grassroots': 'community sport australia local football',
+  'The Draft': 'australian football draft young athlete',
+  'Wave Hunters': 'surfing big wave ocean australia',
+  'Pacific Rising': 'pacific island ocean climate',
+  'Silk Road Kitchens': 'central asian cuisine food market',
+  'Border Towns': 'border town community frontier',
+  'Pitch Lab': 'television production studio creative',
+};
+
+export function buildPexelsQuery(title: string, genre: string): string {
+  if (KEYWORD_OVERRIDES[title]) return KEYWORD_OVERRIDES[title];
+  const titleWords = title.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+  const genreWords = genre.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+  return [...titleWords, ...genreWords].slice(0, 5).join(' ');
 }
 
 /** Gradient fallback per genre family */
