@@ -1,8 +1,8 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, RotateCcw, Clapperboard, Palette, Hammer, PackageOpen } from 'lucide-react';
+import { Layers, GitBranch, RotateCcw, Clapperboard, Palette, Hammer, PackageOpen, Radio, CalendarDays } from 'lucide-react';
 
-type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
+type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar';
 
 export function AppSidebar() {
   const { activeSlate, currentView, setCurrentView, slates, resetSlate } = useDevSlate();
@@ -11,15 +11,16 @@ export function AppSidebar() {
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
   const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
 
-  const primaryViews: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
+  const viewItems: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
     { id: 'discover', label: 'Discover', icon: Layers, count: totalDeck },
     { id: 'pipeline', label: 'Pipeline', icon: GitBranch, count: totalPipeline },
-    { id: 'buildroom', label: 'Build Room', icon: Hammer },
+    { id: 'passed', label: 'Idea Bin', icon: PackageOpen, count: totalPassed },
   ];
 
-  const secondaryViews: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
+  const toolItems: { id: ViewId; label: string; icon: typeof Layers }[] = [
     { id: 'custom', label: 'Custom', icon: Palette },
-    { id: 'passed', label: 'Idea Bin', icon: PackageOpen, count: totalPassed },
+    { id: 'market-radar', label: 'Market Radar', icon: Radio },
+    { id: 'funding-calendar', label: 'Funding Calendar', icon: CalendarDays },
   ];
 
   const renderButton = (view: { id: ViewId; label: string; icon: typeof Layers; count?: number }, isPrimary: boolean) => {
@@ -68,14 +69,14 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="px-3 pt-6 pb-4 flex-1">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Workflow</p>
-        {primaryViews.map(v => renderButton(v, true))}
+        <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Views</p>
+        {viewItems.map(v => renderButton(v, true))}
 
         {/* Divider */}
         <div className="mx-3 my-3 border-t border-sidebar-foreground/10" />
 
         <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/30 mb-2">Tools</p>
-        {secondaryViews.map(v => renderButton(v, false))}
+        {toolItems.map(v => renderButton(v, false))}
       </nav>
 
       {/* Reset */}
