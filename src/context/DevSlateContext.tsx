@@ -9,6 +9,7 @@ interface DevSlateContextType {
   swipeRight: (slateId: SlateId, idea: ShowIdea) => void;
   swipeLeft: (slateId: SlateId, idea: ShowIdea) => void;
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
+  restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
   currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
   setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom') => void;
@@ -76,6 +77,23 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const restoreToPipeline = useCallback((slateId: SlateId, ideaId: string) => {
+    setSlates(prev => {
+      const slate = prev[slateId];
+      const idea = slate.passed.find(i => i.id === ideaId);
+      if (!idea) return prev;
+      const pipelineIdea: PipelineIdea = { ...idea, status: 'swiped', notes: [] };
+      return {
+        ...prev,
+        [slateId]: {
+          ...slate,
+          passed: slate.passed.filter(i => i.id !== ideaId),
+          pipeline: [...slate.pipeline, pipelineIdea],
+        },
+      };
+    });
+  }, []);
+
   const resetSlate = useCallback((slateId: SlateId) => {
     setSlates(prev => {
       const config = SLATE_CONFIGS.find(c => c.id === slateId)!;
@@ -96,7 +114,7 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
       activeSlate, setActiveSlate,
       slates,
       swipeRight, swipeLeft,
-      updatePipelineIdea, resetSlate,
+      updatePipelineIdea, restoreToPipeline, resetSlate,
       currentView, setCurrentView,
     }}>
       {children}

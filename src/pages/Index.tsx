@@ -16,7 +16,7 @@ function DevSlateApp() {
   const viewTitles: Record<string, string> = {
     discover: 'Discover',
     pipeline: 'Pipeline',
-    passed: 'Passed',
+    passed: 'Idea Bin',
     custom: 'Custom',
     buildroom: 'Build Room',
   };

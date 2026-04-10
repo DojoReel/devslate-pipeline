@@ -1,14 +1,19 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { Layers, GitBranch, Archive, RotateCcw } from 'lucide-react';
+import { SLATE_CONFIGS } from '@/types/devslate';
+import { Layers, GitBranch, PackageOpen, RotateCcw, Hammer } from 'lucide-react';
 
 export function ViewSwitcher() {
-  const { currentView, setCurrentView, activeSlate, slates, resetSlate } = useDevSlate();
-  const slate = slates[activeSlate];
+  const { currentView, setCurrentView, slates, activeSlate, resetSlate } = useDevSlate();
+
+  const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
+  const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
+  const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
 
   const views = [
-    { id: 'discover' as const, label: 'Discover', icon: Layers, count: slate.deck.length },
-    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch, count: slate.pipeline.length },
-    { id: 'passed' as const, label: 'Passed', icon: Archive, count: slate.passed.length },
+    { id: 'discover' as const, label: 'Discover', icon: Layers, count: totalDeck },
+    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch, count: totalPipeline },
+    { id: 'buildroom' as const, label: 'Build Room', icon: Hammer, count: 0 },
+    { id: 'passed' as const, label: 'Idea Bin', icon: PackageOpen, count: totalPassed },
   ];
 
   return (
