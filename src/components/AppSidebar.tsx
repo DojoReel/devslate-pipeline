@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, Archive, RotateCcw, Clapperboard, Palette, Hammer } from 'lucide-react';
+import { Layers, GitBranch, RotateCcw, Clapperboard, Palette, Hammer, PackageOpen } from 'lucide-react';
 
 type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
 
@@ -11,13 +11,45 @@ export function AppSidebar() {
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
   const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
 
-  const views: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
+  const primaryViews: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
     { id: 'discover', label: 'Discover', icon: Layers, count: totalDeck },
     { id: 'pipeline', label: 'Pipeline', icon: GitBranch, count: totalPipeline },
-    { id: 'passed', label: 'Passed', icon: Archive, count: totalPassed },
-    { id: 'custom', label: 'Custom', icon: Palette },
     { id: 'buildroom', label: 'Build Room', icon: Hammer },
   ];
+
+  const secondaryViews: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
+    { id: 'custom', label: 'Custom', icon: Palette },
+    { id: 'passed', label: 'Idea Bin', icon: PackageOpen, count: totalPassed },
+  ];
+
+  const renderButton = (view: { id: ViewId; label: string; icon: typeof Layers; count?: number }, isPrimary: boolean) => {
+    const isActive = currentView === view.id;
+    return (
+      <button
+        key={view.id}
+        onClick={() => setCurrentView(view.id as any)}
+        className={`w-full flex items-center justify-between px-3 rounded-lg transition-all mb-0.5 ${
+          isPrimary ? 'py-2.5 text-sm font-semibold' : 'py-2 text-[13px] font-medium'
+        } ${
+          isActive
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+            : isPrimary
+              ? 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+              : 'text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+        }`}
+      >
+        <span className="flex items-center gap-3">
+          <view.icon className={isPrimary ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
+          {view.label}
+        </span>
+        {view.count != null && view.count > 0 && (
+          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
+            isActive ? 'bg-sidebar-primary/20 text-sidebar-primary' : 'text-sidebar-foreground/40'
+          }`}>{view.count}</span>
+        )}
+      </button>
+    );
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-sidebar text-sidebar-foreground shrink-0 h-screen sticky top-0">
@@ -34,33 +66,16 @@ export function AppSidebar() {
         </div>
       </div>
 
-      {/* Views */}
+      {/* Navigation */}
       <nav className="px-3 pt-6 pb-4 flex-1">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Views</p>
-        {views.map(view => {
-          const isActive = currentView === view.id;
-          return (
-            <button
-              key={view.id}
-              onClick={() => setCurrentView(view.id as any)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5 ${
-                isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <view.icon className="w-4 h-4" />
-                {view.label}
-              </span>
-              {view.count != null && view.count > 0 && (
-                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
-                  isActive ? 'bg-sidebar-primary/20 text-sidebar-primary' : 'text-sidebar-foreground/50'
-                }`}>{view.count}</span>
-              )}
-            </button>
-          );
-        })}
+        <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Workflow</p>
+        {primaryViews.map(v => renderButton(v, true))}
+
+        {/* Divider */}
+        <div className="mx-3 my-3 border-t border-sidebar-foreground/10" />
+
+        <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/30 mb-2">Tools</p>
+        {secondaryViews.map(v => renderButton(v, false))}
       </nav>
 
       {/* Reset */}

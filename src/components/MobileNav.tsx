@@ -1,13 +1,19 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { Layers, GitBranch, Archive } from 'lucide-react';
+import { Layers, GitBranch, PackageOpen, Palette, Hammer } from 'lucide-react';
 
 export function MobileNav() {
   const { currentView, setCurrentView, activeSlate, slates } = useDevSlate();
+  const { SLATE_CONFIGS } = require('@/types/devslate');
+
+  const totalPipeline = SLATE_CONFIGS.reduce((sum: number, c: any) => sum + slates[c.id].pipeline.length, 0);
+  const totalPassed = SLATE_CONFIGS.reduce((sum: number, c: any) => sum + slates[c.id].passed.length, 0);
+  const totalDeck = SLATE_CONFIGS.reduce((sum: number, c: any) => sum + slates[c.id].deck.length, 0);
 
   const views = [
-    { id: 'discover' as const, label: 'Discover', icon: Layers, count: slates[activeSlate].deck.length },
-    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch, count: slates[activeSlate].pipeline.length },
-    { id: 'passed' as const, label: 'Passed', icon: Archive, count: slates[activeSlate].passed.length },
+    { id: 'discover' as const, label: 'Discover', icon: Layers, count: totalDeck },
+    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch, count: totalPipeline },
+    { id: 'buildroom' as const, label: 'Build', icon: Hammer },
+    { id: 'passed' as const, label: 'Idea Bin', icon: PackageOpen, count: totalPassed },
   ];
 
   return (
