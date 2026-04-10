@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, BuildRoomDocument, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Loader2, FileText, Hammer, Telescope, ChevronRight } from 'lucide-react';
+import { Loader2, FileText, Telescope, Eye } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { BuildRoomModal } from './BuildRoomModal';
@@ -27,15 +27,13 @@ const TAB_OPTIONS: { id: 'all' | SlateId; label: string }[] = [
 ];
 
 function PipelineCard({
-  idea, onClickCard, onDeepDive, onBuildRoom, isLoading, isBuilding,
+  idea, onDeepDive, onViewResearch, isLoading,
 }: {
-  idea: PipelineIdea; onClickCard: () => void; onDeepDive: () => void; onBuildRoom: () => void; isLoading: boolean; isBuilding: boolean;
+  idea: PipelineIdea; onDeepDive: () => void; onViewResearch: () => void; isLoading: boolean;
 }) {
-  const canBuild = idea.report && (idea.report.verdict === 'GREENLIGHT' || idea.report.verdict === 'DEVELOP FURTHER') && idea.status === 'researched';
-
   return (
-    <div onClick={onClickCard}
-      className="flex flex-col md:flex-row bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+    <div
+      className="flex flex-col md:flex-row bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group"
     >
       <div className="relative w-full md:w-[45%] min-h-[250px] md:min-h-[350px] shrink-0">
         <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="w-full h-full object-cover" alt={idea.title} />
@@ -76,19 +74,16 @@ function PipelineCard({
               <Loader2 className="w-4 h-4 animate-spin text-primary" /> Researching…
             </div>
           )}
-          {canBuild && (
-            <button onClick={(e) => { e.stopPropagation(); onBuildRoom(); }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-bold hover:scale-105 transition-transform">
-              <Hammer className="w-4 h-4" /> Build Room
+          {(idea.status === 'researched' || idea.status === 'complete' || idea.status === 'building') && idea.report && (
+            <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+              <Eye className="w-4 h-4" /> View Research
             </button>
           )}
           {idea.status === 'building' && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin text-primary" /> Building…
             </div>
-          )}
-          {(idea.report || idea.buildRoomDocs) && (
-            <ChevronRight className="w-5 h-5 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
           )}
         </div>
       </div>
@@ -105,7 +100,6 @@ export function PipelineView() {
   const [buildingId, setBuildingId] = useState<string | null>(null);
   const [buildDocs, setBuildDocs] = useState<BuildRoomDocument[]>([]);
 
-  // Gather all pipeline ideas across slates
   const allPipelineIdeas = useMemo(() => {
     return SLATE_CONFIGS.flatMap(c => slates[c.id].pipeline);
   }, [slates]);
@@ -139,6 +133,7 @@ export function PipelineView() {
     const initialDocs: BuildRoomDocument[] = DOC_TYPES.map(d => ({ documentType: d.type, label: d.label, content: '', status: 'pending' as const }));
     setBuildDocs(initialDocs);
     setBuildRoomIdea(idea);
+    setSelectedIdea(null);
     const ideaPayload = { title: idea.title, logline: idea.logline, format: idea.format, targetBroadcaster: idea.targetBroadcaster, genre: idea.genre };
     const completedDocs: BuildRoomDocument[] = [...initialDocs];
     for (let i = 0; i < DOC_TYPES.length; i++) {
@@ -166,7 +161,6 @@ export function PipelineView() {
 
   return (
     <>
-      {/* Tab bar */}
       <div className="flex items-center gap-2 mb-8 flex-wrap">
         {TAB_OPTIONS.map(tab => {
           const isActive = activeTab === tab.id;
@@ -201,15 +195,22 @@ export function PipelineView() {
       ) : (
         <div className="grid gap-6 animate-fade-in">
           {filteredIdeas.map(idea => (
-            <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id} isBuilding={buildingId === idea.id}
-              onClickCard={() => { if (idea.buildRoomDocs) { setBuildDocs(idea.buildRoomDocs); setBuildRoomIdea(idea); } else if (idea.report) setSelectedIdea(idea); }}
-              onDeepDive={() => runDeepDive(idea)} onBuildRoom={() => runBuildRoom(idea)}
+            <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id}
+              onDeepDive={() => runDeepDive(idea)}
+              onViewResearch={() => setSelectedIdea(idea)}
             />
           ))}
         </div>
       )}
 
-      {selectedIdea?.report && <DeepDiveModal idea={selectedIdea} report={selectedIdea.report} onClose={() => setSelectedIdea(null)} />}
+      {selectedIdea?.report && (
+        <DeepDiveModal
+          idea={selectedIdea}
+          report={selectedIdea.report}
+          onClose={() => setSelectedIdea(null)}
+          onBuildRoom={() => runBuildRoom(selectedIdea)}
+        />
+      )}
       {buildRoomIdea?.report && (
         <BuildRoomModal idea={buildRoomIdea} report={buildRoomIdea.report} documents={buildDocs}
           isGenerating={buildingId !== null} onClose={() => { setBuildRoomIdea(null); setBuildingId(null); }} />
