@@ -11,6 +11,7 @@ interface DevSlateContextType {
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
   restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
+  addCustomIdea: (idea: ShowIdea) => void;
   currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
   setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom') => void;
 }
@@ -109,12 +110,23 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addCustomIdea = useCallback((idea: ShowIdea) => {
+    setSlates(prev => ({
+      ...prev,
+      custom: {
+        ...prev.custom,
+        deck: [...prev.custom.deck, idea],
+      },
+    }));
+  }, []);
+
   return (
     <DevSlateContext.Provider value={{
       activeSlate, setActiveSlate,
       slates,
       swipeRight, swipeLeft,
       updatePipelineIdea, restoreToPipeline, resetSlate,
+      addCustomIdea,
       currentView, setCurrentView,
     }}>
       {children}
