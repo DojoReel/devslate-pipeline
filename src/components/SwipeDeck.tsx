@@ -28,8 +28,7 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const startX = useRef(0);
 
   const currentIdea = ideas[0];
-  const imageQuery = currentIdea ? `${currentIdea.genre} ${currentIdea.title} television cinematic` : '';
-  const heroImage = useUnsplashImage(imageQuery);
+  const heroImage = currentIdea ? usePicsumImage(currentIdea.title) : null;
 
   if (!currentIdea) {
     return (
