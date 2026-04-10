@@ -13,6 +13,7 @@ interface DiscoverIdeaCardProps {
   onAdd: () => void;
   onPass: () => void;
   showNavigation: boolean;
+  isMobile: boolean;
 }
 
 export function DiscoverIdeaCard({
@@ -25,46 +26,128 @@ export function DiscoverIdeaCard({
   onAdd,
   onPass,
   showNavigation,
+  isMobile,
 }: DiscoverIdeaCardProps) {
   const whyNow = extractWhyNow(idea);
   const meta = getIdeaMeta(idea);
 
+  if (isMobile) {
+    return (
+      <div className="flex h-[100dvh] w-screen flex-col bg-card">
+        {/* Image: 40vh */}
+        <div className="relative h-[40dvh] w-full shrink-0 overflow-hidden">
+          <UnsplashImage
+            genre={idea.genre}
+            keyword={idea.title}
+            orientation="landscape"
+            logline={idea.logline}
+            className="h-full w-full object-cover"
+            alt={idea.title}
+            showLoadingState={true}
+          />
+        </div>
+
+        {/* Info panel: scrollable middle area */}
+        <div className="flex-1 overflow-y-auto px-5 pb-4 pt-5">
+          <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
+            {idea.genre}
+          </span>
+
+          <h3 className="mb-2 text-[26px] font-extrabold leading-tight text-foreground">
+            {idea.title}
+          </h3>
+
+          <p className="mb-3 text-sm text-muted-foreground">
+            {idea.format} · {idea.targetBroadcaster}
+          </p>
+
+          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+            {idea.logline}
+          </p>
+
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            {[
+              { label: 'Format', value: meta.format },
+              { label: 'Funding Path', value: meta.fundingPath },
+              { label: 'Comparable Shows', value: meta.comparables },
+              { label: 'Production Complexity', value: meta.complexity },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                <p className="text-xs font-semibold leading-snug text-foreground">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl bg-muted/50 p-4">
+            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Why Now?</p>
+            <p className="text-sm leading-relaxed text-foreground">{whyNow}</p>
+          </div>
+        </div>
+
+        {/* Fixed bottom buttons */}
+        <div className="shrink-0 border-t border-border bg-card px-5 pb-[env(safe-area-inset-bottom,8px)] pt-3">
+          <button
+            onClick={onAdd}
+            disabled={isAnimating}
+            className="mb-2 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <ThumbsUp className="h-4 w-4" />
+            Add to Pipeline
+          </button>
+          <button
+            onClick={onPass}
+            disabled={isAnimating}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
+          >
+            <ThumbsDown className="h-4 w-4" />
+            Pass
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
-    <div className="flex h-full flex-col bg-card md:flex-row">
-      <div className="relative h-[320px] w-full overflow-hidden md:h-full md:w-[60%]">
+    <div className="relative flex w-full bg-card">
+      {/* Image panel: 40% */}
+      <div className="relative w-[40%] shrink-0 overflow-hidden">
         <UnsplashImage
           genre={idea.genre}
           keyword={idea.title}
           orientation="landscape"
           logline={idea.logline}
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           alt={idea.title}
           showLoadingState={true}
         />
-
-        {showNavigation && (
-          <>
-            <button
-              onClick={onPrev}
-              disabled={!canGoPrev || isAnimating}
-              className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition hover:bg-background/90 disabled:cursor-default disabled:opacity-30"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={onNext}
-              disabled={!canGoNext || isAnimating}
-              className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition hover:bg-background/90 disabled:cursor-default disabled:opacity-30"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </>
-        )}
       </div>
 
-      <div className="flex h-full w-full flex-col justify-between p-8 md:w-[40%] md:p-10">
+      {/* Arrow buttons on full card edges */}
+      {showNavigation && (
+        <>
+          <button
+            onClick={onPrev}
+            disabled={!canGoPrev || isAnimating}
+            className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition hover:bg-background/90 disabled:cursor-default disabled:opacity-30"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={onNext}
+            disabled={!canGoNext || isAnimating}
+            className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition hover:bg-background/90 disabled:cursor-default disabled:opacity-30"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </>
+      )}
+
+      {/* Info panel: 60% */}
+      <div className="flex w-[60%] flex-col justify-between p-8">
         <div>
-          <span className={`mb-5 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
+          <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
           </span>
 
@@ -88,8 +171,8 @@ export function DiscoverIdeaCard({
               { label: 'Production Complexity', value: meta.complexity },
             ].map((stat) => (
               <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                <p className="text-xs font-semibold leading-snug text-foreground">{stat.value}</p>
+                <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                <p className="text-[13px] font-semibold leading-snug text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>

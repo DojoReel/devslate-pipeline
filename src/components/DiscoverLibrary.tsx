@@ -3,6 +3,7 @@ import { ShowIdea, SLATE_CONFIGS } from '@/types/devslate';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { preloadImage } from './UnsplashImage';
 import { DiscoverIdeaCard } from './discover/DiscoverIdeaCard';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const TRANSITION_DURATION = 350;
@@ -25,11 +26,13 @@ function SlateSection({
   ideas,
   onAdd,
   onPass,
+  isMobile,
 }: {
   label: string;
   ideas: ShowIdea[];
   onAdd: (idea: ShowIdea) => void;
   onPass: (idea: ShowIdea) => void;
+  isMobile: boolean;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -46,7 +49,6 @@ function SlateSection({
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-
     frameRefs.current.forEach((frameId) => window.cancelAnimationFrame(frameId));
     frameRefs.current = [];
   }, []);
@@ -56,7 +58,6 @@ function SlateSection({
       const secondFrame = window.requestAnimationFrame(callback);
       frameRefs.current.push(secondFrame);
     });
-
     frameRefs.current.push(firstFrame);
   }, []);
 
@@ -108,7 +109,6 @@ function SlateSection({
     const targetIndex = dir === 'next'
       ? Math.min(ideas.length - 1, currentIndex + 1)
       : Math.max(0, currentIndex - 1);
-
     navigateTo(targetIndex);
   }, [currentIndex, ideas.length, navigateTo]);
 
@@ -176,12 +176,31 @@ function SlateSection({
 
   if (ideas.length === 0) return null;
 
-  return (
-    <div>
-      <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
+  const renderTrack = (cards: ShowIdea[], isTransition: boolean) => {
+    return cards.map((idea, index) => (
+      <div key={isTransition ? `transition-${idea.id}` : idea.id} className="w-full shrink-0">
+        <DiscoverIdeaCard
+          idea={idea}
+          canGoPrev={!isTransition && index > 0}
+          canGoNext={!isTransition && index < ideas.length - 1}
+          isAnimating={isAnimating}
+          onPrev={isTransition ? () => undefined : () => navigate('prev')}
+          onNext={isTransition ? () => undefined : () => navigate('next')}
+          onAdd={isTransition ? () => undefined : () => handleAction('add')}
+          onPass={isTransition ? () => undefined : () => handleAction('pass')}
+          showNavigation={!isTransition && !isMobile && ideas.length > 1}
+          isMobile={isMobile}
+        />
+      </div>
+    ));
+  };
 
+  // Mobile: full-bleed, no outer chrome
+  if (isMobile) {
+    return (
       <div
-        className="relative h-[860px] overflow-hidden rounded-2xl border border-border bg-card shadow-lg md:h-[560px]"
+        className="relative overflow-hidden"
+        style={{ height: '100dvh', width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -196,21 +215,7 @@ function SlateSection({
               willChange: 'transform',
             }}
           >
-            {actionTransition.cards.map((idea) => (
-              <div key={`transition-${idea.id}`} className="h-full w-full shrink-0">
-                <DiscoverIdeaCard
-                  idea={idea}
-                  canGoPrev={false}
-                  canGoNext={false}
-                  isAnimating={true}
-                  onPrev={() => undefined}
-                  onNext={() => undefined}
-                  onAdd={() => undefined}
-                  onPass={() => undefined}
-                  showNavigation={false}
-                />
-              </div>
-            ))}
+            {renderTrack(actionTransition.cards, true)}
           </div>
         ) : (
           <div
@@ -223,21 +228,66 @@ function SlateSection({
               willChange: 'transform',
             }}
           >
-            {ideas.map((idea, index) => (
-              <div key={idea.id} className="h-full w-full shrink-0">
-                <DiscoverIdeaCard
-                  idea={idea}
-                  canGoPrev={index > 0}
-                  canGoNext={index < ideas.length - 1}
-                  isAnimating={isAnimating}
-                  onPrev={() => navigate('prev')}
-                  onNext={() => navigate('next')}
-                  onAdd={() => handleAction('add')}
-                  onPass={() => handleAction('pass')}
-                  showNavigation={ideas.length > 1}
+            {renderTrack(ideas, false)}
+          </div>
+        )}
+
+        {/* Dots above bottom buttons — rendered inside the card's fixed button area via CSS */}
+        {ideas.length > 1 && (
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center pb-[120px]">
+            <div className="pointer-events-auto flex items-center gap-2">
+              {ideas.map((idea, index) => (
+                <button
+                  key={idea.id}
+                  onClick={() => navigateTo(index)}
+                  disabled={isAnimating || !!actionTransition}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${
+                    index === currentIndex ? 'scale-125 bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                  } disabled:pointer-events-none`}
                 />
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop layout
+  return (
+    <div>
+      <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
+
+      <div
+        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {actionTransition ? (
+          <div
+            className="flex"
+            style={{
+              transform: `translateX(${actionTransition.translateX}%)`,
+              transition: actionTransition.transitionEnabled
+                ? `transform ${TRANSITION_DURATION}ms ${EASING}`
+                : 'none',
+              willChange: 'transform',
+            }}
+          >
+            {renderTrack(actionTransition.cards, true)}
+          </div>
+        ) : (
+          <div
+            className="flex"
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              transition: trackTransitionEnabled
+                ? `transform ${TRANSITION_DURATION}ms ${EASING}`
+                : 'none',
+              willChange: 'transform',
+            }}
+          >
+            {renderTrack(ideas, false)}
           </div>
         )}
       </div>
@@ -264,6 +314,7 @@ const DISCOVER_SLATES = SLATE_CONFIGS.filter((config) => config.id !== 'custom')
 
 export function DiscoverLibrary() {
   const { slates, swipeRight, swipeLeft } = useDevSlate();
+  const isMobile = useIsMobile();
 
   const handleAdd = (idea: ShowIdea) => swipeRight(idea.slateId, idea);
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
@@ -283,6 +334,7 @@ export function DiscoverLibrary() {
             ideas={ideas}
             onAdd={handleAdd}
             onPass={handlePass}
+            isMobile={isMobile}
           />
         );
       })}
