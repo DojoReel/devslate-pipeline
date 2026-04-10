@@ -10,8 +10,8 @@ interface DevSlateContextType {
   swipeLeft: (slateId: SlateId, idea: ShowIdea) => void;
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
   resetSlate: (slateId: SlateId) => void;
-  currentView: 'discover' | 'pipeline' | 'passed';
-  setCurrentView: (view: 'discover' | 'pipeline' | 'passed') => void;
+  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
+  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom') => void;
 }
 
 const DevSlateContext = createContext<DevSlateContextType | null>(null);
@@ -32,7 +32,7 @@ function initSlates(): Record<SlateId, SlateState> {
 export function DevSlateProvider({ children }: { children: ReactNode }) {
   const [activeSlate, setActiveSlate] = useState<SlateId>('abc');
   const [slates, setSlates] = useState<Record<SlateId, SlateState>>(initSlates);
-  const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed'>('discover');
+  const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom'>('discover');
 
   const swipeRight = useCallback((slateId: SlateId, idea: ShowIdea) => {
     setSlates(prev => {
