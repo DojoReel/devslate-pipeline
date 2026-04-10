@@ -50,7 +50,7 @@ function DevSlateApp() {
           <ViewSwitcher />
         </div>
 
-        {/* Content header — only for views that don't have their own */}
+        {/* Content header */}
         {!hideSubtitle && (
           <div className="px-6 md:px-10 pt-8 pb-2">
             <h2 className="text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
@@ -60,8 +60,8 @@ function DevSlateApp() {
           </div>
         )}
 
-        {/* Main content */}
-        <main className={`flex-1 px-4 md:px-10 pb-24 md:pb-6 max-w-5xl w-full ${hideSubtitle ? 'py-8' : 'py-6'}`}>
+        {/* Main content — remove max-w for full-width cards */}
+        <main className={`flex-1 px-4 md:px-8 pb-24 md:pb-6 w-full ${hideSubtitle ? 'py-8' : 'py-6'}`}>
           {currentView === 'discover' && <DiscoverLibrary />}
           {currentView === 'pipeline' && <PipelineView />}
           {currentView === 'passed' && <PassedView />}

@@ -1,20 +1,10 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { PipelineIdea, BuildRoomDocument, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Loader2, FileText, Telescope, Eye, ArrowRight } from 'lucide-react';
+import { PipelineIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
+import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
-import { BuildRoomModal } from './BuildRoomModal';
 import { UnsplashImage } from './UnsplashImage';
 import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
-
-const DOC_TYPES = [
-  { type: 'pitchDocument', label: 'Pitch Document' },
-  { type: 'budgetEstimate', label: 'Budget Estimate' },
-  { type: 'productionSchedule', label: 'Production Schedule' },
-  { type: 'keyContacts', label: 'Key Contacts' },
-  { type: 'fundingSources', label: 'Funding Sources' },
-  { type: 'sponsorshipDeck', label: 'Sponsorship Deck' },
-];
 
 const VERDICT_BORDER: Record<string, string> = {
   'GREENLIGHT': 'border-l-verdict-green',
@@ -30,55 +20,55 @@ const VERDICT_DOT: Record<string, string> = {
 
 const TAB_OPTIONS: { id: 'all' | SlateId; label: string }[] = [
   { id: 'all', label: 'Show All' },
-  ...SLATE_CONFIGS.filter(c => c.id !== 'custom').map(c => ({ id: c.id, label: c.label })),
+  ...SLATE_CONFIGS.map(c => ({ id: c.id, label: c.label })),
 ];
 
 function PipelineCard({
-  idea, onDeepDive, onViewResearch, onBuildRoom, isLoading,
+  idea, onDeepDive, onViewResearch, onSendToBuildRoom, onViewBuildRoom, isLoading,
 }: {
-  idea: PipelineIdea; onDeepDive: () => void; onViewResearch: () => void; onBuildRoom: () => void; isLoading: boolean;
+  idea: PipelineIdea;
+  onDeepDive: () => void;
+  onViewResearch: () => void;
+  onSendToBuildRoom: () => void;
+  onViewBuildRoom: () => void;
+  isLoading: boolean;
 }) {
   const hasReport = idea.report != null;
   const verdictKey = idea.report?.verdict;
   const canBuild = verdictKey === 'GREENLIGHT' || verdictKey === 'DEVELOP FURTHER';
+  const isBuilt = idea.status === 'built' || idea.status === 'complete' || idea.status === 'building';
   const meta = getIdeaMeta(idea);
   const whyNow = extractWhyNow(idea);
 
   const borderClass = hasReport ? `border-l-4 ${VERDICT_BORDER[verdictKey!]}` : 'border-l-4 border-l-border';
 
   return (
-    <div className={`flex flex-col md:flex-row bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${borderClass}`}>
-      {/* Image panel — left */}
-      <div className="relative w-full md:w-[55%] min-h-[280px] md:min-h-[420px] shrink-0">
-        <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="w-full h-full object-cover" alt={idea.title} />
-        {idea.status === 'complete' && (
-          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">BUILT</div>
+    <div className={`relative flex w-full bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${borderClass}`}>
+      {/* Image panel — 45% */}
+      <div className="relative w-[45%] shrink-0 overflow-hidden">
+        <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="absolute inset-0 w-full h-full object-cover" alt={idea.title} />
+        {isBuilt && (
+          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-teal-600 text-primary-foreground text-xs font-bold">BUILT</div>
         )}
       </div>
 
-      {/* Info panel — right */}
-      <div className="w-full md:w-[45%] p-8 md:p-10 flex flex-col justify-between">
+      {/* Info panel — 55% */}
+      <div className="w-[55%] p-8 flex flex-col justify-between">
         <div>
-          {/* Genre pill */}
-          <span className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm mb-5 ${getGenrePillColor(idea.genre)}`}>
+          <span className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm mb-4 ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
           </span>
 
-          {/* Title with verdict dot */}
           <div className="flex items-center gap-2.5 mb-3">
             {hasReport && (
               <span className={`w-3 h-3 rounded-full shrink-0 ${VERDICT_DOT[verdictKey!]}`} />
             )}
-            <h3 className="text-[28px] font-extrabold text-foreground leading-tight">{idea.title}</h3>
+            <h3 className="text-[32px] font-extrabold text-foreground leading-tight">{idea.title}</h3>
           </div>
 
-          {/* Format + broadcaster */}
           <p className="text-sm text-muted-foreground mb-4">{idea.format} · {idea.targetBroadcaster}</p>
-
-          {/* Logline */}
           <p className="text-sm text-muted-foreground leading-relaxed mb-5">{idea.logline}</p>
 
-          {/* 2x2 stat grid */}
           <div className="grid grid-cols-2 gap-3 mb-5">
             {[
               { label: 'Format', value: meta.format },
@@ -87,21 +77,20 @@ function PipelineCard({
               { label: 'Production Complexity', value: meta.complexity },
             ].map(stat => (
               <div key={stat.label} className="bg-muted/40 rounded-lg p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{stat.label}</p>
-                <p className="text-xs font-semibold text-foreground leading-snug">{stat.value}</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{stat.label}</p>
+                <p className="text-[13px] font-semibold text-foreground leading-snug">{stat.value}</p>
               </div>
             ))}
           </div>
 
-          {/* Why Now */}
-          <div className="bg-muted/50 rounded-xl p-4 mb-6">
+          <div className="bg-muted/50 rounded-xl p-4">
             <p className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">Why Now?</p>
             <p className="text-sm text-foreground leading-relaxed italic">{whyNow}</p>
           </div>
         </div>
 
         {/* Divider + Action buttons */}
-        <div className="border-t border-border pt-5">
+        <div className="border-t border-border pt-5 mt-6">
           <div className="flex items-center gap-3 flex-wrap">
             {idea.status === 'swiped' && (
               <button onClick={(e) => { e.stopPropagation(); onDeepDive(); }}
@@ -114,24 +103,31 @@ function PipelineCard({
                 <Loader2 className="w-4 h-4 animate-spin text-primary" /> Researching…
               </div>
             )}
-            {(idea.status === 'researched' || idea.status === 'complete' || idea.status === 'building') && hasReport && (
+            {idea.status === 'researched' && hasReport && (
               <>
                 <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
                   className={`flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform ${!canBuild ? 'flex-1' : ''}`}>
                   <Eye className="w-4 h-4" /> View Research
                 </button>
-                {canBuild && idea.status !== 'building' && (
-                  <button onClick={(e) => { e.stopPropagation(); onBuildRoom(); }}
+                {canBuild && (
+                  <button onClick={(e) => { e.stopPropagation(); onSendToBuildRoom(); }}
                     className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
                     Send to Build Room <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
               </>
             )}
-            {idea.status === 'building' && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" /> Building…
-              </div>
+            {isBuilt && hasReport && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                  <Eye className="w-4 h-4" /> View Research
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onViewBuildRoom(); }}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-slate-700 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                  <Hammer className="w-4 h-4" /> View in Build Room <ArrowRight className="w-4 h-4" />
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -141,16 +137,13 @@ function PipelineCard({
 }
 
 export function PipelineView() {
-  const { slates, updatePipelineIdea } = useDevSlate();
+  const { slates, updatePipelineIdea, sendToBuildRoom, setCurrentView } = useDevSlate();
   const [activeTab, setActiveTab] = useState<'all' | SlateId>('all');
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
-  const [buildRoomIdea, setBuildRoomIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [buildingId, setBuildingId] = useState<string | null>(null);
-  const [buildDocs, setBuildDocs] = useState<BuildRoomDocument[]>([]);
 
   const allPipelineIdeas = useMemo(() => {
-    return SLATE_CONFIGS.filter(c => c.id !== 'custom').flatMap(c => slates[c.id].pipeline);
+    return SLATE_CONFIGS.flatMap(c => slates[c.id].pipeline);
   }, [slates]);
 
   const filteredIdeas = activeTab === 'all'
@@ -175,37 +168,9 @@ export function PipelineView() {
     } finally { setLoadingId(null); }
   };
 
-  const runBuildRoom = async (idea: PipelineIdea) => {
-    if (!idea.report) return;
-    setBuildingId(idea.id);
-    updatePipelineIdea(idea.slateId, idea.id, { status: 'building' });
-    const initialDocs: BuildRoomDocument[] = DOC_TYPES.map(d => ({ documentType: d.type, label: d.label, content: '', status: 'pending' as const }));
-    setBuildDocs(initialDocs);
-    setBuildRoomIdea(idea);
-    setSelectedIdea(null);
-    const ideaPayload = { title: idea.title, logline: idea.logline, format: idea.format, targetBroadcaster: idea.targetBroadcaster, genre: idea.genre };
-    const completedDocs: BuildRoomDocument[] = [...initialDocs];
-    for (let i = 0; i < DOC_TYPES.length; i++) {
-      const dt = DOC_TYPES[i];
-      completedDocs[i] = { ...completedDocs[i], status: 'generating' };
-      setBuildDocs([...completedDocs]);
-      try {
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/build-room`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ idea: ideaPayload, report: idea.report, documentType: dt.type }),
-        });
-        if (!response.ok) throw new Error(`Failed: ${dt.label}`);
-        const result = await response.json();
-        completedDocs[i] = { ...completedDocs[i], content: result.content, status: 'complete' };
-      } catch (err) {
-        console.error(`Build room error for ${dt.type}:`, err);
-        completedDocs[i] = { ...completedDocs[i], status: 'error' };
-      }
-      setBuildDocs([...completedDocs]);
-    }
-    updatePipelineIdea(idea.slateId, idea.id, { status: 'complete', buildRoomDocs: completedDocs });
-    setBuildingId(null);
+  const handleSendToBuildRoom = (idea: PipelineIdea) => {
+    sendToBuildRoom(idea.slateId, idea.id);
+    setCurrentView('buildroom');
   };
 
   return (
@@ -247,7 +212,8 @@ export function PipelineView() {
             <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id}
               onDeepDive={() => runDeepDive(idea)}
               onViewResearch={() => setSelectedIdea(idea)}
-              onBuildRoom={() => runBuildRoom(idea)}
+              onSendToBuildRoom={() => handleSendToBuildRoom(idea)}
+              onViewBuildRoom={() => setCurrentView('buildroom')}
             />
           ))}
         </div>
@@ -258,12 +224,7 @@ export function PipelineView() {
           idea={selectedIdea}
           report={selectedIdea.report}
           onClose={() => setSelectedIdea(null)}
-          onBuildRoom={() => runBuildRoom(selectedIdea)}
         />
-      )}
-      {buildRoomIdea?.report && (
-        <BuildRoomModal idea={buildRoomIdea} report={buildRoomIdea.report} documents={buildDocs}
-          isGenerating={buildingId !== null} onClose={() => { setBuildRoomIdea(null); setBuildingId(null); }} />
       )}
     </>
   );

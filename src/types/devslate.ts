@@ -38,7 +38,7 @@ export interface BuildRoomDocument {
 }
 
 export interface PipelineIdea extends ShowIdea {
-  status: 'swiped' | 'researching' | 'researched' | 'building' | 'complete';
+  status: 'swiped' | 'researching' | 'researched' | 'building' | 'built' | 'complete';
   report?: DeepDiveReport;
   buildRoomDocs?: BuildRoomDocument[];
   notes: string[];

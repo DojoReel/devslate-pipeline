@@ -12,6 +12,7 @@ interface DevSlateContextType {
   restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
   addCustomIdea: (idea: ShowIdea) => void;
+  sendToBuildRoom: (slateId: SlateId, ideaId: string) => void;
   currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar';
   setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar') => void;
 }
@@ -110,14 +111,34 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Custom ideas go directly to pipeline, not deck
   const addCustomIdea = useCallback((idea: ShowIdea) => {
+    const pipelineIdea: PipelineIdea = { ...idea, status: 'swiped', notes: [] };
     setSlates(prev => ({
       ...prev,
       custom: {
         ...prev.custom,
-        deck: [...prev.custom.deck, idea],
+        pipeline: [...prev.custom.pipeline, pipelineIdea],
       },
     }));
+  }, []);
+
+  // Mark idea as sent to build room (status 'built') without generating docs
+  const sendToBuildRoom = useCallback((slateId: SlateId, ideaId: string) => {
+    setSlates(prev => {
+      const slate = prev[slateId];
+      return {
+        ...prev,
+        [slateId]: {
+          ...slate,
+          pipeline: slate.pipeline.map(i =>
+            i.id === ideaId
+              ? { ...i, status: 'built' as PipelineIdea['status'] }
+              : i
+          ),
+        },
+      };
+    });
   }, []);
 
   return (
@@ -126,7 +147,7 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
       slates,
       swipeRight, swipeLeft,
       updatePipelineIdea, restoreToPipeline, resetSlate,
-      addCustomIdea,
+      addCustomIdea, sendToBuildRoom,
       currentView, setCurrentView,
     }}>
       {children}

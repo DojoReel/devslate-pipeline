@@ -2,6 +2,7 @@ import { useDevSlate } from '@/context/DevSlateContext';
 import { PackageOpen, RotateCcw } from 'lucide-react';
 import { UnsplashImage } from './UnsplashImage';
 import { ShowIdea, SLATE_CONFIGS } from '@/types/devslate';
+import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 
 export function PassedView() {
   const { slates } = useDevSlate();
@@ -23,7 +24,7 @@ export function PassedView() {
   }
 
   return (
-    <div className="grid gap-4 animate-fade-in">
+    <div className="grid gap-6 animate-fade-in">
       {allPassed.map(idea => (
         <IdeaBinCard key={idea.id} idea={idea} />
       ))}
@@ -33,49 +34,54 @@ export function PassedView() {
 
 function IdeaBinCard({ idea }: { idea: ShowIdea }) {
   const { restoreToPipeline } = useDevSlate();
+  const meta = getIdeaMeta(idea);
+  const whyNow = extractWhyNow(idea);
 
   return (
-    <div className="flex bg-card rounded-xl border border-border overflow-hidden shadow-sm opacity-60 saturate-[0.2] hover:opacity-75 hover:saturate-[0.4] transition-all duration-300">
-      {/* Compact portrait image */}
-      <div className="relative w-[180px] md:w-[200px] shrink-0">
-        <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="portrait" className="w-full h-full object-cover" alt={idea.title} />
+    <div className="relative flex w-full bg-card rounded-2xl border border-border overflow-hidden shadow-md opacity-50 saturate-[0.15] hover:opacity-70 hover:saturate-[0.3] transition-all duration-300">
+      {/* Image panel — 45% */}
+      <div className="relative w-[45%] shrink-0 overflow-hidden">
+        <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="absolute inset-0 w-full h-full object-cover" alt={idea.title} />
       </div>
 
-      {/* Info panel */}
-      <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+      {/* Info panel — 55% */}
+      <div className="w-[55%] p-8 flex flex-col justify-between">
         <div>
-          <span className="inline-block px-2.5 py-0.5 rounded-full bg-muted text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">{idea.genre}</span>
-          <h3 className="text-lg font-bold text-foreground/50 leading-tight mt-2">{idea.title}</h3>
-          <p className="text-xs text-muted-foreground/50 mt-1">{idea.format} · {idea.targetBroadcaster}</p>
-          <p className="text-sm text-muted-foreground/40 mt-2 leading-relaxed line-clamp-2">{idea.logline}</p>
+          <span className={`inline-block px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm mb-4 ${getGenrePillColor(idea.genre)}`}>
+            {idea.genre}
+          </span>
 
-          {/* Stat grid */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/30">Format</p>
-              <p className="text-xs font-bold text-foreground/40">{idea.format}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/30">Funding Path</p>
-              <p className="text-xs font-bold text-foreground/40">Screen Australia + License Fee</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/30">Comparable Shows</p>
-              <p className="text-xs font-bold text-foreground/40">—</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/30">Production Complexity</p>
-              <p className="text-xs font-bold text-foreground/40">Medium</p>
-            </div>
+          <h3 className="text-[32px] font-extrabold text-foreground leading-tight mb-3">{idea.title}</h3>
+
+          <p className="text-sm text-muted-foreground mb-4">{idea.format} · {idea.targetBroadcaster}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-5">{idea.logline}</p>
+
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {[
+              { label: 'Format', value: meta.format },
+              { label: 'Funding Path', value: meta.fundingPath },
+              { label: 'Comparable Shows', value: meta.comparables },
+              { label: 'Production Complexity', value: meta.complexity },
+            ].map(stat => (
+              <div key={stat.label} className="bg-muted/40 rounded-lg p-3">
+                <p className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{stat.label}</p>
+                <p className="text-[13px] font-semibold text-foreground leading-snug">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">Why Now?</p>
+            <p className="text-sm text-foreground leading-relaxed italic">{whyNow}</p>
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-border/50">
+        <div className="border-t border-border pt-5 mt-6">
           <button
             onClick={() => restoreToPipeline(idea.slateId, idea.id)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-border text-xs font-semibold text-muted-foreground/60 hover:text-foreground hover:border-foreground/30 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
           >
-            <RotateCcw className="w-3 h-3" />
+            <RotateCcw className="w-4 h-4" />
             Restore to Pipeline
           </button>
         </div>
