@@ -110,12 +110,23 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addCustomIdea = useCallback((idea: ShowIdea) => {
+    setSlates(prev => ({
+      ...prev,
+      custom: {
+        ...prev.custom,
+        deck: [...prev.custom.deck, idea],
+      },
+    }));
+  }, []);
+
   return (
     <DevSlateContext.Provider value={{
       activeSlate, setActiveSlate,
       slates,
       swipeRight, swipeLeft,
       updatePipelineIdea, restoreToPipeline, resetSlate,
+      addCustomIdea,
       currentView, setCurrentView,
     }}>
       {children}

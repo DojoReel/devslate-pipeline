@@ -92,14 +92,12 @@ function SlateSection({
   ideas,
   onAdd,
   onPass,
-  featured,
 }: {
   slateId: SlateId;
   label: string;
   ideas: ShowIdea[];
   onAdd: (idea: ShowIdea) => void;
   onPass: (idea: ShowIdea) => void;
-  featured: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -180,7 +178,7 @@ function SlateSection({
       <h2 className="text-[24px] font-bold text-foreground mb-6">{label}</h2>
 
       <div
-        className={`relative rounded-2xl overflow-hidden shadow-lg bg-card border border-border ${featured ? 'ring-2 ring-primary/30' : ''}`}
+        className="relative rounded-2xl overflow-hidden shadow-lg bg-card border border-border"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -197,12 +195,6 @@ function SlateSection({
                 alt={idea.title}
               />
             </div>
-            {featured && (
-              <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider shadow-md">
-                <Star className="w-3.5 h-3.5" />
-                Featured
-              </div>
-            )}
 
             {ideas.length > 1 && (
               <>
@@ -323,31 +315,28 @@ export function DiscoverLibrary() {
   const handleAdd = (idea: ShowIdea) => swipeRight(idea.slateId, idea);
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
 
-  let isFirst = true;
+  // Include custom slate ideas too
+  const allSlates = [...DISCOVER_SLATES, SLATE_CONFIGS.find(c => c.id === 'custom')!];
 
   return (
     <div className="animate-fade-in space-y-12">
-      {DISCOVER_SLATES.map(config => {
+      {allSlates.map(config => {
         const ideas = slates[config.id].deck;
         if (ideas.length === 0) return null;
-
-        const f = isFirst;
-        if (isFirst) isFirst = false;
 
         return (
           <SlateSection
             key={config.id}
             slateId={config.id}
-            label={config.label}
+            label={config.id === 'custom' ? 'Custom Ideas' : config.label}
             ideas={ideas}
             onAdd={handleAdd}
             onPass={handlePass}
-            featured={f}
           />
         );
       })}
 
-      {DISCOVER_SLATES.every(c => slates[c.id].deck.length === 0) && (
+      {allSlates.every(c => slates[c.id].deck.length === 0) && (
         <div className="flex flex-col items-center justify-center h-80 text-muted-foreground">
           <p className="text-lg font-semibold text-foreground">All ideas have been reviewed</p>
           <p className="text-sm mt-1">Reset a slate to start fresh</p>
