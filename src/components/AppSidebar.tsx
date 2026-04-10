@@ -108,7 +108,7 @@ export function AppSidebar() {
           {toolItems.map(v => renderButton(v, 'tool'))}
 
           {/* Thin divider before Idea Bin */}
-          <div className="mx-3 my-2 border-t border-sidebar-foreground/8" />
+          <div className="mx-3 my-2" style={{ borderTop: '1px solid #2a2a3a' }} />
 
           {renderButton({ id: 'passed', label: 'Idea Bin', icon: PackageOpen, count: totalPassed }, 'bin')}
         </div>
