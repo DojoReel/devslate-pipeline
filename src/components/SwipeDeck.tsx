@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { ShowIdea, SlateId } from '@/types/devslate';
 import { useDevSlate } from '@/context/DevSlateContext';
 import { Check, X } from 'lucide-react';
