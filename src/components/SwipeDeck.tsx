@@ -15,21 +15,9 @@ const GENRE_COLORS: Record<string, string> = {
   'International': 'bg-slate_accent-international text-primary-foreground',
 };
 
-function useUnsplashImage(query: string) {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!query) return;
-    const encoded = encodeURIComponent(query);
-    setUrl(`https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&h=1000&fit=crop&q=80`);
-    const img = new Image();
-    const sourceUrl = `https://source.unsplash.com/800x1000/?${encoded}`;
-    img.onload = () => setUrl(sourceUrl);
-    img.onerror = () => {};
-    img.src = sourceUrl;
-  }, [query]);
-
-  return url;
+function usePicsumImage(title: string) {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `https://picsum.photos/seed/${slug}/800/1000`;
 }
 
 export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
