@@ -12,8 +12,8 @@ interface DevSlateContextType {
   restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
   addCustomIdea: (idea: ShowIdea) => void;
-  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
-  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom') => void;
+  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar';
+  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar') => void;
 }
 
 const DevSlateContext = createContext<DevSlateContextType | null>(null);
