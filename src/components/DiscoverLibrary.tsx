@@ -1,12 +1,16 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { ShowIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
 import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useCallback, useRef } from 'react';
-import { UnsplashImage } from './UnsplashImage';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { UnsplashImage, preloadImage } from './UnsplashImage';
 import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 
+const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
+const EXIT_DURATION = 400;
+const ENTER_DURATION = 350;
 
-type TransitionDir = 'next' | 'prev' | null;
+type ExitDir = 'left' | 'right' | null;
+type Phase = 'idle' | 'exiting' | 'entering';
 
 function SlateSection({
   label,
@@ -20,78 +24,117 @@ function SlateSection({
   onAdd: (idea: ShowIdea) => void;
   onPass: (idea: ShowIdea) => void;
 }) {
-  const [index, setIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [transitionDir, setTransitionDir] = useState<TransitionDir>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [displayIndex, setDisplayIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [exitDir, setExitDir] = useState<ExitDir>(null);
+  const [imageReady, setImageReady] = useState(true);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pendingIndexRef = useRef<number | null>(null);
 
-  const safeIndex = Math.min(index, Math.max(0, ideas.length - 1));
+  const isAnimating = phase !== 'idle';
   const safeDisplayIndex = Math.min(displayIndex, Math.max(0, ideas.length - 1));
   const idea = ideas[safeDisplayIndex];
 
-  const navigate = useCallback((dir: 'next' | 'prev') => {
+  // Preload next card's image
+  useEffect(() => {
+    const nextIdx = currentIndex + 1;
+    if (nextIdx < ideas.length) {
+      preloadImage(ideas[nextIdx].title, ideas[nextIdx].genre);
+    }
+  }, [currentIndex, ideas]);
+
+  const triggerTransition = useCallback((targetIndex: number, direction: ExitDir) => {
     if (isAnimating) return;
-    const newIndex = dir === 'next'
-      ? Math.min(ideas.length - 1, safeIndex + 1)
-      : Math.max(0, safeIndex - 1);
-    if (newIndex === safeIndex) return;
+    pendingIndexRef.current = targetIndex;
+    setExitDir(direction);
+    setPhase('exiting');
 
-    setIsAnimating(true);
-    setTransitionDir(dir);
-
-    // After exit animation, swap content and play enter
     setTimeout(() => {
-      setDisplayIndex(newIndex);
-      setIndex(newIndex);
-      setTransitionDir(null);
-      setTimeout(() => setIsAnimating(false), 350);
-    }, 200);
-  }, [isAnimating, safeIndex, ideas.length]);
+      setDisplayIndex(targetIndex);
+      setCurrentIndex(targetIndex);
+      setImageReady(false);
+      setExitDir(null);
+      setPhase('entering');
 
-  const prev = useCallback(() => navigate('prev'), [navigate]);
-  const next = useCallback(() => navigate('next'), [navigate]);
+      setTimeout(() => {
+        setPhase('idle');
+        pendingIndexRef.current = null;
+      }, ENTER_DURATION);
+    }, EXIT_DURATION);
+  }, [isAnimating]);
+
+  const navigate = useCallback((dir: 'next' | 'prev') => {
+    const newIndex = dir === 'next'
+      ? Math.min(ideas.length - 1, currentIndex + 1)
+      : Math.max(0, currentIndex - 1);
+    if (newIndex === currentIndex) return;
+    triggerTransition(newIndex, dir === 'next' ? 'left' : 'right');
+  }, [currentIndex, ideas.length, triggerTransition]);
+
+  const handleAdd = useCallback(() => {
+    if (isAnimating) return;
+    onAdd(idea);
+  }, [idea, onAdd, isAnimating]);
 
   const handlePass = useCallback(() => {
+    if (isAnimating) return;
     onPass(idea);
-  }, [idea, onPass]);
+  }, [idea, onPass, isAnimating]);
 
-  // Touch handlers for mobile swipe
+  // Touch handlers
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isAnimating) return;
     const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
     const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
     touchStartRef.current = null;
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
-    if (dx < 0) next();
-    else prev();
-  }, [next, prev]);
+    if (dx < 0) navigate('next');
+    else navigate('prev');
+  }, [navigate, isAnimating]);
 
   if (!idea) return null;
 
   const whyNow = extractWhyNow(idea);
   const meta = getIdeaMeta(idea);
 
-  // Animation classes
+  // Card animation styles
   const getCardStyle = (): React.CSSProperties => {
-    if (transitionDir === 'next') {
-      return { transform: 'translateX(-80px)', opacity: 0, transition: 'transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms cubic-bezier(0.4,0,0.2,1)' };
+    if (phase === 'exiting') {
+      const tx = exitDir === 'left' ? '-120px' : exitDir === 'right' ? '120px' : '0px';
+      const ty = exitDir === 'right' ? '-30px' : exitDir === 'left' ? '-30px' : '0px';
+      return {
+        transform: `translate(${tx}, ${ty})`,
+        opacity: 0,
+        transition: `transform ${EXIT_DURATION}ms ${EASING}, opacity ${EXIT_DURATION}ms ${EASING}`,
+      };
     }
-    if (transitionDir === 'prev') {
-      return { transform: 'translateX(80px)', opacity: 0, transition: 'transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms cubic-bezier(0.4,0,0.2,1)' };
+    if (phase === 'entering') {
+      return {
+        transform: 'translate(0, 0)',
+        opacity: 1,
+        transition: `transform ${ENTER_DURATION}ms ${EASING}, opacity ${ENTER_DURATION}ms ${EASING}`,
+      };
     }
-    return { transform: 'translateX(0)', opacity: 1, transition: 'transform 350ms cubic-bezier(0.4,0,0.2,1), opacity 350ms cubic-bezier(0.4,0,0.2,1)' };
+    return {
+      transform: 'translate(0, 0)',
+      opacity: 1,
+      transition: `transform ${ENTER_DURATION}ms ${EASING}, opacity ${ENTER_DURATION}ms ${EASING}`,
+    };
   };
 
-  const getImageStyle = (): React.CSSProperties => {
-    if (transitionDir) {
-      return { transform: 'scale(1.05)', transition: 'transform 350ms cubic-bezier(0.4,0,0.2,1)' };
+  // Initial enter offset for entering phase
+  const getCardInitialStyle = (): React.CSSProperties | undefined => {
+    if (phase === 'entering') {
+      // Slide in from opposite direction
+      const fromRight = exitDir === 'left' || (pendingIndexRef.current !== null && pendingIndexRef.current > displayIndex);
+      return undefined; // We handle this via the entering phase directly
     }
-    return { transform: 'scale(1)', transition: 'transform 500ms cubic-bezier(0.4,0,0.2,1)' };
+    return undefined;
   };
 
   return (
@@ -106,29 +149,29 @@ function SlateSection({
         <div style={getCardStyle()} className="flex flex-col md:flex-row">
           {/* Image — left 60% */}
           <div className="relative w-full md:w-[60%] min-h-[300px] md:min-h-[500px] overflow-hidden">
-            <div style={getImageStyle()} className="w-full h-full">
-              <UnsplashImage
-                genre={idea.genre}
-                keyword={idea.title}
-                orientation="landscape"
-                logline={idea.logline}
-                className="w-full h-full object-cover"
-                alt={idea.title}
-              />
-            </div>
+            <UnsplashImage
+              genre={idea.genre}
+              keyword={idea.title}
+              orientation="landscape"
+              logline={idea.logline}
+              className="w-full h-full object-cover"
+              alt={idea.title}
+              showLoadingState={true}
+              onImageReady={() => setImageReady(true)}
+            />
 
             {ideas.length > 1 && (
               <>
                 <button
-                  onClick={prev}
-                  disabled={safeIndex === 0 || isAnimating}
+                  onClick={() => navigate('prev')}
+                  disabled={currentIndex === 0 || isAnimating}
                   className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/70 backdrop-blur flex items-center justify-center text-foreground hover:bg-background/90 transition disabled:opacity-30 disabled:cursor-default"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={next}
-                  disabled={safeIndex === ideas.length - 1 || isAnimating}
+                  onClick={() => navigate('next')}
+                  disabled={currentIndex === ideas.length - 1 || isAnimating}
                   className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/70 backdrop-blur flex items-center justify-center text-foreground hover:bg-background/90 transition disabled:opacity-30 disabled:cursor-default"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -181,15 +224,17 @@ function SlateSection({
             {/* Buttons */}
             <div className="flex items-center gap-3 flex-wrap">
               <button
-                onClick={() => onAdd(idea)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-md hover:scale-105 transition-transform"
+                onClick={handleAdd}
+                disabled={isAnimating}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm shadow-md hover:scale-105 transition-transform disabled:opacity-50 disabled:pointer-events-none"
               >
                 <ThumbsUp className="w-4 h-4" />
                 Add to Pipeline
               </button>
               <button
                 onClick={handlePass}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-muted text-muted-foreground font-semibold text-sm border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                disabled={isAnimating}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-muted text-muted-foreground font-semibold text-sm border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
               >
                 <ThumbsDown className="w-4 h-4" />
                 Pass
@@ -206,19 +251,12 @@ function SlateSection({
             <button
               key={i}
               onClick={() => {
-                if (isAnimating || i === safeIndex) return;
-                const dir = i > safeIndex ? 'next' : 'prev';
-                setIsAnimating(true);
-                setTransitionDir(dir);
-                setTimeout(() => {
-                  setDisplayIndex(i);
-                  setIndex(i);
-                  setTransitionDir(null);
-                  setTimeout(() => setIsAnimating(false), 350);
-                }, 200);
+                if (isAnimating || i === currentIndex) return;
+                const dir = i > currentIndex ? 'left' : 'right';
+                triggerTransition(i, dir);
               }}
               className={`w-2.5 h-2.5 rounded-full transition-all ${
-                i === safeIndex ? 'bg-primary scale-125' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                i === currentIndex ? 'bg-primary scale-125' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }`}
             />
           ))}
@@ -236,7 +274,6 @@ export function DiscoverLibrary() {
   const handleAdd = (idea: ShowIdea) => swipeRight(idea.slateId, idea);
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
 
-  // Include custom slate ideas too
   const allSlates = [...DISCOVER_SLATES, SLATE_CONFIGS.find(c => c.id === 'custom')!];
 
   return (
