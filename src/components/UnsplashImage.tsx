@@ -6,11 +6,12 @@ interface UnsplashImageProps {
   orientation?: 'portrait' | 'landscape';
   className?: string;
   alt?: string;
+  logline?: string;
 }
 
 /** Renders an Unsplash image with gradient fallback. Never shows broken icons. */
-export function UnsplashImage({ genre, keyword, orientation = 'portrait', className = '', alt = '' }: UnsplashImageProps) {
-  const { imageUrl, loading, gradient } = useUnsplashImage(genre, keyword, orientation);
+export function UnsplashImage({ genre, keyword, orientation = 'portrait', className = '', alt = '', logline }: UnsplashImageProps) {
+  const { imageUrl, loading, gradient } = useUnsplashImage(genre, keyword, orientation, logline);
 
   if (!imageUrl) {
     return <div className={className} style={{ background: gradient }} />;
@@ -23,7 +24,6 @@ export function UnsplashImage({ genre, keyword, orientation = 'portrait', classN
       className={className}
       loading="lazy"
       onError={(e) => {
-        // Replace with gradient on error
         const el = e.currentTarget;
         const parent = el.parentElement;
         if (parent) {

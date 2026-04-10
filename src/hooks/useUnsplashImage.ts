@@ -4,11 +4,29 @@ const UNSPLASH_ACCESS_KEY = 'lnJhQZFYk1uOwPaESHrAZG31qzN6FvqgQTAQeJTuAKs';
 const imageCache = new Map<string, string>();
 const pendingRequests = new Map<string, Promise<string | null>>();
 
+/** Build a highly specific search query from title + genre + logline */
+export function buildUnsplashQuery(title: string, genre: string, logline?: string): string {
+  // Extract meaningful keywords from the title (drop short words)
+  const titleWords = title.split(/\s+/).filter(w => w.length > 2).join(' ');
+
+  // Pull a location/context keyword from the logline if available
+  let contextWords = '';
+  if (logline) {
+    const contextMatches = logline.match(/\b(Australia|Australian|Pacific|Asia|Sydney|Melbourne|outback|reef|ocean|island|urban|rural|remote|border|underground|desert)\b/gi);
+    if (contextMatches) {
+      contextWords = [...new Set(contextMatches.map(w => w.toLowerCase()))].slice(0, 2).join(' ');
+    }
+  }
+
+  return [titleWords, genre, contextWords].filter(Boolean).join(' ');
+}
+
 /** Fetch a random Unsplash image URL for a given query. Returns cached result if available. */
 export async function fetchUnsplashImage(
   genre: string,
   keyword: string,
-  orientation: 'portrait' | 'landscape' = 'portrait'
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  logline?: string
 ): Promise<string | null> {
   const cacheKey = `${genre}|${keyword}|${orientation}`;
 
@@ -16,12 +34,11 @@ export async function fetchUnsplashImage(
     return imageCache.get(cacheKey)!;
   }
 
-  // Deduplicate in-flight requests
   if (pendingRequests.has(cacheKey)) {
     return pendingRequests.get(cacheKey)!;
   }
 
-  const query = encodeURIComponent(`${genre} ${keyword} television documentary`);
+  const query = encodeURIComponent(buildUnsplashQuery(keyword, genre, logline));
   const url = `https://api.unsplash.com/photos/random?query=${query}&orientation=${orientation}&client_id=${UNSPLASH_ACCESS_KEY}`;
 
   const promise = fetch(url)
@@ -64,13 +81,14 @@ export function getGenreGradient(genre: string): string {
   return GENRE_GRADIENTS.default;
 }
 
-// React hook for fetching an Unsplash image with caching
+// React hook
 import { useState, useEffect } from 'react';
 
 export function useUnsplashImage(
   genre: string,
   keyword: string,
-  orientation: 'portrait' | 'landscape' = 'portrait'
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  logline?: string
 ) {
   const [imageUrl, setImageUrl] = useState<string | null>(() => {
     const cacheKey = `${genre}|${keyword}|${orientation}`;
@@ -81,14 +99,14 @@ export function useUnsplashImage(
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchUnsplashImage(genre, keyword, orientation).then(url => {
+    fetchUnsplashImage(genre, keyword, orientation, logline).then(url => {
       if (!cancelled) {
         setImageUrl(url);
         setLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [genre, keyword, orientation]);
+  }, [genre, keyword, orientation, logline]);
 
   return { imageUrl, loading, gradient: getGenreGradient(genre) };
 }
