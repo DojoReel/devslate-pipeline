@@ -3,12 +3,17 @@ import { SLATE_CONFIGS } from '@/types/devslate';
 import { Layers, GitBranch, Archive, RotateCcw, Clapperboard } from 'lucide-react';
 
 export function AppSidebar() {
-  const { activeSlate, setActiveSlate, currentView, setCurrentView, slates, resetSlate } = useDevSlate();
+  const { activeSlate, currentView, setCurrentView, slates, resetSlate } = useDevSlate();
+
+  // Count across ALL slates for global views
+  const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
+  const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
+  const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
 
   const views = [
-    { id: 'discover' as const, label: 'Discover', icon: Layers },
-    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch },
-    { id: 'passed' as const, label: 'Passed', icon: Archive },
+    { id: 'discover' as const, label: 'Discover', icon: Layers, count: totalDeck },
+    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch, count: totalPipeline },
+    { id: 'passed' as const, label: 'Passed', icon: Archive, count: totalPassed },
   ];
 
   return (
@@ -27,12 +32,9 @@ export function AppSidebar() {
       </div>
 
       {/* Views */}
-      <nav className="px-3 pt-6 pb-4">
+      <nav className="px-3 pt-6 pb-4 flex-1">
         <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Views</p>
         {views.map(view => {
-          const count = view.id === 'discover' ? slates[activeSlate].deck.length
-            : view.id === 'pipeline' ? slates[activeSlate].pipeline.length
-            : slates[activeSlate].passed.length;
           const isActive = currentView === view.id;
           return (
             <button
@@ -48,41 +50,10 @@ export function AppSidebar() {
                 <view.icon className="w-4 h-4" />
                 {view.label}
               </span>
-              {count > 0 && (
+              {view.count > 0 && (
                 <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
                   isActive ? 'bg-sidebar-primary/20 text-sidebar-primary' : 'text-sidebar-foreground/50'
-                }`}>{count}</span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Slates */}
-      <nav className="px-3 flex-1 overflow-y-auto">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Slates</p>
-        {SLATE_CONFIGS.map(config => {
-          const isActive = activeSlate === config.id;
-          const count = slates[config.id].pipeline.length;
-          return (
-            <button
-              key={config.id}
-              onClick={() => setActiveSlate(config.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5 ${
-                isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
-              }`}
-            >
-              <span className="flex items-center gap-3">
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: `hsl(var(${config.colorVar}))` }}
-                />
-                {config.label}
-              </span>
-              {count > 0 && (
-                <span className="text-xs font-semibold text-sidebar-foreground/50">{count}</span>
+                }`}>{view.count}</span>
               )}
             </button>
           );
