@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { ShowIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { ThumbsUp, ThumbsDown, Telescope, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { UnsplashImage } from './UnsplashImage';
 
@@ -51,19 +51,43 @@ function extractWhyNow(idea: ShowIdea): string {
   return whyNowMap[idea.title] || 'This concept taps into current cultural conversations and audience demand for authentic, timely storytelling.';
 }
 
-function extractBullets(idea: ShowIdea): string[] {
-  const bullets: string[] = [];
-  // Episode count from format
-  const epMatch = idea.format.match(/(\d+\s*×\s*\d+min)/);
-  if (epMatch) bullets.push(epMatch[1]);
-  bullets.push(idea.format);
-  bullets.push(`Target: ${idea.targetBroadcaster}`);
-  return bullets;
+/* ─── Idea metadata for stat blocks ─── */
+interface IdeaMeta {
+  format: string;
+  fundingPath: string;
+  comparables: string;
+  complexity: string;
+}
+
+function getIdeaMeta(idea: ShowIdea): IdeaMeta {
+  const metaMap: Record<string, IdeaMeta> = {
+    'Outback Medics': { format: 'Observational Documentary', fundingPath: 'Screen Australia + ABC Commissioning', comparables: 'Ambulance (BBC), Australian Story (ABC)', complexity: 'High — remote location logistics' },
+    'First Languages': { format: 'Authored Documentary', fundingPath: 'NITV + Screen Australia Indigenous Dept', comparables: 'First Australians (SBS), Language Matters (PBS)', complexity: 'Medium — community partnerships required' },
+    'The Ballot': { format: 'Vérité Event Series', fundingPath: 'ABC + Documentary Australia Foundation', comparables: 'The Vote (Channel 4), Vote (Al Jazeera)', complexity: 'Medium — election cycle timing' },
+    'Reef Patrol': { format: 'Natural History Hybrid', fundingPath: 'Screen Qld + ABC + Int\'l Pre-sales', comparables: 'Blue Planet (BBC), Reef Live (ABC)', complexity: 'High — underwater & aerial filming' },
+    'New Roots': { format: 'Character-led Documentary', fundingPath: 'SBS Commissioning + Screen Australia', comparables: 'Go Back to Where You Came From (SBS)', complexity: 'Medium — sensitive access required' },
+    'Cold Cases Reloaded': { format: 'True Crime Investigation', fundingPath: 'Stan Original + Screen NSW', comparables: 'The Night Caller (Stan), Underbelly', complexity: 'Medium — archival & legal clearance' },
+    'Hustle Sydney': { format: 'Business Reality Series', fundingPath: 'Stan + Brand Partnerships', comparables: 'Shark Tank (Ten), Planet Startup', complexity: 'Low — studio + location hybrid' },
+    'Underground Kings': { format: 'Factual Drama Hybrid', fundingPath: 'Stan + Screen SA + Int\'l', comparables: 'Outback Opal Hunters (Discovery)', complexity: 'High — underground filming' },
+    'The Algorithm': { format: 'Competition Reality', fundingPath: 'Stan + Digital Platform Partnerships', comparables: 'The Circle (Netflix), Screentime (ABC)', complexity: 'Medium — tech integration' },
+    'Fight Camp': { format: 'Sports Observational', fundingPath: 'Fox Sports + Screen NSW', comparables: 'Fighter (Stan), Last Chance U (Netflix)', complexity: 'Medium — gym & event access' },
+    'Grassroots': { format: 'Sports Reality Series', fundingPath: 'Fox Sports Commissioning', comparables: 'Sunderland \'Til I Die (Netflix)', complexity: 'Low — season-long embed' },
+    'The Draft': { format: 'Sports Documentary', fundingPath: 'Fox Footy + AFL Media Rights', comparables: 'Draft Day (film), Hard Knocks (HBO)', complexity: 'Medium — AFL access agreements' },
+    'Wave Hunters': { format: 'Adventure Sports Doc', fundingPath: 'Fox Sports + Red Bull Media', comparables: '100 Foot Wave (HBO), Storm Surfers', complexity: 'High — ocean safety & drone crews' },
+    'Pacific Rising': { format: 'Geopolitical Event Series', fundingPath: 'BBC Co-pro + Netflix + Screen Pacific', comparables: 'Chasing Coral (Netflix), Islands of Faith', complexity: 'High — multi-country shoots' },
+    'Silk Road Kitchens': { format: 'Travel Food Series', fundingPath: 'Netflix + SBS Food + Tourism boards', comparables: 'Street Food (Netflix), Somebody Feed Phil', complexity: 'Medium — international travel' },
+    'Border Towns': { format: 'Geopolitical Documentary', fundingPath: 'HBO Co-pro + BBC Storyville', comparables: 'Frontline (PBS), No Man\'s Land', complexity: 'High — conflict zone access' },
+  };
+  return metaMap[idea.title] || {
+    format: idea.genre,
+    fundingPath: 'Broadcaster License Fee + Screen Agency',
+    comparables: 'TBD — market research pending',
+    complexity: 'Medium — standard production',
+  };
 }
 
 /* ─── Single Slate Section with carousel ─── */
 function SlateSection({
-  slateId,
   label,
   ideas,
   onAdd,
@@ -90,8 +114,8 @@ function SlateSection({
 
   if (!idea) return null;
 
-  const bullets = extractBullets(idea);
   const whyNow = extractWhyNow(idea);
+  const meta = getIdeaMeta(idea);
 
   return (
     <div>
@@ -154,14 +178,20 @@ function SlateSection({
               {idea.logline}
             </p>
 
-            <ul className="space-y-1.5 mb-5">
-              {bullets.map((b, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  {b}
-                </li>
+            {/* Stat grid — 2x2 */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              {[
+                { label: 'Format', value: meta.format },
+                { label: 'Funding Path', value: meta.fundingPath },
+                { label: 'Comparable Shows', value: meta.comparables },
+                { label: 'Production Complexity', value: meta.complexity },
+              ].map(stat => (
+                <div key={stat.label} className="bg-muted/40 rounded-lg p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{stat.label}</p>
+                  <p className="text-xs font-semibold text-foreground leading-snug">{stat.value}</p>
+                </div>
               ))}
-            </ul>
+            </div>
 
             {/* Why Now */}
             <div className="bg-muted/50 rounded-xl p-4 mb-6">
@@ -170,7 +200,7 @@ function SlateSection({
             </div>
           </div>
 
-          {/* Buttons */}
+          {/* Buttons — only Add & Pass */}
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => onAdd(idea)}
@@ -185,12 +215,6 @@ function SlateSection({
             >
               <ThumbsDown className="w-4 h-4" />
               Pass
-            </button>
-            <button
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-opacity"
-            >
-              <Telescope className="w-4 h-4" />
-              Deep Dive
             </button>
           </div>
         </div>
@@ -214,6 +238,9 @@ function SlateSection({
   );
 }
 
+/* ─── Filter out 'custom' slate ─── */
+const DISCOVER_SLATES = SLATE_CONFIGS.filter(c => c.id !== 'custom');
+
 /* ─── Main Library ─── */
 export function DiscoverLibrary() {
   const { slates, swipeRight, swipeLeft } = useDevSlate();
@@ -225,7 +252,7 @@ export function DiscoverLibrary() {
 
   return (
     <div className="animate-fade-in space-y-12">
-      {SLATE_CONFIGS.map(config => {
+      {DISCOVER_SLATES.map(config => {
         const ideas = slates[config.id].deck;
         if (ideas.length === 0) return null;
 
@@ -245,9 +272,8 @@ export function DiscoverLibrary() {
         );
       })}
 
-      {SLATE_CONFIGS.every(c => slates[c.id].deck.length === 0) && (
+      {DISCOVER_SLATES.every(c => slates[c.id].deck.length === 0) && (
         <div className="flex flex-col items-center justify-center h-80 text-muted-foreground">
-          <Telescope className="w-12 h-12 mb-4 opacity-40" />
           <p className="text-lg font-semibold text-foreground">All ideas have been reviewed</p>
           <p className="text-sm mt-1">Reset a slate to start fresh</p>
         </div>
