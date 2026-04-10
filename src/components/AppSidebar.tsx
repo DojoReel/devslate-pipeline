@@ -1,19 +1,22 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, Archive, RotateCcw, Clapperboard } from 'lucide-react';
+import { Layers, GitBranch, Archive, RotateCcw, Clapperboard, Palette, Hammer } from 'lucide-react';
+
+type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
 
 export function AppSidebar() {
   const { activeSlate, currentView, setCurrentView, slates, resetSlate } = useDevSlate();
 
-  // Count across ALL slates for global views
   const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
   const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
 
-  const views = [
-    { id: 'discover' as const, label: 'Discover', icon: Layers, count: totalDeck },
-    { id: 'pipeline' as const, label: 'Pipeline', icon: GitBranch, count: totalPipeline },
-    { id: 'passed' as const, label: 'Passed', icon: Archive, count: totalPassed },
+  const views: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
+    { id: 'discover', label: 'Discover', icon: Layers, count: totalDeck },
+    { id: 'pipeline', label: 'Pipeline', icon: GitBranch, count: totalPipeline },
+    { id: 'passed', label: 'Passed', icon: Archive, count: totalPassed },
+    { id: 'custom', label: 'Custom', icon: Palette },
+    { id: 'buildroom', label: 'Build Room', icon: Hammer },
   ];
 
   return (
@@ -39,7 +42,7 @@ export function AppSidebar() {
           return (
             <button
               key={view.id}
-              onClick={() => setCurrentView(view.id)}
+              onClick={() => setCurrentView(view.id as any)}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5 ${
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
@@ -50,7 +53,7 @@ export function AppSidebar() {
                 <view.icon className="w-4 h-4" />
                 {view.label}
               </span>
-              {view.count > 0 && (
+              {view.count != null && view.count > 0 && (
                 <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
                   isActive ? 'bg-sidebar-primary/20 text-sidebar-primary' : 'text-sidebar-foreground/50'
                 }`}>{view.count}</span>

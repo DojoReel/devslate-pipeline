@@ -29,25 +29,23 @@ export function UnsplashImage({ genre, keyword, className = '', alt = '' }: Unsp
     fetched.current = true;
 
     const query = encodeURIComponent(buildPexelsQuery(keyword, genre));
-    fetch(`https://api.pexels.com/v1/search?query=${query}&orientation=landscape&per_page=1`, {
+    const randomPage = Math.floor(Math.random() * 3) + 1;
+    fetch(`https://api.pexels.com/v1/search?query=${query}&orientation=landscape&per_page=1&page=${randomPage}`, {
       headers: { Authorization: PEXELS_API_KEY },
     })
       .then(r => r.json())
       .then(data => {
         const url = data?.photos?.[0]?.src?.landscape;
         if (url) {
-          console.log(`[Pexels] ✓ ${keyword}:`, url);
           imageCache.set(cacheKey, url);
           setSrc(url);
         } else {
-          console.warn(`[Pexels] No result for "${keyword}", using picsum fallback`);
           const fallback = getPicsumUrl(keyword);
           imageCache.set(cacheKey, fallback);
           setSrc(fallback);
         }
       })
       .catch(() => {
-        console.warn(`[Pexels] Fetch failed for "${keyword}", using picsum fallback`);
         const fallback = getPicsumUrl(keyword);
         imageCache.set(cacheKey, fallback);
         setSrc(fallback);
