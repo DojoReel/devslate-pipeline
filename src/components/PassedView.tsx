@@ -1,23 +1,14 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PackageOpen, RotateCcw } from 'lucide-react';
 import { UnsplashImage } from './UnsplashImage';
-import { ShowIdea, PipelineIdea, SLATE_CONFIGS } from '@/types/devslate';
+import { ShowIdea, SLATE_CONFIGS } from '@/types/devslate';
 
 export function PassedView() {
-  const { slates, updatePipelineIdea } = useDevSlate();
+  const { slates } = useDevSlate();
 
-  // Gather all passed ideas across all slates
   const allPassed = SLATE_CONFIGS.flatMap(c =>
     slates[c.id].passed.map(idea => ({ ...idea, slateId: c.id }))
   );
-
-  const handleRestore = (idea: ShowIdea) => {
-    // We need to move from passed back to pipeline
-    // This requires a new context method, but for now we use a workaround
-    // by dispatching through the existing state update mechanism
-    const { slates: currentSlates } = useDevSlate.getState?.() || {};
-    // Since we can't call hooks here, we'll use a callback pattern
-  };
 
   if (allPassed.length === 0) {
     return (
@@ -48,7 +39,6 @@ function IdeaBinCard({ idea }: { idea: ShowIdea }) {
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-md opacity-50 saturate-[0.3] group-hover:opacity-70 group-hover:saturate-[0.6] transition-all duration-300">
         <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="portrait" className="w-full h-full object-cover" alt={idea.title} />
         <div className="absolute inset-0 gradient-scrim opacity-60" />
-        {/* Restore button */}
         <button
           onClick={() => restoreToPipeline(idea.slateId, idea.id)}
           className="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-background/80 backdrop-blur text-foreground text-xs font-semibold opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 hover:bg-background"

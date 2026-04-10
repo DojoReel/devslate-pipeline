@@ -1,13 +1,13 @@
 import { useDevSlate } from '@/context/DevSlateContext';
-import { Layers, GitBranch, PackageOpen, Palette, Hammer } from 'lucide-react';
+import { SLATE_CONFIGS } from '@/types/devslate';
+import { Layers, GitBranch, PackageOpen, Hammer } from 'lucide-react';
 
 export function MobileNav() {
-  const { currentView, setCurrentView, activeSlate, slates } = useDevSlate();
-  const { SLATE_CONFIGS } = require('@/types/devslate');
+  const { currentView, setCurrentView, slates } = useDevSlate();
 
-  const totalPipeline = SLATE_CONFIGS.reduce((sum: number, c: any) => sum + slates[c.id].pipeline.length, 0);
-  const totalPassed = SLATE_CONFIGS.reduce((sum: number, c: any) => sum + slates[c.id].passed.length, 0);
-  const totalDeck = SLATE_CONFIGS.reduce((sum: number, c: any) => sum + slates[c.id].deck.length, 0);
+  const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
+  const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
+  const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
 
   const views = [
     { id: 'discover' as const, label: 'Discover', icon: Layers, count: totalDeck },
