@@ -3,31 +3,7 @@ import { ShowIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
 import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
 import { UnsplashImage } from './UnsplashImage';
-
-const GENRE_PILL_COLORS: Record<string, string> = {
-  'Documentary': 'bg-primary',
-  'Political Documentary': 'bg-primary',
-  'Natural History': 'bg-primary',
-  'Factual Entertainment': 'bg-primary',
-  'Human Interest': 'bg-primary',
-  'Factual Drama': 'bg-primary',
-  'True Crime': 'bg-primary',
-  'Sports Documentary': 'bg-slate_accent-sport',
-  'Sports Reality': 'bg-slate_accent-sport',
-  'Adventure Sports': 'bg-slate_accent-sport',
-  'Travel Food': 'bg-slate_accent-international',
-  'Geopolitical Documentary': 'bg-slate_accent-international',
-  'Current Affairs': 'bg-slate_accent-international',
-  'Business Reality': 'bg-slate_accent-stan',
-  'Competition Reality': 'bg-slate_accent-stan',
-  'Behind the Scenes': 'bg-muted-foreground',
-  'Custom': 'bg-muted-foreground',
-};
-
-function getGenrePillColor(genre: string) {
-  return GENRE_PILL_COLORS[genre] || 'bg-primary';
-}
-
+import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 function extractWhyNow(idea: ShowIdea): string {
   const whyNowMap: Record<string, string> = {
     'Outback Medics': 'Rural healthcare access is a growing national debate as climate events increase demand for remote medical services.',
