@@ -6,9 +6,6 @@ import { UnsplashImage } from './UnsplashImage';
 import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 
 
-  };
-}
-
 type TransitionDir = 'next' | 'prev' | null;
 
 function SlateSection({
