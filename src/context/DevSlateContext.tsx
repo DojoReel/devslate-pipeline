@@ -11,6 +11,7 @@ interface DevSlateContextType {
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
   restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
+  addCustomIdea: (idea: ShowIdea) => void;
   currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom';
   setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom') => void;
 }

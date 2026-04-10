@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { ShowIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
 import { UnsplashImage } from './UnsplashImage';
 
