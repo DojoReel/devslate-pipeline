@@ -1,4 +1,5 @@
-import { useUnsplashImage } from '@/hooks/useUnsplashImage';
+import { getUnsplashUrl, getGenreGradient } from '@/hooks/useUnsplashImage';
+import { useState } from 'react';
 
 interface UnsplashImageProps {
   genre: string;
@@ -9,30 +10,22 @@ interface UnsplashImageProps {
   logline?: string;
 }
 
-/** Renders an Unsplash image with gradient fallback. Never shows broken icons. */
-export function UnsplashImage({ genre, keyword, orientation = 'portrait', className = '', alt = '', logline }: UnsplashImageProps) {
-  const { imageUrl, loading, gradient } = useUnsplashImage(genre, keyword, orientation, logline);
+export function UnsplashImage({ genre, keyword, className = '', alt = '' }: UnsplashImageProps) {
+  const [failed, setFailed] = useState(false);
+  const gradient = getGenreGradient(genre);
+  const src = getUnsplashUrl(keyword, genre);
 
-  if (!imageUrl) {
+  if (failed) {
     return <div className={className} style={{ background: gradient }} />;
   }
 
   return (
     <img
-      src={imageUrl}
+      src={src}
       alt={alt || keyword}
       className={className}
       loading="lazy"
-      onError={(e) => {
-        const el = e.currentTarget;
-        const parent = el.parentElement;
-        if (parent) {
-          const div = document.createElement('div');
-          div.className = el.className;
-          div.style.background = gradient;
-          parent.replaceChild(div, el);
-        }
-      }}
+      onError={() => setFailed(true)}
     />
   );
 }
