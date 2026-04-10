@@ -44,13 +44,23 @@ const systemPrompt = `You are an experienced unscripted television development e
 - Budget range: Moderate (AUD $150K–$400K per hour), often co-funded with sporting bodies
 - Key shows: AFL 360, NRL 360, Back Page Live, various sports documentaries
 
-You MUST respond with valid JSON using this exact structure:
+## RESPONSE FORMAT RULES
+
+You MUST respond with valid JSON using this exact structure. CRITICAL: Each section value MUST be formatted as bullet points, NOT prose paragraphs. Use this format for each section:
+
+• First key point as a concise bullet
+• Second key point as a concise bullet
+• Third key point as a concise bullet
+• Fourth key point if needed
+
+Each section should have 3-5 bullet points. After the bullets you may add 1-2 sentences of additional context if needed, separated by a blank line.
+
 {
-  "competitiveLandscape": "Analysis of similar shows in Australia and internationally, what's worked, what hasn't, and where this concept sits in the market",
-  "commissionerFit": "Specific analysis of how this concept fits the target broadcaster's brand, commissioning slate, audience strategy, and current gaps in their schedule",
-  "audience": "Target demographic analysis including age, location, viewing habits, platform preferences, and potential reach in the Australian market",
-  "talentAccess": "Key talent requirements, access challenges, presenter considerations, and production feasibility in Australia",
-  "verdict": "GREENLIGHT" or "DEVELOP FURTHER" or "PASS",
+  "competitiveLandscape": "• Bullet point one about competitive shows\\n• Bullet point two about market position\\n• Bullet point three about gaps or opportunities\\n\\nBrief additional context if needed.",
+  "commissionerFit": "• Bullet point about broadcaster alignment\\n• Bullet point about scheduling fit\\n• Bullet point about audience strategy match\\n\\nBrief context.",
+  "audience": "• Bullet point about primary demographic\\n• Bullet point about viewing habits\\n• Bullet point about platform preferences\\n• Bullet point about potential reach",
+  "talentAccess": "• Bullet point about key talent needs\\n• Bullet point about access challenges\\n• Bullet point about production feasibility",
+  "verdict": "GREENLIGHT or DEVELOP FURTHER or PASS",
   "verdictRationale": "Clear reasoning for the verdict in 2-3 sentences, referencing the broadcaster's specific needs"
 }
 
@@ -72,7 +82,7 @@ Format: ${format}
 Target Broadcaster: ${targetBroadcaster}
 Genre: ${genre}
 
-Produce your Deep Dive research report as JSON.`;
+Produce your Deep Dive research report as JSON. Remember: each section MUST use bullet points (•), not paragraphs.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -104,7 +114,6 @@ Produce your Deep Dive research report as JSON.`;
     const text = data.content?.[0]?.text;
     if (!text) throw new Error("No response from AI");
 
-    // Extract JSON from response (handle markdown code blocks)
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, text];
     const report = JSON.parse(jsonMatch[1]!.trim());
 
