@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { getPicsumUrl } from '@/hooks/useUnsplashImage';
 import { ShowIdea, SlateId } from '@/types/devslate';
 import { useDevSlate } from '@/context/DevSlateContext';
 import { Check, X } from 'lucide-react';
@@ -25,7 +26,7 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const startX = useRef(0);
 
   const currentIdea = ideas[0];
-  const heroImage = currentIdea ? usePicsumImage(currentIdea.title) : null;
+  const heroImage = currentIdea ? getPicsumUrl(currentIdea.title, 800, 1000) : null;
 
   if (!currentIdea) {
     return (
