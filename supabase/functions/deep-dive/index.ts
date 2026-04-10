@@ -46,20 +46,16 @@ const systemPrompt = `You are an experienced unscripted television development e
 
 ## RESPONSE FORMAT RULES
 
-You MUST respond with valid JSON using this exact structure. CRITICAL: Each section value MUST be formatted as bullet points, NOT prose paragraphs. Use this format for each section:
+You MUST respond with valid JSON using this exact structure. CRITICAL: Each section value MUST be formatted as exactly 4 bullet points prefixed with "•". Do NOT write prose paragraphs. Each bullet should be concise (one sentence max) and start with a bold label where relevant (e.g. "Comparable shows:", "Key gap:", "Primary demo:").
 
-• First key point as a concise bullet
-• Second key point as a concise bullet
-• Third key point as a concise bullet
-• Fourth key point if needed
-
-Each section should have 3-5 bullet points. After the bullets you may add 1-2 sentences of additional context if needed, separated by a blank line.
+Format each section value EXACTLY like this:
+"• Bold label: concise insight\\n• Bold label: concise insight\\n• Bold label: concise insight\\n• Bold label: concise insight"
 
 {
-  "competitiveLandscape": "• Bullet point one about competitive shows\\n• Bullet point two about market position\\n• Bullet point three about gaps or opportunities\\n\\nBrief additional context if needed.",
-  "commissionerFit": "• Bullet point about broadcaster alignment\\n• Bullet point about scheduling fit\\n• Bullet point about audience strategy match\\n\\nBrief context.",
-  "audience": "• Bullet point about primary demographic\\n• Bullet point about viewing habits\\n• Bullet point about platform preferences\\n• Bullet point about potential reach",
-  "talentAccess": "• Bullet point about key talent needs\\n• Bullet point about access challenges\\n• Bullet point about production feasibility",
+  "competitiveLandscape": "• Key competitor: Show Name (Network) — brief comparison\\n• Market gap: What's missing in the current landscape\\n• Comparable shows: List 2-3 similar titles with networks\\n• Differentiation: What makes this concept stand out",
+  "commissionerFit": "• Broadcaster alignment: How it fits their slate strategy\\n• Scheduling fit: Where it sits in their programming\\n• Audience strategy: How it serves their target demo\\n• Co-funding potential: Likelihood of additional funding support",
+  "audience": "• Primary demo: Age range and psychographic profile\\n• Viewing behaviour: How they consume content\\n• Platform preference: Linear vs streaming vs both\\n• Reach potential: Estimated audience size and engagement",
+  "talentAccess": "• Key talent: Who would front or feature in this\\n• Access challenges: What permissions or locations are needed\\n• Production feasibility: Crew and logistics assessment\\n• Budget consideration: Cost drivers and efficiencies",
   "verdict": "GREENLIGHT or DEVELOP FURTHER or PASS",
   "verdictRationale": "Clear reasoning for the verdict in 2-3 sentences, referencing the broadcaster's specific needs"
 }
@@ -82,7 +78,7 @@ Format: ${format}
 Target Broadcaster: ${targetBroadcaster}
 Genre: ${genre}
 
-Produce your Deep Dive research report as JSON. Remember: each section MUST use bullet points (•), not paragraphs.`;
+Produce your Deep Dive research report as JSON. CRITICAL: each section MUST contain exactly 4 bullet points prefixed with "•", with bold labels. No prose paragraphs.`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
