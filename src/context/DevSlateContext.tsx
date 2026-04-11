@@ -6,6 +6,7 @@ interface DevSlateContextType {
   activeSlate: SlateId;
   setActiveSlate: (id: SlateId) => void;
   slates: Record<SlateId, SlateState>;
+  archivedIdeas: PipelineIdea[];
   swipeRight: (slateId: SlateId, idea: ShowIdea) => void;
   swipeLeft: (slateId: SlateId, idea: ShowIdea) => void;
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
@@ -13,6 +14,8 @@ interface DevSlateContextType {
   resetSlate: (slateId: SlateId) => void;
   addCustomIdea: (idea: ShowIdea) => void;
   sendToBuildRoom: (slateId: SlateId, ideaId: string) => void;
+  archiveIdea: (slateId: SlateId, ideaId: string) => void;
+  unarchiveIdea: (ideaId: string) => void;
   currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar';
   setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar') => void;
 }
@@ -35,6 +38,7 @@ function initSlates(): Record<SlateId, SlateState> {
 export function DevSlateProvider({ children }: { children: ReactNode }) {
   const [activeSlate, setActiveSlate] = useState<SlateId>('abc');
   const [slates, setSlates] = useState<Record<SlateId, SlateState>>(initSlates);
+  const [archivedIdeas, setArchivedIdeas] = useState<PipelineIdea[]>([]);
   const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar'>('discover');
 
   const swipeRight = useCallback((slateId: SlateId, idea: ShowIdea) => {
@@ -141,13 +145,48 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const archiveIdea = useCallback((slateId: SlateId, ideaId: string) => {
+    setSlates(prev => {
+      const slate = prev[slateId];
+      const idea = slate.pipeline.find(i => i.id === ideaId);
+      if (!idea) return prev;
+      setArchivedIdeas(archived => [...archived, idea]);
+      return {
+        ...prev,
+        [slateId]: {
+          ...slate,
+          pipeline: slate.pipeline.filter(i => i.id !== ideaId),
+        },
+      };
+    });
+  }, []);
+
+  const unarchiveIdea = useCallback((ideaId: string) => {
+    setArchivedIdeas(prev => {
+      const idea = prev.find(i => i.id === ideaId);
+      if (!idea) return prev;
+      setSlates(s => {
+        const slate = s[idea.slateId];
+        return {
+          ...s,
+          [idea.slateId]: {
+            ...slate,
+            pipeline: [...slate.pipeline, idea],
+          },
+        };
+      });
+      return prev.filter(i => i.id !== ideaId);
+    });
+  }, []);
+
   return (
     <DevSlateContext.Provider value={{
       activeSlate, setActiveSlate,
-      slates,
+      slates, archivedIdeas,
       swipeRight, swipeLeft,
       updatePipelineIdea, restoreToPipeline, resetSlate,
       addCustomIdea, sendToBuildRoom,
+      archiveIdea, unarchiveIdea,
       currentView, setCurrentView,
     }}>
       {children}
