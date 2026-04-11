@@ -33,9 +33,9 @@ export function DiscoverIdeaCard({
 
   if (isMobile) {
     return (
-      <div className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden h-full">
-        {/* Image: 40% of card height */}
-        <div className="relative w-full shrink-0 overflow-hidden rounded-t-2xl" style={{ height: '40%' }}>
+      <div className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden">
+        {/* Image with genre + title overlay — scrolls naturally */}
+        <div className="relative w-full overflow-hidden rounded-t-2xl" style={{ height: '45vw' }}>
           <UnsplashImage
             genre={idea.genre}
             keyword={idea.title}
@@ -45,19 +45,22 @@ export function DiscoverIdeaCard({
             alt={idea.title}
             showLoadingState={true}
           />
+          {/* Gradient overlay */}
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          {/* Genre + Title on image */}
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <span className={`inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground ${getGenrePillColor(idea.genre)}`}>
+              {idea.genre}
+            </span>
+            <h3 className="text-2xl font-extrabold leading-tight text-white mt-1.5">
+              {idea.title}
+            </h3>
+          </div>
         </div>
 
-        {/* Info panel: 60% */}
-        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-          <span className={`self-start rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground ${getGenrePillColor(idea.genre)}`}>
-            {idea.genre}
-          </span>
-
-          <h3 className="text-2xl font-extrabold leading-tight text-foreground mt-2">
-            {idea.title}
-          </h3>
-
-          <p className="text-[13px] text-muted-foreground mt-1">
+        {/* Info panel — continuous scroll */}
+        <div className="flex flex-col p-4 overflow-hidden">
+          <p className="text-[13px] text-muted-foreground">
             {idea.format} · {idea.targetBroadcaster}
           </p>
 
@@ -80,21 +83,24 @@ export function DiscoverIdeaCard({
             ))}
           </div>
 
-          {/* Why Now: inline */}
-          <div className="flex items-start gap-2 mt-2">
+          {/* Concept summary */}
+          <p className="text-[13px] leading-relaxed text-muted-foreground mt-3">
+            {idea.logline} This concept explores a fresh angle on the {idea.genre.toLowerCase()} genre, targeting {idea.targetBroadcaster} audiences with a {idea.format.toLowerCase()} format designed for maximum engagement and commissioning appeal.
+          </p>
+
+          {/* Why Now: full text */}
+          <div className="flex items-start gap-2 mt-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 shrink-0 pt-0.5">Why Now?</span>
-            <p className="text-[13px] leading-snug text-foreground line-clamp-1">{whyNow}</p>
+            <p className="text-[13px] leading-snug text-foreground">{whyNow}</p>
           </div>
 
-          {/* Spacer to push buttons to bottom */}
-          <div className="flex-1 min-h-2" />
-
-          {/* Buttons: Pass top, Add bottom, full width */}
-          <div className="flex flex-col gap-2 mt-2">
+          {/* Buttons: side by side — Pass 40%, Add 60% */}
+          <div className="flex gap-2 mt-4">
             <button
               onClick={onPass}
               disabled={isAnimating}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted min-h-[48px] px-5 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-full border border-border bg-muted min-h-[48px] px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
+              style={{ width: '40%' }}
             >
               <ThumbsDown className="h-4 w-4" />
               Pass
@@ -102,7 +108,8 @@ export function DiscoverIdeaCard({
             <button
               onClick={onAdd}
               disabled={isAnimating}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary min-h-[48px] px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-full bg-primary min-h-[48px] px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+              style={{ width: '60%' }}
             >
               <ThumbsUp className="h-4 w-4" />
               Add to Pipeline
