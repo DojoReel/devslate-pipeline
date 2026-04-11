@@ -88,20 +88,20 @@ export function DiscoverIdeaCard({
         {/* Fixed bottom buttons */}
         <div className="shrink-0 border-t border-border bg-card px-5 pb-[env(safe-area-inset-bottom,8px)] pt-3">
           <button
-            onClick={onAdd}
-            disabled={isAnimating}
-            className="mb-2 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ThumbsUp className="h-4 w-4" />
-            Add to Pipeline
-          </button>
-          <button
             onClick={onPass}
             disabled={isAnimating}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
+            className="mb-2 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
           >
             <ThumbsDown className="h-4 w-4" />
             Pass
+          </button>
+          <button
+            onClick={onAdd}
+            disabled={isAnimating}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <ThumbsUp className="h-4 w-4" />
+            Add to Pipeline
           </button>
         </div>
       </div>
@@ -185,20 +185,20 @@ export function DiscoverIdeaCard({
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
-            onClick={onAdd}
-            disabled={isAnimating}
-            className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ThumbsUp className="h-4 w-4" />
-            Add to Pipeline
-          </button>
-          <button
             onClick={onPass}
             disabled={isAnimating}
             className="flex items-center gap-2 rounded-full border border-border bg-muted px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
           >
             <ThumbsDown className="h-4 w-4" />
             Pass
+          </button>
+          <button
+            onClick={onAdd}
+            disabled={isAnimating}
+            className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <ThumbsUp className="h-4 w-4" />
+            Add to Pipeline
           </button>
         </div>
       </div>
