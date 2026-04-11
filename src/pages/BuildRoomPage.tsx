@@ -20,6 +20,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
   const [generatingDoc, setGeneratingDoc] = useState<string | null>(null);
+  const [docsExpanded, setDocsExpanded] = useState(false);
 
   const docs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
     documentType: d.type,
@@ -81,7 +82,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
 
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-md">
-      {/* Header with image — stacked on mobile, side-by-side on desktop */}
+      {/* Header with image */}
       <div className="flex flex-col md:flex-row">
         <div className="relative w-full h-40 md:w-[200px] md:h-auto shrink-0 overflow-hidden">
           <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="absolute inset-0 w-full h-full object-cover" alt={idea.title} />
@@ -93,11 +94,20 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
           <h3 className="text-lg md:text-xl font-extrabold text-foreground">{idea.title}</h3>
           <p className="text-sm text-muted-foreground mt-1">{idea.format} · {idea.targetBroadcaster}</p>
           <p className="text-xs text-muted-foreground mt-2">{completedCount}/{DOC_TYPES.length} documents generated</p>
+
+          {/* Mobile: collapsible toggle for document generation */}
+          <button
+            onClick={() => setDocsExpanded(!docsExpanded)}
+            className="md:hidden flex items-center gap-2 mt-3 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold min-h-[48px] w-full justify-center transition-colors"
+          >
+            {docsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            Generate Documents
+          </button>
         </div>
       </div>
 
-      {/* Document slots — vertically stacked accordion */}
-      <div className="p-4 md:p-6 pt-0 space-y-2 md:space-y-3">
+      {/* Document slots — always visible on desktop, collapsible on mobile */}
+      <div className={`p-4 md:p-6 pt-0 space-y-2 md:space-y-3 ${docsExpanded ? 'block' : 'hidden md:block'}`}>
         {docs.map(doc => {
           const docMeta = DOC_TYPES.find(d => d.type === doc.documentType);
           const isGenerating = generatingDoc === doc.documentType || doc.status === 'generating';

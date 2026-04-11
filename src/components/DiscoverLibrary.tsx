@@ -154,7 +154,7 @@ function SlateSection({
     }
   }, [isAnimating]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback(() => {
     if (!touchStartRef.current || isAnimating) return;
     const dx = dragX;
     touchStartRef.current = null;
@@ -163,10 +163,8 @@ function SlateSection({
 
     if (Math.abs(dx) >= SWIPE_THRESHOLD) {
       if (dx > 0) {
-        // Swipe right → Add to Pipeline
         handleAction('add');
       } else {
-        // Swipe left → Pass
         handleAction('pass');
       }
     }
@@ -195,7 +193,7 @@ function SlateSection({
   const getMobileDragStyle = (): React.CSSProperties => {
     if (phase?.type === 'action-exit') return getExitStyle();
     if (dragX === 0) return {};
-    const tilt = (dragX / 300) * 5; // max ~5deg tilt
+    const tilt = (dragX / 300) * 5;
     return {
       transform: `translateX(${dragX}px) rotate(${tilt}deg)`,
       transition: 'none',
@@ -234,9 +232,9 @@ function SlateSection({
     const showPassOverlay = dragX < -SWIPE_THRESHOLD;
 
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col">
         <div
-          className="relative flex-1 overflow-hidden"
+          className="relative overflow-hidden"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -257,7 +255,7 @@ function SlateSection({
             </>
           )}
 
-          <div style={getMobileDragStyle()} className="h-full">
+          <div style={getMobileDragStyle()}>
             {/* Flash overlay */}
             {isExiting && showFlash && (
               <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
@@ -373,7 +371,7 @@ export function DiscoverLibrary() {
   const handleAdd = (idea: ShowIdea) => swipeRight(idea.slateId, idea);
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
 
-  // Mobile: single slate, single card, full screen
+  // Mobile: single slate, single card
   if (isMobile) {
     const ideas = slates[activeSlate].deck;
 
@@ -388,7 +386,7 @@ export function DiscoverLibrary() {
 
     return (
       <div
-        className={`flex-1 flex flex-col transition-all duration-250 ${
+        className={`flex-1 flex flex-col px-4 transition-all duration-250 ${
           slateTransition ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
         }`}
       >
