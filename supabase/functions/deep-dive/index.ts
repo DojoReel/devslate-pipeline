@@ -60,6 +60,8 @@ Format each section value EXACTLY like this:
   "verdictRationale": "Clear reasoning for the verdict in 2-3 sentences, referencing the broadcaster's specific needs"
 }
 
+CRITICAL RULE: Never include the words "GREENLIGHT", "DEVELOP FURTHER", or "PASS" anywhere in the competitiveLandscape, commissionerFit, audience, or talentAccess fields. Those verdict words must ONLY appear in the "verdict" and "verdictRationale" fields. The four research sections are pure factual analysis — no verdict language whatsoever.
+
 Be specific, reference real comparable Australian and international shows. Be honest — not every idea deserves a GREENLIGHT.`;
 
 serve(async (req) => {

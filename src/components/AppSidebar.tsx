@@ -10,11 +10,12 @@ export function AppSidebar() {
   const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
   const totalPassed = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].passed.length, 0);
+  const totalBuildRoom = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.filter(i => i.status === 'built' || i.status === 'complete' || i.status === 'building').length, 0);
 
   const workflowItems: { id: ViewId; label: string; icon: typeof Layers; count?: number }[] = [
     { id: 'discover', label: 'Discover', icon: Layers, count: totalDeck },
     { id: 'pipeline', label: 'Pipeline', icon: GitBranch, count: totalPipeline },
-    { id: 'buildroom', label: 'Build Room', icon: Hammer },
+    { id: 'buildroom', label: 'Build Room', icon: Hammer, count: totalBuildRoom },
   ];
 
   const toolItems: { id: ViewId; label: string; icon: typeof Layers }[] = [
