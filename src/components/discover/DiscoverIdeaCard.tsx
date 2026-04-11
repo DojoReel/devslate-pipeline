@@ -64,8 +64,9 @@ export function DiscoverIdeaCard({
             {idea.format} · {idea.targetBroadcaster}
           </p>
 
-          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-3 mt-2">
-            {idea.logline}
+          {/* Full concept summary — no truncation */}
+          <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
+            {idea.logline} This concept explores a fresh angle on the {idea.genre.toLowerCase()} genre, targeting {idea.targetBroadcaster} audiences with a {idea.format.toLowerCase()} format designed for maximum engagement and commissioning appeal.
           </p>
 
           {/* Stat grid: 2×2 compact */}
@@ -82,11 +83,6 @@ export function DiscoverIdeaCard({
               </div>
             ))}
           </div>
-
-          {/* Concept summary */}
-          <p className="text-[13px] leading-relaxed text-muted-foreground mt-3">
-            {idea.logline} This concept explores a fresh angle on the {idea.genre.toLowerCase()} genre, targeting {idea.targetBroadcaster} audiences with a {idea.format.toLowerCase()} format designed for maximum engagement and commissioning appeal.
-          </p>
 
           {/* Why Now: full text */}
           <div className="flex items-start gap-2 mt-3">
