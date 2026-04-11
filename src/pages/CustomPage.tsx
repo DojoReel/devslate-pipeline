@@ -59,36 +59,36 @@ export default function CustomPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in">
+    <div className="max-w-2xl mx-auto animate-fade-in px-0 md:px-0">
       <div className="flex items-center gap-3 mb-2">
-        <Palette className="w-7 h-7 text-primary" />
-        <h1 className="text-2xl font-extrabold text-foreground">Custom Slate</h1>
+        <Palette className="w-6 md:w-7 h-6 md:h-7 text-primary" />
+        <h1 className="text-xl md:text-2xl font-extrabold text-foreground">Custom Slate</h1>
       </div>
-      <p className="text-sm text-muted-foreground mb-8">
+      <p className="text-xs md:text-sm text-muted-foreground mb-6 md:mb-8">
         Add your own show ideas — they go straight to Pipeline for research and development
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
         <div className="space-y-2">
           <Label htmlFor="title">Show Title <span className="text-destructive">*</span></Label>
-          <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Desert Dreamers" required />
+          <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Desert Dreamers" required className="min-h-[48px] text-base" />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="logline">Logline — one sentence that sells the show <span className="text-destructive">*</span></Label>
-          <Textarea id="logline" value={logline} onChange={e => setLogline(e.target.value)} rows={2} placeholder="A one-sentence pitch that captures the essence of the show" required />
+          <Textarea id="logline" value={logline} onChange={e => setLogline(e.target.value)} rows={2} placeholder="A one-sentence pitch that captures the essence of the show" required className="text-base" />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="format">Format</Label>
-          <Input id="format" value={format} onChange={e => setFormat(e.target.value)} placeholder="e.g. 6 × 60min Series" />
+          <Input id="format" value={format} onChange={e => setFormat(e.target.value)} placeholder="e.g. 6 × 60min Series" className="min-h-[48px] text-base" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Genre</Label>
             <Select value={genre} onValueChange={setGenre}>
-              <SelectTrigger><SelectValue placeholder="Select genre" /></SelectTrigger>
+              <SelectTrigger className="min-h-[48px] text-base"><SelectValue placeholder="Select genre" /></SelectTrigger>
               <SelectContent>
                 {GENRES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
               </SelectContent>
@@ -98,7 +98,7 @@ export default function CustomPage() {
           <div className="space-y-2">
             <Label>Target Broadcaster</Label>
             <Select value={broadcaster} onValueChange={setBroadcaster}>
-              <SelectTrigger><SelectValue placeholder="Select broadcaster" /></SelectTrigger>
+              <SelectTrigger className="min-h-[48px] text-base"><SelectValue placeholder="Select broadcaster" /></SelectTrigger>
               <SelectContent>
                 {BROADCASTERS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
               </SelectContent>
@@ -108,13 +108,13 @@ export default function CustomPage() {
 
         <div className="space-y-2">
           <Label htmlFor="whyNow">Why Now?</Label>
-          <Textarea id="whyNow" value={whyNow} onChange={e => setWhyNow(e.target.value)} rows={2} placeholder="One sentence on cultural relevance or timeliness" />
+          <Textarea id="whyNow" value={whyNow} onChange={e => setWhyNow(e.target.value)} rows={2} placeholder="One sentence on cultural relevance or timeliness" className="text-base" />
         </div>
 
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full py-3 rounded-xl bg-verdict-amber text-primary-foreground font-bold text-base hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 min-h-[48px] rounded-xl bg-verdict-amber text-primary-foreground font-bold text-base hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Add to Pipeline
         </button>
