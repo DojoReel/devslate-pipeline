@@ -11,6 +11,8 @@ import CustomPage from '@/pages/CustomPage';
 import BuildRoomPage from '@/pages/BuildRoomPage';
 import MarketRadarPage from '@/pages/MarketRadarPage';
 import FundingCalendarPage from '@/pages/FundingCalendarPage';
+import ToolsPage from '@/pages/ToolsPage';
+import { SLATE_CONFIGS } from '@/types/devslate';
 import { useState } from 'react';
 
 function DevSlateApp() {
@@ -25,16 +27,20 @@ function DevSlateApp() {
     buildroom: 'Build Room',
     'market-radar': 'Market Radar',
     'funding-calendar': 'Funding Calendar',
+    tools: 'Tools',
   };
 
-  const hideSubtitle = currentView === 'custom' || currentView === 'market-radar' || currentView === 'funding-calendar';
+  const hideSubtitle = currentView === 'custom' || currentView === 'market-radar' || currentView === 'funding-calendar' || currentView === 'tools';
+
+  // Active slate label for mobile header
+  const activeSlateLabel = SLATE_CONFIGS.find(c => c.id === activeSlate)?.label || 'Slate';
 
   return (
     <div className="min-h-screen bg-background flex overflow-x-hidden">
       <AppSidebar />
 
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
-        {/* Mobile header — logo + drawer trigger */}
+        {/* Mobile header — logo + slates button */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-sidebar shrink-0">
           <div className="flex items-center gap-2.5">
             <Clapperboard className="w-5 h-5 text-sidebar-primary" />
@@ -44,12 +50,12 @@ function DevSlateApp() {
             onClick={() => setDrawerOpen(true)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[13px] font-semibold text-sidebar-foreground/80 hover:text-sidebar-foreground bg-sidebar-accent/30 transition-colors"
           >
-            Slates
+            {activeSlateLabel}
             <ChevronRight className="w-4 h-4" />
           </button>
         </header>
 
-        {/* Mobile slate drawer */}
+        {/* Mobile slate bottom sheet */}
         <MobileSlateDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* Desktop view switcher */}
@@ -59,7 +65,7 @@ function DevSlateApp() {
 
         {/* Content header — hidden on mobile for discover */}
         {!hideSubtitle && (
-          <div className={`px-4 md:px-10 pt-4 md:pt-8 pb-2 shrink-0 ${currentView === 'discover' ? 'hidden' : 'hidden md:block'}`}>
+          <div className={`px-4 md:px-10 pt-4 md:pt-8 pb-2 shrink-0 hidden md:block`}>
             <h2 className="text-lg md:text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
             <p className="text-xs text-muted-foreground mt-0.5 md:mt-1">
               {slates[activeSlate].config.label} · {slates[activeSlate].config.description}
@@ -68,7 +74,7 @@ function DevSlateApp() {
         )}
 
         {/* Main content — single scroll context on mobile */}
-        <main className={`flex-1 flex flex-col ${currentView === 'discover' ? 'px-0 md:px-8' : 'px-4 md:px-8'} pb-24 md:pb-6 w-full min-w-0 ${hideSubtitle ? 'pt-0 md:py-8' : 'py-0 md:py-6'} overflow-hidden`}>
+        <main className={`flex-1 flex flex-col ${currentView === 'discover' ? 'px-0 md:px-8' : 'px-0 md:px-8'} pb-24 md:pb-6 w-full min-w-0 ${hideSubtitle ? 'pt-0 md:py-8' : 'py-0 md:py-6'} overflow-hidden`}>
           {currentView === 'discover' && <DiscoverLibrary />}
           {currentView === 'pipeline' && <PipelineView />}
           {currentView === 'passed' && <PassedView />}
@@ -76,6 +82,7 @@ function DevSlateApp() {
           {currentView === 'buildroom' && <BuildRoomPage />}
           {currentView === 'market-radar' && <MarketRadarPage />}
           {currentView === 'funding-calendar' && <FundingCalendarPage />}
+          {currentView === 'tools' && <ToolsPage />}
         </main>
       </div>
 
