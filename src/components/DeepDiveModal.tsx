@@ -48,10 +48,10 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
   const rationaleBullets = extractRationaleBullets(report.verdictRationale);
 
   const sections = [
-    { title: 'Competitive Landscape', content: report.competitiveLandscape, icon: Globe, color: 'text-blue-500', dotColor: 'bg-blue-500', borderColor: 'border-t-blue-500' },
-    { title: 'Commissioner Fit', content: report.commissionerFit, icon: Sparkles, color: 'text-amber-500', dotColor: 'bg-amber-500', borderColor: 'border-t-amber-500' },
-    { title: 'Target Audience', content: report.audience, icon: Users, color: 'text-emerald-500', dotColor: 'bg-emerald-500', borderColor: 'border-t-emerald-500' },
-    { title: 'Talent & Access', content: report.talentAccess, icon: UserCheck, color: 'text-purple-500', dotColor: 'bg-purple-500', borderColor: 'border-t-purple-500' },
+    { title: 'Competitive Landscape', content: report.competitiveLandscape.replace(/GREENLIGHT|DEVELOP FURTHER|PASS/gi, '').trim(), icon: Globe, color: 'text-blue-500', dotColor: 'bg-blue-500', borderColor: 'border-t-blue-500' },
+    { title: 'Commissioner Fit', content: report.commissionerFit.replace(/GREENLIGHT|DEVELOP FURTHER|PASS/gi, '').trim(), icon: Sparkles, color: 'text-amber-500', dotColor: 'bg-amber-500', borderColor: 'border-t-amber-500' },
+    { title: 'Target Audience', content: report.audience.replace(/GREENLIGHT|DEVELOP FURTHER|PASS/gi, '').trim(), icon: Users, color: 'text-emerald-500', dotColor: 'bg-emerald-500', borderColor: 'border-t-emerald-500' },
+    { title: 'Talent & Access', content: report.talentAccess.replace(/GREENLIGHT|DEVELOP FURTHER|PASS/gi, '').trim(), icon: UserCheck, color: 'text-purple-500', dotColor: 'bg-purple-500', borderColor: 'border-t-purple-500' },
   ];
 
   return (
