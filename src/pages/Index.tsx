@@ -28,21 +28,19 @@ function DevSlateApp() {
   const hideSubtitle = currentView === 'custom' || currentView === 'market-radar' || currentView === 'funding-calendar';
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex overflow-x-hidden">
       <AppSidebar />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-sidebar">
-          <div className="flex items-center gap-2.5">
-            <Clapperboard className="w-5 h-5 text-sidebar-primary" />
-            <h1 className="text-base font-bold text-sidebar-accent-foreground tracking-tight">DevSlate</h1>
-          </div>
+        <header className="md:hidden flex items-center gap-2.5 px-4 py-3 bg-sidebar shrink-0">
+          <Clapperboard className="w-5 h-5 text-sidebar-primary" />
+          <h1 className="text-base font-bold text-sidebar-accent-foreground tracking-tight">DevSlate</h1>
         </header>
 
         {/* Mobile slate tabs — only show on discover view */}
         {currentView === 'discover' && (
-          <div className="md:hidden">
+          <div className="md:hidden shrink-0">
             <SlateTabBar />
           </div>
         )}
@@ -54,16 +52,16 @@ function DevSlateApp() {
 
         {/* Content header */}
         {!hideSubtitle && (
-          <div className="px-4 md:px-10 pt-6 md:pt-8 pb-2">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
-            <p className="text-xs md:text-sm text-muted-foreground mt-1">
+          <div className="px-4 md:px-10 pt-4 md:pt-8 pb-2 shrink-0">
+            <h2 className="text-lg md:text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5 md:mt-1">
               {slates[activeSlate].config.label} · {slates[activeSlate].config.description}
             </p>
           </div>
         )}
 
         {/* Main content */}
-        <main className={`flex-1 px-4 md:px-8 pb-28 md:pb-6 w-full ${hideSubtitle ? 'pt-4 md:py-8' : 'py-4 md:py-6'}`}>
+        <main className={`flex-1 px-4 md:px-8 pb-24 md:pb-6 w-full min-w-0 ${hideSubtitle ? 'pt-4 md:py-8' : 'py-3 md:py-6'}`}>
           {currentView === 'discover' && <DiscoverLibrary />}
           {currentView === 'pipeline' && <PipelineView />}
           {currentView === 'passed' && <PassedView />}

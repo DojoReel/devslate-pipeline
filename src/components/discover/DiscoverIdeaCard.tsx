@@ -33,76 +33,78 @@ export function DiscoverIdeaCard({
 
   if (isMobile) {
     return (
-      <div className="flex h-[100dvh] w-screen flex-col bg-card">
-        {/* Image: 40vh */}
-        <div className="relative h-[40dvh] w-full shrink-0 overflow-hidden">
+      <div className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden shadow-md">
+        {/* Image top: 45vw height */}
+        <div className="relative w-full shrink-0 overflow-hidden rounded-t-2xl" style={{ height: '45vw' }}>
           <UnsplashImage
             genre={idea.genre}
             keyword={idea.title}
             orientation="landscape"
             logline={idea.logline}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
             alt={idea.title}
             showLoadingState={true}
           />
         </div>
 
-        {/* Info panel: scrollable middle area */}
-        <div className="flex-1 overflow-y-auto px-5 pb-4 pt-5">
-          <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
+        {/* Info panel below */}
+        <div className="p-4 flex flex-col gap-3">
+          <span className={`self-start rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
           </span>
 
-          <h3 className="mb-2 text-[26px] font-extrabold leading-tight text-foreground">
+          <h3 className="text-2xl font-extrabold leading-tight text-foreground">
             {idea.title}
           </h3>
 
-          <p className="mb-3 text-sm text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {idea.format} · {idea.targetBroadcaster}
           </p>
 
-          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-3">
             {idea.logline}
           </p>
 
-          <div className="mb-4 grid grid-cols-2 gap-2">
+          {/* Stat grid: 2×2 compact */}
+          <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'Format', value: meta.format },
               { label: 'Funding Path', value: meta.fundingPath },
               { label: 'Comparable Shows', value: meta.comparables },
               { label: 'Production Complexity', value: meta.complexity },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+              <div key={stat.label} className="rounded-lg bg-muted/40 p-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{stat.label}</p>
                 <p className="text-xs font-semibold leading-snug text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>
 
-          <div className="rounded-xl bg-muted/50 p-4">
-            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Why Now?</p>
-            <p className="text-sm leading-relaxed text-foreground">{whyNow}</p>
+          {/* Why Now: inline */}
+          <div className="flex items-start gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 shrink-0 pt-0.5">Why Now?</span>
+            <p className="text-[13px] leading-snug text-foreground line-clamp-1">{whyNow}</p>
           </div>
-        </div>
 
-        {/* Fixed bottom buttons */}
-        <div className="shrink-0 border-t border-border bg-card px-5 pb-[env(safe-area-inset-bottom,8px)] pt-3">
-          <button
-            onClick={onPass}
-            disabled={isAnimating}
-            className="mb-2 flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ThumbsDown className="h-4 w-4" />
-            Pass
-          </button>
-          <button
-            onClick={onAdd}
-            disabled={isAnimating}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ThumbsUp className="h-4 w-4" />
-            Add to Pipeline
-          </button>
+          {/* Buttons: Pass top, Add bottom, full width, 48px min height */}
+          <div className="flex flex-col gap-2 mt-1">
+            <button
+              onClick={onPass}
+              disabled={isAnimating}
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted min-h-[48px] px-5 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
+            >
+              <ThumbsDown className="h-4 w-4" />
+              Pass
+            </button>
+            <button
+              onClick={onAdd}
+              disabled={isAnimating}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary min-h-[48px] px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+            >
+              <ThumbsUp className="h-4 w-4" />
+              Add to Pipeline
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -111,8 +113,8 @@ export function DiscoverIdeaCard({
   // Desktop layout
   return (
     <div className="relative flex w-full bg-card">
-      {/* Image panel: 40% */}
-      <div className="relative w-[40%] shrink-0 overflow-hidden">
+      {/* Image panel: 45% */}
+      <div className="relative w-[45%] shrink-0 overflow-hidden">
         <UnsplashImage
           genre={idea.genre}
           keyword={idea.title}
@@ -144,8 +146,8 @@ export function DiscoverIdeaCard({
         </>
       )}
 
-      {/* Info panel: 60% */}
-      <div className="flex w-[60%] flex-col justify-between p-8">
+      {/* Info panel: 55% */}
+      <div className="flex w-[55%] flex-col justify-between p-8">
         <div>
           <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
