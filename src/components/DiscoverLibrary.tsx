@@ -7,7 +7,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 const EASING_SLIDE = 'ease-in-out';
-const EASING_ADD = 'cubic-bezier(0.2, 0, 0.2, 1.4)';
 const EASING_PASS = 'ease-in';
 
 type ActionType = 'add' | 'pass';
@@ -56,14 +55,6 @@ function SlateSection({
     }
     frameRefs.current.forEach((id) => window.cancelAnimationFrame(id));
     frameRefs.current = [];
-  }, []);
-
-  const raf = useCallback((cb: () => void) => {
-    const f1 = window.requestAnimationFrame(() => {
-      const f2 = window.requestAnimationFrame(cb);
-      frameRefs.current.push(f2);
-    });
-    frameRefs.current.push(f1);
   }, []);
 
   useEffect(() => () => clearHandles(), [clearHandles]);
@@ -120,13 +111,11 @@ function SlateSection({
     if (!currentIdea) return;
 
     const nextIdea = ideas[currentIndex + 1];
-    const prevIdea = ideas[currentIndex - 1];
     const nextIndex = nextIdea ? currentIndex : Math.max(0, currentIndex - 1);
 
     clearHandles();
     setIsAnimating(true);
 
-    // Phase 1: exit animation
     setPhase({ type: 'action-exit', action, ideaId: currentIdea.id });
     setShowFlash(action);
 
@@ -134,8 +123,6 @@ function SlateSection({
 
     timeoutRef.current = window.setTimeout(() => {
       setShowFlash(null);
-
-      // Commit the mutation
       pendingMutationRef.current = { nextIndex, removedIdeaId: currentIdea.id };
       if (action === 'add') onAdd(currentIdea);
       else onPass(currentIdea);
@@ -224,31 +211,33 @@ function SlateSection({
     </div>
   );
 
+  const dotIndicators = ideas.length > 1 && (
+    <div className="flex items-center justify-center gap-2 py-3">
+      {ideas.map((idea, index) => (
+        <button
+          key={idea.id}
+          onClick={() => navigateTo(index)}
+          disabled={isAnimating}
+          className={`h-2.5 w-2.5 rounded-full transition-all ${
+            index === currentIndex ? 'scale-125 bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+          } disabled:pointer-events-none`}
+        />
+      ))}
+    </div>
+  );
+
   if (isMobile) {
     return (
-      <div
-        className="relative overflow-hidden"
-        style={{ height: '100dvh', width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        {renderCards()}
-        {ideas.length > 1 && (
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center pb-[120px]">
-            <div className="pointer-events-auto flex items-center gap-2">
-              {ideas.map((idea, index) => (
-                <button
-                  key={idea.id}
-                  onClick={() => navigateTo(index)}
-                  disabled={isAnimating}
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    index === currentIndex ? 'scale-125 bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                  } disabled:pointer-events-none`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold text-foreground mb-3">{label}</h2>
+        <div
+          className="relative overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {renderCards()}
+        </div>
+        {dotIndicators}
       </div>
     );
   }
@@ -289,7 +278,7 @@ export function DiscoverLibrary() {
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
 
   return (
-    <div className="animate-fade-in space-y-12">
+    <div className="animate-fade-in space-y-6 md:space-y-12">
       {DISCOVER_SLATES.map((config) => {
         const ideas = slates[config.id].deck;
         if (ideas.length === 0) return null;

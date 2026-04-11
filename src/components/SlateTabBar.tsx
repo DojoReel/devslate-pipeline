@@ -5,7 +5,7 @@ export function SlateTabBar() {
   const { activeSlate, setActiveSlate, slates } = useDevSlate();
 
   return (
-    <div className="flex items-center gap-2 px-5 py-3 bg-nav-bg overflow-x-auto scrollbar-none">
+    <div className="flex items-center gap-2 px-4 py-3 bg-nav-bg overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
       {SLATE_CONFIGS.map(config => {
         const isActive = activeSlate === config.id;
         const pipelineCount = slates[config.id].pipeline.length;
