@@ -85,7 +85,7 @@ export function AppSidebar() {
             <Clapperboard className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-sidebar-accent-foreground">DevSlate</h1>
+            <h1 className="text-lg font-bold tracking-tight text-sidebar-accent-foreground">Pitchfire</h1>
             <p className="text-[11px] text-sidebar-foreground/60 uppercase tracking-widest">Pipeline</p>
           </div>
         </div>

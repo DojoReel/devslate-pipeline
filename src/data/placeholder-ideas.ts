@@ -28,7 +28,7 @@ export const PLACEHOLDER_IDEAS: Record<SlateId, ShowIdea[]> = {
     { id: makeId(), title: 'Border Towns', logline: 'Life in the world\'s most contested border towns — from the DMZ to Kashmir — told through the families who live there.', format: '6 × 60min Series', targetBroadcaster: 'HBO / BBC', genre: 'Geopolitical Documentary', slateId: 'international' },
   ],
   custom: [
-    { id: makeId(), title: 'Your Idea Here', logline: 'Add your own show ideas to this custom slate and run them through the DevSlate pipeline.', format: 'TBD', targetBroadcaster: 'TBD', genre: 'Custom', slateId: 'custom' },
+    { id: makeId(), title: 'Your Idea Here', logline: 'Add your own show ideas to this custom slate and run them through the Pitchfire pipeline.', format: 'TBD', targetBroadcaster: 'TBD', genre: 'Custom', slateId: 'custom' },
     { id: makeId(), title: 'Pitch Lab', logline: 'A meta-documentary following producers as they use AI tools to develop and pitch unscripted television concepts.', format: '4 × 30min Series', targetBroadcaster: 'YouTube / Stan', genre: 'Behind the Scenes', slateId: 'custom' },
   ],
 };
