@@ -61,7 +61,7 @@ function DevSlateApp() {
         )}
 
         {/* Main content */}
-        <main className={`flex-1 px-4 md:px-8 pb-24 md:pb-6 w-full min-w-0 ${hideSubtitle ? 'pt-4 md:py-8' : 'py-3 md:py-6'}`}>
+        <main className={`flex-1 flex flex-col ${currentView === 'discover' ? 'px-0 md:px-8' : 'px-4 md:px-8'} pb-24 md:pb-6 w-full min-w-0 ${hideSubtitle ? 'pt-0 md:py-8' : 'py-0 md:py-6'}`}>
           {currentView === 'discover' && <DiscoverLibrary />}
           {currentView === 'pipeline' && <PipelineView />}
           {currentView === 'passed' && <PassedView />}
