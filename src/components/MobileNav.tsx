@@ -1,8 +1,8 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, PackageOpen, Hammer, Palette, Radio, CalendarDays } from 'lucide-react';
+import { Layers, GitBranch, Hammer, Wrench, PlusCircle } from 'lucide-react';
 
-type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar';
+type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools';
 
 export function MobileNav() {
   const { currentView, setCurrentView, slates } = useDevSlate();
@@ -15,8 +15,8 @@ export function MobileNav() {
     { id: 'discover', label: 'Discover', icon: Layers, count: totalDeck },
     { id: 'pipeline', label: 'Pipeline', icon: GitBranch, count: totalPipeline },
     { id: 'buildroom', label: 'Build', icon: Hammer, count: totalBuildRoom },
-    { id: 'custom', label: 'Custom', icon: Palette },
-    { id: 'passed', label: 'Bin', icon: PackageOpen },
+    { id: 'tools', label: 'Tools', icon: Wrench },
+    { id: 'custom', label: 'Add Idea', icon: PlusCircle },
   ];
 
   return (

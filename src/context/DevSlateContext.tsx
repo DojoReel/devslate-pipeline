@@ -16,8 +16,8 @@ interface DevSlateContextType {
   sendToBuildRoom: (slateId: SlateId, ideaId: string) => void;
   archiveIdea: (slateId: SlateId, ideaId: string) => void;
   unarchiveIdea: (ideaId: string) => void;
-  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar';
-  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar') => void;
+  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools';
+  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools') => void;
 }
 
 const DevSlateContext = createContext<DevSlateContextType | null>(null);
@@ -39,7 +39,7 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
   const [activeSlate, setActiveSlate] = useState<SlateId>('abc');
   const [slates, setSlates] = useState<Record<SlateId, SlateState>>(initSlates);
   const [archivedIdeas, setArchivedIdeas] = useState<PipelineIdea[]>([]);
-  const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar'>('discover');
+  const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools'>('discover');
 
   const swipeRight = useCallback((slateId: SlateId, idea: ShowIdea) => {
     setSlates(prev => {
