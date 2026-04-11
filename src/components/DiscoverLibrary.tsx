@@ -15,7 +15,8 @@ type AnimationPhase =
   | null
   | { type: 'slide'; direction: 'next' | 'prev'; targetIndex: number }
   | { type: 'action-exit'; action: ActionType; ideaId: string }
-  | { type: 'action-enter'; action: ActionType; nextIndex: number };
+  | { type: 'action-enter'; action: ActionType; nextIndex: number }
+  | { type: 'slate-switch' };
 
 interface PendingMutation {
   nextIndex: number;
@@ -24,6 +25,8 @@ interface PendingMutation {
 
 // Non-custom slates only for Discover
 const DISCOVER_SLATES = SLATE_CONFIGS.filter((config) => config.id !== 'custom');
+
+const SWIPE_THRESHOLD = 60;
 
 function SlateSection({
   label,
@@ -48,6 +51,10 @@ function SlateSection({
   const frameRefs = useRef<number[]>([]);
   const pendingMutationRef = useRef<PendingMutation | null>(null);
 
+  // Mobile drag state
+  const [dragX, setDragX] = useState(0);
+  const isDraggingRef = useRef(false);
+
   const clearHandles = useCallback(() => {
     if (timeoutRef.current !== null) {
       window.clearTimeout(timeoutRef.current);
@@ -71,7 +78,7 @@ function SlateSection({
     if (next) preloadImage(next.title, next.genre);
   }, [currentIndex, ideas]);
 
-  // Handle pending mutation (after idea removed from array)
+  // Handle pending mutation
   useEffect(() => {
     const pm = pendingMutationRef.current;
     if (!pm) return;
@@ -84,7 +91,6 @@ function SlateSection({
     setIsAnimating(false);
   }, [ideas]);
 
-  // Arrow/dot navigation — simple track slide
   const navigateTo = useCallback((targetIndex: number) => {
     if (isAnimating) return;
     if (targetIndex < 0 || targetIndex >= ideas.length || targetIndex === currentIndex) return;
@@ -104,7 +110,6 @@ function SlateSection({
     navigateTo(dir === 'next' ? currentIndex + 1 : currentIndex - 1);
   }, [currentIndex, navigateTo]);
 
-  // Add/Pass actions — distinct exit animations
   const handleAction = useCallback((action: ActionType) => {
     if (isAnimating) return;
     const currentIdea = ideas[currentIndex];
@@ -115,7 +120,6 @@ function SlateSection({
 
     clearHandles();
     setIsAnimating(true);
-
     setPhase({ type: 'action-exit', action, ideaId: currentIdea.id });
     setShowFlash(action);
 
@@ -129,26 +133,49 @@ function SlateSection({
     }, exitDuration);
   }, [clearHandles, currentIndex, ideas, isAnimating, onAdd, onPass]);
 
+  // Mobile touch handlers with drag
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (isAnimating) return;
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }, []);
+    isDraggingRef.current = false;
+    setDragX(0);
+  }, [isAnimating]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current || isAnimating) return;
+    const dx = e.touches[0].clientX - touchStartRef.current.x;
+    const dy = e.touches[0].clientY - touchStartRef.current.y;
+    if (!isDraggingRef.current && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      isDraggingRef.current = true;
+    }
+    if (isDraggingRef.current) {
+      e.preventDefault();
+      setDragX(dx);
+    }
+  }, [isAnimating]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!touchStartRef.current || isAnimating) return;
-    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
-    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const dx = dragX;
     touchStartRef.current = null;
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
-    if (dx < 0) navigate('next');
-    else navigate('prev');
-  }, [isAnimating, navigate]);
+    isDraggingRef.current = false;
+    setDragX(0);
+
+    if (Math.abs(dx) >= SWIPE_THRESHOLD) {
+      if (dx > 0) {
+        // Swipe right → Add to Pipeline
+        handleAction('add');
+      } else {
+        // Swipe left → Pass
+        handleAction('pass');
+      }
+    }
+  }, [isAnimating, dragX, handleAction]);
 
   if (ideas.length === 0) return null;
 
-  // Compute exit style for the current card during action-exit
   const getExitStyle = (): React.CSSProperties => {
     if (!phase || phase.type !== 'action-exit') return {};
-
     if (phase.action === 'add') {
       return {
         transform: 'translateX(110%) translateY(-20px) rotate(8deg)',
@@ -164,7 +191,17 @@ function SlateSection({
     }
   };
 
-  // Track-based carousel rendering
+  // Mobile drag style
+  const getMobileDragStyle = (): React.CSSProperties => {
+    if (phase?.type === 'action-exit') return getExitStyle();
+    if (dragX === 0) return {};
+    const tilt = (dragX / 300) * 5; // max ~5deg tilt
+    return {
+      transform: `translateX(${dragX}px) rotate(${tilt}deg)`,
+      transition: 'none',
+    };
+  };
+
   const trackStyle: React.CSSProperties = {
     transform: `translateX(-${currentIndex * 100}%)`,
     transition: phase?.type === 'slide'
@@ -173,6 +210,84 @@ function SlateSection({
     willChange: 'transform',
   };
 
+  const dotIndicators = ideas.length > 1 && (
+    <div className="flex items-center justify-center gap-2 py-2">
+      {ideas.map((idea, index) => (
+        <button
+          key={idea.id}
+          onClick={() => navigateTo(index)}
+          disabled={isAnimating}
+          className={`h-2 w-2 rounded-full transition-all ${
+            index === currentIndex ? 'scale-125 bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+          } disabled:pointer-events-none`}
+        />
+      ))}
+    </div>
+  );
+
+  if (isMobile) {
+    const currentIdea = ideas[currentIndex];
+    if (!currentIdea) return null;
+
+    const isExiting = phase?.type === 'action-exit';
+    const showAddOverlay = dragX > SWIPE_THRESHOLD;
+    const showPassOverlay = dragX < -SWIPE_THRESHOLD;
+
+    return (
+      <div className="flex flex-col h-full">
+        <div
+          className="relative flex-1 overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Drag overlays */}
+          {dragX !== 0 && (
+            <>
+              {showAddOverlay && (
+                <div className="absolute inset-y-0 right-0 w-1/3 z-20 bg-green-500/20 flex items-center justify-center pointer-events-none rounded-r-2xl">
+                  <CheckCircle className="w-12 h-12 text-green-500" style={{ opacity: 0.7 }} />
+                </div>
+              )}
+              {showPassOverlay && (
+                <div className="absolute inset-y-0 left-0 w-1/3 z-20 bg-red-500/20 flex items-center justify-center pointer-events-none rounded-l-2xl">
+                  <XCircle className="w-12 h-12 text-red-500" style={{ opacity: 0.7 }} />
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={getMobileDragStyle()} className="h-full">
+            {/* Flash overlay */}
+            {isExiting && showFlash && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+                {showFlash === 'add' ? (
+                  <CheckCircle className="w-20 h-20 text-green-400 animate-scale-in" style={{ opacity: 0.8 }} />
+                ) : (
+                  <XCircle className="w-20 h-20 text-muted-foreground animate-scale-in" style={{ opacity: 0.6 }} />
+                )}
+              </div>
+            )}
+            <DiscoverIdeaCard
+              idea={currentIdea}
+              canGoPrev={currentIndex > 0}
+              canGoNext={currentIndex < ideas.length - 1}
+              isAnimating={isAnimating}
+              onPrev={() => navigate('prev')}
+              onNext={() => navigate('next')}
+              onAdd={() => handleAction('add')}
+              onPass={() => handleAction('pass')}
+              showNavigation={false}
+              isMobile={true}
+            />
+          </div>
+        </div>
+        {dotIndicators}
+      </div>
+    );
+  }
+
+  // Desktop
   const renderCards = () => (
     <div className="flex" style={trackStyle}>
       {ideas.map((idea, index) => {
@@ -183,7 +298,6 @@ function SlateSection({
             className="w-full shrink-0 relative"
             style={isExiting ? getExitStyle() : undefined}
           >
-            {/* Flash overlay */}
             {isExiting && showFlash && (
               <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
                 {showFlash === 'add' ? (
@@ -210,37 +324,6 @@ function SlateSection({
       })}
     </div>
   );
-
-  const dotIndicators = ideas.length > 1 && (
-    <div className="flex items-center justify-center gap-2 py-3">
-      {ideas.map((idea, index) => (
-        <button
-          key={idea.id}
-          onClick={() => navigateTo(index)}
-          disabled={isAnimating}
-          className={`h-2.5 w-2.5 rounded-full transition-all ${
-            index === currentIndex ? 'scale-125 bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-          } disabled:pointer-events-none`}
-        />
-      ))}
-    </div>
-  );
-
-  if (isMobile) {
-    return (
-      <div className="mb-8">
-        <h2 className="text-lg font-bold text-foreground mb-3">{label}</h2>
-        <div
-          className="relative overflow-hidden"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {renderCards()}
-        </div>
-        {dotIndicators}
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -271,14 +354,58 @@ function SlateSection({
 }
 
 export function DiscoverLibrary() {
-  const { slates, swipeRight, swipeLeft } = useDevSlate();
+  const { slates, activeSlate, swipeRight, swipeLeft } = useDevSlate();
   const isMobile = useIsMobile();
+  const [slateTransition, setSlateTransition] = useState(false);
+  const prevSlateRef = useRef(activeSlate);
+
+  // Slate switch animation on mobile
+  useEffect(() => {
+    if (isMobile && prevSlateRef.current !== activeSlate) {
+      setSlateTransition(true);
+      const timer = setTimeout(() => setSlateTransition(false), 250);
+      prevSlateRef.current = activeSlate;
+      return () => clearTimeout(timer);
+    }
+    prevSlateRef.current = activeSlate;
+  }, [activeSlate, isMobile]);
 
   const handleAdd = (idea: ShowIdea) => swipeRight(idea.slateId, idea);
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
 
+  // Mobile: single slate, single card, full screen
+  if (isMobile) {
+    const ideas = slates[activeSlate].deck;
+
+    if (ideas.length === 0) {
+      return (
+        <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground px-4">
+          <p className="text-base font-semibold text-foreground">All ideas reviewed</p>
+          <p className="mt-1 text-sm">Switch slates or reset to see more</p>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className={`flex-1 flex flex-col transition-all duration-250 ${
+          slateTransition ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+        }`}
+      >
+        <SlateSection
+          label=""
+          ideas={ideas}
+          onAdd={handleAdd}
+          onPass={handlePass}
+          isMobile={true}
+        />
+      </div>
+    );
+  }
+
+  // Desktop: all slates stacked
   return (
-    <div className="animate-fade-in space-y-6 md:space-y-12">
+    <div className="animate-fade-in space-y-12">
       {DISCOVER_SLATES.map((config) => {
         const ideas = slates[config.id].deck;
         if (ideas.length === 0) return null;
@@ -290,7 +417,7 @@ export function DiscoverLibrary() {
             ideas={ideas}
             onAdd={handleAdd}
             onPass={handlePass}
-            isMobile={isMobile}
+            isMobile={false}
           />
         );
       })}

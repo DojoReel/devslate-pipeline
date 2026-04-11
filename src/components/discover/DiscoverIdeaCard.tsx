@@ -33,9 +33,9 @@ export function DiscoverIdeaCard({
 
   if (isMobile) {
     return (
-      <div className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden shadow-md">
-        {/* Image top: 45vw height */}
-        <div className="relative w-full shrink-0 overflow-hidden rounded-t-2xl" style={{ height: '45vw' }}>
+      <div className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden h-full">
+        {/* Image: 40% of card height */}
+        <div className="relative w-full shrink-0 overflow-hidden rounded-t-2xl" style={{ height: '40%' }}>
           <UnsplashImage
             genre={idea.genre}
             keyword={idea.title}
@@ -47,26 +47,26 @@ export function DiscoverIdeaCard({
           />
         </div>
 
-        {/* Info panel below */}
-        <div className="p-4 flex flex-col gap-3">
+        {/* Info panel: 60% */}
+        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
           <span className={`self-start rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
           </span>
 
-          <h3 className="text-2xl font-extrabold leading-tight text-foreground">
+          <h3 className="text-2xl font-extrabold leading-tight text-foreground mt-2">
             {idea.title}
           </h3>
 
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground mt-1">
             {idea.format} · {idea.targetBroadcaster}
           </p>
 
-          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-3">
+          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-3 mt-2">
             {idea.logline}
           </p>
 
           {/* Stat grid: 2×2 compact */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 mt-3">
             {[
               { label: 'Format', value: meta.format },
               { label: 'Funding Path', value: meta.fundingPath },
@@ -81,13 +81,16 @@ export function DiscoverIdeaCard({
           </div>
 
           {/* Why Now: inline */}
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2 mt-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 shrink-0 pt-0.5">Why Now?</span>
             <p className="text-[13px] leading-snug text-foreground line-clamp-1">{whyNow}</p>
           </div>
 
-          {/* Buttons: Pass top, Add bottom, full width, 48px min height */}
-          <div className="flex flex-col gap-2 mt-1">
+          {/* Spacer to push buttons to bottom */}
+          <div className="flex-1 min-h-2" />
+
+          {/* Buttons: Pass top, Add bottom, full width */}
+          <div className="flex flex-col gap-2 mt-2">
             <button
               onClick={onPass}
               disabled={isAnimating}
@@ -113,7 +116,6 @@ export function DiscoverIdeaCard({
   // Desktop layout
   return (
     <div className="relative flex w-full bg-card">
-      {/* Image panel: 45% */}
       <div className="relative w-[45%] shrink-0 overflow-hidden">
         <UnsplashImage
           genre={idea.genre}
@@ -126,7 +128,6 @@ export function DiscoverIdeaCard({
         />
       </div>
 
-      {/* Arrow buttons on full card edges */}
       {showNavigation && (
         <>
           <button
@@ -146,7 +147,6 @@ export function DiscoverIdeaCard({
         </>
       )}
 
-      {/* Info panel: 55% */}
       <div className="flex w-[55%] flex-col justify-between p-8">
         <div>
           <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
