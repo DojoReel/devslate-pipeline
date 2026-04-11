@@ -38,9 +38,12 @@ function DevSlateApp() {
           <h1 className="text-base font-bold text-sidebar-accent-foreground tracking-tight">DevSlate</h1>
         </header>
 
-        {/* Mobile slate tabs — only show on discover view */}
+        {/* Mobile: Discover title + slate tabs */}
         {currentView === 'discover' && (
-          <div className="md:hidden shrink-0">
+          <div className="md:hidden shrink-0 bg-sidebar">
+            <div className="px-4 pt-1 pb-1.5">
+              <h2 className="text-lg font-bold text-white tracking-tight">Discover</h2>
+            </div>
             <SlateTabBar />
           </div>
         )}
@@ -50,9 +53,9 @@ function DevSlateApp() {
           <ViewSwitcher />
         </div>
 
-        {/* Content header */}
+        {/* Content header — hidden on mobile for discover */}
         {!hideSubtitle && (
-          <div className="px-4 md:px-10 pt-4 md:pt-8 pb-2 shrink-0">
+          <div className={`px-4 md:px-10 pt-4 md:pt-8 pb-2 shrink-0 ${currentView === 'discover' ? 'hidden md:block' : ''}`}>
             <h2 className="text-lg md:text-2xl font-bold text-foreground tracking-tight">{viewTitles[currentView]}</h2>
             <p className="text-xs text-muted-foreground mt-0.5 md:mt-1">
               {slates[activeSlate].config.label} · {slates[activeSlate].config.description}
