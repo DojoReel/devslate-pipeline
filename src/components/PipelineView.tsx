@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer } from 'lucide-react';
+import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
@@ -18,20 +18,24 @@ const VERDICT_DOT: Record<string, string> = {
   'PASS': 'bg-verdict-red',
 };
 
-const TAB_OPTIONS: { id: 'all' | SlateId; label: string }[] = [
+const TAB_OPTIONS: { id: 'all' | 'archived' | SlateId; label: string }[] = [
   { id: 'all', label: 'Show All' },
   ...SLATE_CONFIGS.map(c => ({ id: c.id, label: c.label })),
+  { id: 'archived', label: 'Archived' },
 ];
 
 function PipelineCard({
-  idea, onDeepDive, onViewResearch, onSendToBuildRoom, onViewBuildRoom, isLoading,
+  idea, onDeepDive, onViewResearch, onSendToBuildRoom, onViewBuildRoom, onArchive, onUnarchive, isLoading, isArchived,
 }: {
   idea: PipelineIdea;
   onDeepDive: () => void;
   onViewResearch: () => void;
   onSendToBuildRoom: () => void;
   onViewBuildRoom: () => void;
+  onArchive?: () => void;
+  onUnarchive?: () => void;
   isLoading: boolean;
+  isArchived?: boolean;
 }) {
   const hasReport = idea.report != null;
   const verdictKey = idea.report?.verdict;
@@ -43,12 +47,23 @@ function PipelineCard({
   const borderClass = hasReport ? `border-l-4 ${VERDICT_BORDER[verdictKey!]}` : 'border-l-4 border-l-border';
 
   return (
-    <div className={`relative flex w-full bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${borderClass}`}>
+    <div className={`relative flex w-full bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${borderClass} ${isArchived ? 'opacity-70' : ''}`}>
+      {/* Archive button */}
+      {!isArchived && onArchive && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onArchive(); }}
+          className="absolute top-3 right-3 z-10 p-2 rounded-lg bg-background/80 text-muted-foreground hover:text-foreground hover:bg-background transition-colors backdrop-blur-sm"
+          title="Archive"
+        >
+          <Archive className="w-4 h-4" />
+        </button>
+      )}
+
       {/* Image panel — 45% */}
       <div className="relative w-[45%] shrink-0 overflow-hidden">
         <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="absolute inset-0 w-full h-full object-cover" alt={idea.title} />
         {isBuilt && (
-          <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-teal-600 text-primary-foreground text-xs font-bold">BUILT</div>
+          <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-teal-600 text-primary-foreground text-xs font-bold">BUILT</div>
         )}
       </div>
 
@@ -92,41 +107,50 @@ function PipelineCard({
         {/* Divider + Action buttons */}
         <div className="border-t border-border pt-5 mt-6">
           <div className="flex items-center gap-3 flex-wrap">
-            {idea.status === 'swiped' && (
-              <button onClick={(e) => { e.stopPropagation(); onDeepDive(); }}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
-                <Telescope className="w-4 h-4" /> Deep Dive
+            {isArchived && onUnarchive ? (
+              <button onClick={(e) => { e.stopPropagation(); onUnarchive(); }}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-border bg-muted text-muted-foreground text-sm font-bold hover:bg-muted/80 transition-colors">
+                <ArchiveRestore className="w-4 h-4" /> Restore to Pipeline
               </button>
-            )}
-            {idea.status === 'researching' && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" /> Researching…
-              </div>
-            )}
-            {idea.status === 'researched' && hasReport && (
+            ) : (
               <>
-                <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
-                  className={`flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform ${!canBuild ? 'flex-1' : ''}`}>
-                  <Eye className="w-4 h-4" /> View Research
-                </button>
-                {canBuild && (
-                  <button onClick={(e) => { e.stopPropagation(); onSendToBuildRoom(); }}
-                    className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
-                    Send to Build Room <ArrowRight className="w-4 h-4" />
+                {idea.status === 'swiped' && (
+                  <button onClick={(e) => { e.stopPropagation(); onDeepDive(); }}
+                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                    <Telescope className="w-4 h-4" /> Deep Dive
                   </button>
                 )}
-              </>
-            )}
-            {isBuilt && hasReport && (
-              <>
-                <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
-                  <Eye className="w-4 h-4" /> View Research
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); onViewBuildRoom(); }}
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-slate-700 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
-                  <Hammer className="w-4 h-4" /> View in Build Room <ArrowRight className="w-4 h-4" />
-                </button>
+                {idea.status === 'researching' && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" /> Researching…
+                  </div>
+                )}
+                {idea.status === 'researched' && hasReport && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
+                      className={`flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform ${!canBuild ? 'flex-1' : ''}`}>
+                      <Eye className="w-4 h-4" /> View Research
+                    </button>
+                    {canBuild && (
+                      <button onClick={(e) => { e.stopPropagation(); onSendToBuildRoom(); }}
+                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                        Send to Build Room <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
+                  </>
+                )}
+                {isBuilt && hasReport && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
+                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      <Eye className="w-4 h-4" /> View Research
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); onViewBuildRoom(); }}
+                      className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-slate-700 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      <Hammer className="w-4 h-4" /> View in Build Room <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -137,8 +161,8 @@ function PipelineCard({
 }
 
 export function PipelineView() {
-  const { slates, updatePipelineIdea, sendToBuildRoom, setCurrentView } = useDevSlate();
-  const [activeTab, setActiveTab] = useState<'all' | SlateId>('all');
+  const { slates, updatePipelineIdea, sendToBuildRoom, archiveIdea, unarchiveIdea, archivedIdeas, setCurrentView } = useDevSlate();
+  const [activeTab, setActiveTab] = useState<'all' | 'archived' | SlateId>('all');
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -148,6 +172,8 @@ export function PipelineView() {
 
   const filteredIdeas = activeTab === 'all'
     ? allPipelineIdeas
+    : activeTab === 'archived'
+    ? archivedIdeas
     : slates[activeTab].pipeline;
 
   const runDeepDive = async (idea: PipelineIdea) => {
@@ -178,7 +204,11 @@ export function PipelineView() {
       <div className="flex items-center gap-2 mb-8 flex-wrap">
         {TAB_OPTIONS.map(tab => {
           const isActive = activeTab === tab.id;
-          const count = tab.id === 'all' ? allPipelineIdeas.length : slates[tab.id].pipeline.length;
+          const count = tab.id === 'all'
+            ? allPipelineIdeas.length
+            : tab.id === 'archived'
+            ? archivedIdeas.length
+            : slates[tab.id].pipeline.length;
           return (
             <button
               key={tab.id}
@@ -201,19 +231,24 @@ export function PipelineView() {
       {filteredIdeas.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-96 text-muted-foreground animate-fade-in">
           <div className="w-20 h-20 rounded-2xl bg-card border border-border flex items-center justify-center mb-5 shadow-md">
-            <FileText className="w-10 h-10 text-muted-foreground/50" />
+            {activeTab === 'archived' ? <Archive className="w-10 h-10 text-muted-foreground/50" /> : <FileText className="w-10 h-10 text-muted-foreground/50" />}
           </div>
-          <p className="text-xl font-bold text-foreground">Pipeline empty</p>
-          <p className="text-sm mt-2 text-muted-foreground">Add ideas from Discover to start building your slate</p>
+          <p className="text-xl font-bold text-foreground">{activeTab === 'archived' ? 'No archived ideas' : 'Pipeline empty'}</p>
+          <p className="text-sm mt-2 text-muted-foreground">
+            {activeTab === 'archived' ? 'Archive ideas from the pipeline to see them here' : 'Add ideas from Discover to start building your slate'}
+          </p>
         </div>
       ) : (
         <div className="grid gap-6 animate-fade-in">
           {filteredIdeas.map(idea => (
             <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id}
+              isArchived={activeTab === 'archived'}
               onDeepDive={() => runDeepDive(idea)}
               onViewResearch={() => setSelectedIdea(idea)}
               onSendToBuildRoom={() => handleSendToBuildRoom(idea)}
               onViewBuildRoom={() => setCurrentView('buildroom')}
+              onArchive={() => archiveIdea(idea.slateId, idea.id)}
+              onUnarchive={() => unarchiveIdea(idea.id)}
             />
           ))}
         </div>

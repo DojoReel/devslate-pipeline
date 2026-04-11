@@ -8,19 +8,26 @@ interface DeepDiveModalProps {
   onClose: () => void;
 }
 
+// Strip verdict language from research content
+const VERDICT_WORDS = /\b(GREENLIGHT|DEVELOP FURTHER|PASS|verdict|greenlight|greenlighted)\b/gi;
+
+function sanitizeBullet(text: string): string {
+  return text.replace(VERDICT_WORDS, '').replace(/\s{2,}/g, ' ').trim();
+}
+
 function extractBullets(content: string): string[] {
   const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
   const bullets: string[] = [];
 
   for (const line of lines) {
     if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*') || /^\d+[\.\)]/.test(line)) {
-      bullets.push(line.replace(/^[•\-\*]\s*/, '').replace(/^\d+[\.\)]\s*/, ''));
+      bullets.push(sanitizeBullet(line.replace(/^[•\-\*]\s*/, '').replace(/^\d+[\.\)]\s*/, '')));
     }
   }
 
   if (bullets.length === 0) {
     const sentences = content.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
-    return sentences.slice(0, 4);
+    return sentences.slice(0, 4).map(sanitizeBullet);
   }
 
   return bullets.slice(0, 4);

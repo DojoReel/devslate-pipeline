@@ -130,7 +130,7 @@ function SlateSection({
     setPhase({ type: 'action-exit', action, ideaId: currentIdea.id });
     setShowFlash(action);
 
-    const exitDuration = action === 'add' ? 400 : 380;
+    const exitDuration = 380;
 
     timeoutRef.current = window.setTimeout(() => {
       setShowFlash(null);
@@ -164,9 +164,9 @@ function SlateSection({
 
     if (phase.action === 'add') {
       return {
-        transform: 'translateY(-120%) scale(1.02)',
+        transform: 'translateX(110%) translateY(-20px) rotate(8deg)',
         opacity: 0,
-        transition: `transform 400ms ${EASING_ADD}, opacity 400ms ${EASING_ADD}`,
+        transition: `transform 380ms ${EASING_PASS}, opacity 380ms ${EASING_PASS}`,
       };
     } else {
       return {
@@ -257,7 +257,7 @@ function SlateSection({
     <div>
       <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
       <div
-        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg"
+        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg max-w-[85%] mx-auto"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
