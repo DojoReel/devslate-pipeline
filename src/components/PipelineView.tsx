@@ -183,7 +183,7 @@ export function PipelineView() {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deep-dive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({ title: idea.title, logline: idea.logline, format: idea.format, targetBroadcaster: idea.targetBroadcaster, genre: idea.genre }),
+        body: JSON.stringify({ title: idea.title, logline: idea.logline, format: idea.format, targetBroadcaster: idea.targetBroadcaster, genre: idea.genre, hook: idea.hook, whyNow: idea.whyNow, peopleAccess: idea.peopleAccess, comparables: idea.comparables }),
       });
       if (!response.ok) throw new Error('Deep dive failed');
       const report = await response.json();
