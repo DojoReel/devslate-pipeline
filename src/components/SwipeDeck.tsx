@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { getPicsumUrl } from '@/hooks/useUnsplashImage';
+import { DiscoverIdeaCard } from '@/components/discover/DiscoverIdeaCard';
 import { ShowIdea, SlateId } from '@/types/devslate';
 import { useDevSlate } from '@/context/DevSlateContext';
 import { Check, X } from 'lucide-react';
@@ -107,53 +108,11 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* Full bleed hero image */}
-          <div className="absolute inset-0 bg-muted">
-            {heroImage && (
-              <img src={heroImage} alt={currentIdea.title} className="w-full h-full object-cover" loading="eager" />
-            )}
-          </div>
-
-          {/* Gradient scrim */}
-          <div className="absolute inset-0 gradient-scrim" />
-
-          {/* Genre pill top-left */}
-          <div className="absolute top-5 left-5">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${genreStyle}`}>
-              {currentIdea.genre}
-            </span>
-          </div>
-
-          {/* Swipe indicators */}
-          {dragX > 50 && (
-            <div className="absolute top-6 right-6 px-4 py-2 rounded-xl bg-verdict-green/20 border-2 border-verdict-green/60 text-verdict-green text-sm font-bold tracking-wide rotate-12 backdrop-blur-sm">
-              PIPELINE →
-            </div>
-          )}
-          {dragX < -50 && (
-            <div className="absolute top-6 left-6 px-4 py-2 rounded-xl bg-verdict-red/20 border-2 border-verdict-red/60 text-verdict-red text-sm font-bold tracking-wide -rotate-12 backdrop-blur-sm">
-              ← PASS
-            </div>
-          )}
-
-          {/* Card content overlay — bottom */}
-          <div className="absolute inset-x-0 bottom-0 p-6">
-            <h2 className="text-3xl font-extrabold text-white mb-2 leading-tight drop-shadow-lg">
-              {currentIdea.title}
-            </h2>
-            <p className="text-sm text-white/80 leading-relaxed line-clamp-3 mb-4">
-              {currentIdea.logline}
-            </p>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm text-white/90 font-medium">
-                {currentIdea.format}
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm text-white/90 font-medium">
-                {currentIdea.targetBroadcaster}
-              </span>
-              <span className="ml-auto text-white/50">{ideas.length} remaining</span>
-            </div>
-          </div>
+          <DiscoverIdeaCard
+            idea={currentIdea}
+            dragX={dragX}
+            isDragging={isDragging}
+          />
         </div>
       </div>
 
