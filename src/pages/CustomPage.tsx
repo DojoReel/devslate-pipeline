@@ -11,16 +11,18 @@ import { toast } from 'sonner';
 const GENRES = [
   'Documentary', 'Factual Entertainment', 'Reality', 'Sport',
   'True Crime', 'Natural History', 'Political Documentary',
-  'Social Experiment', 'Other',
+  'Social Experiment', 'Investigative Documentary', 'Science Documentary',
+  'Historical Documentary', 'Health Documentary', 'Other',
 ];
 
 const BROADCASTERS = [
-  'ABC', 'SBS', 'Stan', 'Network 10', 'Fox Sports', 'International', 'Other',
+  'ABC', 'SBS', 'NITV', 'Stan', 'Network 10', 'Fox Sports', 'Netflix', 'BBC', 'Other',
 ];
 
 export default function CustomPage() {
   const { addCustomIdea, setCurrentView } = useDevSlate();
   const [title, setTitle] = useState('');
+  const [hook, setHook] = useState('');
   const [logline, setLogline] = useState('');
   const [format, setFormat] = useState('');
   const [genre, setGenre] = useState('');
@@ -36,11 +38,19 @@ export default function CustomPage() {
     const idea: ShowIdea = {
       id: `custom-${Date.now()}`,
       title: title.trim(),
+      hook: hook.trim(),
       logline: logline.trim(),
       format: format.trim() || '6 × 60min Series',
       targetBroadcaster: broadcaster || 'ABC',
       genre: genre || 'Documentary',
       slateId: 'custom',
+      whyNow: whyNow.trim(),
+      peopleAccess: '',
+      archiveStatus: '',
+      rightsStatus: '',
+      comparables: '',
+      commissionCheck: '',
+      sources: '',
     };
 
     addCustomIdea(idea);
@@ -51,6 +61,7 @@ export default function CustomPage() {
       },
     });
     setTitle('');
+    setHook('');
     setLogline('');
     setFormat('');
     setGenre('');
@@ -72,6 +83,11 @@ export default function CustomPage() {
         <div className="space-y-2">
           <Label htmlFor="title">Show Title <span className="text-destructive">*</span></Label>
           <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Desert Dreamers" required className="min-h-[48px] text-base" />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="hook">Hook — one line that grabs attention</Label>
+          <Input id="hook" value={hook} onChange={e => setHook(e.target.value)} placeholder="e.g. What happens when a town runs out of water?" className="min-h-[48px] text-base" />
         </div>
 
         <div className="space-y-2">
