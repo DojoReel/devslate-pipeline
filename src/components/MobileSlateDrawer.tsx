@@ -60,7 +60,7 @@ export function MobileSlateDrawer({ open, onClose }: MobileSlateDrawerProps) {
 
         {/* Slate list */}
         <div className="px-3 pt-2 pb-2">
-          <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Broadcaster Slates</p>
+          <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">Genre Slates</p>
           {SLATE_CONFIGS.map(config => {
             const isActive = activeSlate === config.id && currentView === 'discover';
             const count = slates[config.id].deck.length;
