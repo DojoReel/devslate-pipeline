@@ -268,15 +268,8 @@ function SlateSection({
             )}
             <DiscoverIdeaCard
               idea={currentIdea}
-              canGoPrev={currentIndex > 0}
-              canGoNext={currentIndex < ideas.length - 1}
-              isAnimating={isAnimating}
-              onPrev={() => navigate('prev')}
-              onNext={() => navigate('next')}
-              onAdd={() => handleAction('add')}
-              onPass={() => handleAction('pass')}
-              showNavigation={false}
-              isMobile={true}
+              dragX={dragX}
+              isDragging={isDraggingRef.current}
             />
           </div>
         </div>
@@ -307,15 +300,6 @@ function SlateSection({
             )}
             <DiscoverIdeaCard
               idea={idea}
-              canGoPrev={index > 0}
-              canGoNext={index < ideas.length - 1}
-              isAnimating={isAnimating}
-              onPrev={() => navigate('prev')}
-              onNext={() => navigate('next')}
-              onAdd={() => handleAction('add')}
-              onPass={() => handleAction('pass')}
-              showNavigation={!isMobile && ideas.length > 1}
-              isMobile={isMobile}
             />
           </div>
         );
