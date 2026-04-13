@@ -1,211 +1,145 @@
+import { useState } from 'react';
 import { ShowIdea } from '@/types/devslate';
-import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { UnsplashImage } from '@/components/UnsplashImage';
-import { extractWhyNow, getGenrePillColor, getIdeaMeta } from '@/lib/idea-meta';
+import { getPicsumUrl } from '@/hooks/useUnsplashImage';
 
 interface DiscoverIdeaCardProps {
   idea: ShowIdea;
-  canGoPrev: boolean;
-  canGoNext: boolean;
-  isAnimating: boolean;
-  onPrev: () => void;
-  onNext: () => void;
-  onAdd: () => void;
-  onPass: () => void;
-  showNavigation: boolean;
-  isMobile: boolean;
+  dragX?: number;
+  isDragging?: boolean;
 }
 
-export function DiscoverIdeaCard({
-  idea,
-  canGoPrev,
-  canGoNext,
-  isAnimating,
-  onPrev,
-  onNext,
-  onAdd,
-  onPass,
-  showNavigation,
-  isMobile,
-}: DiscoverIdeaCardProps) {
-  const whyNow = extractWhyNow(idea);
-  const meta = getIdeaMeta(idea);
+export function DiscoverIdeaCard({ idea, dragX = 0, isDragging = false }: DiscoverIdeaCardProps) {
+  const [flipped, setFlipped] = useState(false);
 
-  if (isMobile) {
-    return (
-      <div className="flex flex-col bg-card rounded-2xl border border-border overflow-hidden">
-        {/* Image with genre + title overlay — scrolls naturally */}
-        <div className="relative w-full overflow-hidden rounded-t-2xl" style={{ height: '45vw' }}>
-          <UnsplashImage
-            genre={idea.genre}
-            keyword={idea.title}
-            orientation="landscape"
-            logline={idea.logline}
-            className="absolute inset-0 h-full w-full object-cover"
-            alt={idea.title}
-            showLoadingState={true}
-          />
-          {/* Gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          {/* Genre + Title on image */}
-          <div className="absolute inset-x-0 bottom-0 p-4">
-            <span className={`inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground ${getGenrePillColor(idea.genre)}`}>
-              {idea.genre}
-            </span>
-            <h3 className="text-2xl font-extrabold leading-tight text-white mt-1.5">
-              {idea.title}
-            </h3>
-          </div>
-        </div>
-
-        {/* Info panel — continuous scroll */}
-        <div className="flex flex-col p-4 overflow-hidden">
-          <p className="text-[13px] text-muted-foreground">
-            {idea.format} · {idea.targetBroadcaster}
-          </p>
-
-          {/* Full concept summary — no truncation */}
-          <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-            {idea.logline} This concept explores a fresh angle on the {idea.genre.toLowerCase()} genre, targeting {idea.targetBroadcaster} audiences with a {idea.format.toLowerCase()} format designed for maximum engagement and commissioning appeal.
-          </p>
-
-          {/* Stat grid: 2×2 compact */}
-          <div className="grid grid-cols-2 gap-2 mt-3">
-            {[
-              { label: 'Format', value: meta.format },
-              { label: 'Funding Path', value: meta.fundingPath },
-              { label: 'Comparable Shows', value: meta.comparables },
-              { label: 'Production Complexity', value: meta.complexity },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-lg bg-muted/40 p-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{stat.label}</p>
-                <p className="text-xs font-semibold leading-snug text-foreground">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Why Now: full text */}
-          <div className="flex items-start gap-2 mt-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 shrink-0 pt-0.5">Why Now?</span>
-            <p className="text-[13px] leading-snug text-foreground">{whyNow}</p>
-          </div>
-
-          {/* Buttons: side by side — Pass 40%, Add 60% */}
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={onPass}
-              disabled={isAnimating}
-              className="flex items-center justify-center gap-2 rounded-full border border-border bg-muted min-h-[48px] px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
-              style={{ width: '40%' }}
-            >
-              <ThumbsDown className="h-4 w-4" />
-              Pass
-            </button>
-            <button
-              onClick={onAdd}
-              disabled={isAnimating}
-              className="flex items-center justify-center gap-2 rounded-full bg-primary min-h-[48px] px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
-              style={{ width: '60%' }}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              Add to Pipeline
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop layout
   return (
-    <div className="relative flex w-full bg-card">
-      <div className="relative w-[45%] shrink-0 overflow-hidden">
-        <UnsplashImage
-          genre={idea.genre}
-          keyword={idea.title}
-          orientation="landscape"
-          logline={idea.logline}
-          className="absolute inset-0 h-full w-full object-cover"
-          alt={idea.title}
-          showLoadingState={true}
-        />
+    <div
+      className="w-full h-full cursor-pointer"
+      style={{ perspective: '1200px' }}
+      onClick={() => !isDragging && setFlipped(f => !f)}
+    >
+      <div
+        className="relative w-full h-full transition-transform duration-500"
+        style={{
+          transformStyle: 'preserve-3d',
+          transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+        }}
+      >
+        {/* FRONT */}
+        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+          <FrontFace idea={idea} dragX={dragX} />
+        </div>
+
+        {/* BACK */}
+        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+          <BackFace idea={idea} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FrontFace({ idea, dragX }: { idea: ShowIdea; dragX: number }) {
+  const heroImage = getPicsumUrl(idea.title, 800, 1000);
+
+  return (
+    <>
+      {/* Full bleed image */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl">
+        {heroImage && (
+          <img src={heroImage} alt={idea.title} className="w-full h-full object-cover" />
+        )}
       </div>
 
-      {showNavigation && (
-        <>
-          <button
-            onClick={onPrev}
-            disabled={!canGoPrev || isAnimating}
-            className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition hover:bg-background/90 disabled:cursor-default disabled:opacity-30"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={onNext}
-            disabled={!canGoNext || isAnimating}
-            className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition hover:bg-background/90 disabled:cursor-default disabled:opacity-30"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </>
+      {/* Gradient scrim */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent rounded-2xl" />
+
+      {/* Genre tags top */}
+      <div className="absolute top-4 left-4 flex gap-2">
+        {idea.genre.split('×').map((g, i) => (
+          <span key={i} className="rounded-full bg-foreground/20 backdrop-blur-sm px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-foreground">
+            {g.trim()}
+          </span>
+        ))}
+      </div>
+
+      {/* Flip hint */}
+      <div className="absolute top-4 right-4">
+        <span className="text-[11px] text-primary-foreground/60 font-medium">Tap for detail</span>
+      </div>
+
+      {/* Swipe indicators */}
+      {dragX > 50 && (
+        <div className="absolute top-1/2 right-6 -translate-y-1/2 rounded-full bg-emerald-500/80 px-4 py-2 text-sm font-black text-primary-foreground uppercase tracking-wider">
+          PIPELINE →
+        </div>
+      )}
+      {dragX < -50 && (
+        <div className="absolute top-1/2 left-6 -translate-y-1/2 rounded-full bg-destructive/80 px-4 py-2 text-sm font-black text-primary-foreground uppercase tracking-wider">
+          ← PASS
+        </div>
       )}
 
-      <div className="flex w-[55%] flex-col justify-between p-8">
-        <div>
-          <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
-            {idea.genre}
+      {/* Bottom content */}
+      <div className="absolute inset-x-0 bottom-0 p-5">
+        <h3 className="text-2xl md:text-3xl font-extrabold text-primary-foreground leading-tight">
+          {idea.title}
+        </h3>
+        <p className="mt-2 text-sm text-primary-foreground/80 leading-relaxed line-clamp-3">
+          {idea.hook}
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className="text-xs font-semibold text-primary-foreground/60">
+            {idea.format}
           </span>
-
-          <h3 className="mb-3 text-[32px] font-extrabold leading-tight text-foreground">
-            {idea.title}
-          </h3>
-
-          <p className="mb-4 text-sm text-muted-foreground">
-            {idea.format} · {idea.targetBroadcaster}
-          </p>
-
-          <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
-            {idea.logline}
-          </p>
-
-          <div className="mb-5 grid grid-cols-2 gap-3">
-            {[
-              { label: 'Format', value: meta.format },
-              { label: 'Funding Path', value: meta.fundingPath },
-              { label: 'Comparable Shows', value: meta.comparables },
-              { label: 'Production Complexity', value: meta.complexity },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
-                <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                <p className="text-[13px] font-semibold leading-snug text-foreground">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-xl bg-muted/50 p-4">
-            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Why Now?</p>
-            <p className="text-sm leading-relaxed text-foreground">{whyNow}</p>
-          </div>
+          <span className="text-xs font-semibold text-primary-foreground/60">
+            {idea.targetBroadcaster}
+          </span>
         </div>
+      </div>
+    </>
+  );
+}
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
-            onClick={onPass}
-            disabled={isAnimating}
-            className="flex items-center gap-2 rounded-full border border-border bg-muted px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ThumbsDown className="h-4 w-4" />
-            Pass
-          </button>
-          <button
-            onClick={onAdd}
-            disabled={isAnimating}
-            className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ThumbsUp className="h-4 w-4" />
-            Add to Pipeline
-          </button>
-        </div>
+function BackFace({ idea }: { idea: ShowIdea }) {
+  return (
+    <div className="w-full h-full overflow-y-auto rounded-2xl bg-card border border-border p-5 space-y-4">
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">The Story</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.logline}</p>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Why Now</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.whyNow}</p>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">People & Access</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.peopleAccess}</p>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Archive</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.archiveStatus}</p>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Rights</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.rightsStatus}</p>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Comparables</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.comparables}</p>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Commission Check</h4>
+        <p className="text-sm text-foreground leading-relaxed">{idea.commissionCheck}</p>
+      </div>
+
+      <div className="pt-2 border-t border-border">
+        <p className="text-xs text-muted-foreground leading-relaxed">{idea.sources}</p>
       </div>
     </div>
   );
