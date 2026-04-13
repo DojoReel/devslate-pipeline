@@ -27,7 +27,7 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
   const startX = useRef(0);
 
   const currentIdea = ideas[0];
-  const heroImage = currentIdea ? getPicsumUrl(currentIdea.title, 800, 1000) : null;
+  
 
   if (!currentIdea) {
     return (
@@ -72,7 +72,7 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
 
   const rotation = isDragging ? dragX * 0.04 : 0;
   const opacity = isDragging ? Math.max(0.6, 1 - Math.abs(dragX) / 400) : 1;
-  const genreStyle = GENRE_COLORS[currentIdea.genre] || 'bg-primary text-primary-foreground';
+  
 
   return (
     <div className="flex flex-col items-center gap-8">
@@ -104,14 +104,22 @@ export function SwipeDeck({ ideas, slateId }: SwipeDeckProps) {
             opacity,
             transition: isDragging ? 'none' : undefined,
           }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
         >
           <DiscoverIdeaCard
             idea={currentIdea}
             dragX={dragX}
             isDragging={isDragging}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ zIndex: 20 }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onClick={(e) => {
+              if (Math.abs(dragX) < 5) return;
+              e.stopPropagation();
+            }}
           />
         </div>
       </div>
