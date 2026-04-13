@@ -2,10 +2,16 @@ import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS, SlateId } from '@/types/devslate';
 
 const SHORT_LABELS: Record<SlateId, string> = {
-  abc: 'ABC',
-  stan: 'Stan',
+  crime: 'Crime',
+  environment: 'Environ',
   sport: 'Sport',
-  international: 'Intl',
+  culture: 'Culture',
+  character: 'Character',
+  political: 'Political',
+  history: 'History',
+  science: 'Science',
+  social: 'Social',
+  firstnations: '1st Nations',
   custom: 'Custom',
 };
 
