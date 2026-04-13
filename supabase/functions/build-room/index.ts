@@ -31,23 +31,25 @@ const DOCUMENT_LABELS: Record<string, string> = {
 async function generateDocument(
   apiKey: string,
   docType: string,
-  idea: { title: string; logline: string; format: string; targetBroadcaster: string; genre: string },
-  report: { verdict: string; verdictRationale: string; competitiveLandscape: string; commissionerFit: string; audience: string; talentAccess: string }
+  idea: { title: string; logline: string; format: string; targetBroadcaster: string; genre: string; hook?: string },
+  report: { verdict: string; verdictReason: string; fullStory?: string; people?: string; broadcasterFit?: string; commissionCheck?: string; whyNow?: string }
 ): Promise<string> {
   const userPrompt = `Generate the ${DOCUMENT_LABELS[docType]} for this TV concept:
 
 Title: ${idea.title}
+Hook: ${idea.hook || ''}
 Logline: ${idea.logline}
 Format: ${idea.format}
 Target Broadcaster: ${idea.targetBroadcaster}
 Genre: ${idea.genre}
 
 Deep Dive Verdict: ${report.verdict}
-Verdict Rationale: ${report.verdictRationale}
-Competitive Landscape: ${report.competitiveLandscape}
-Commissioner Fit: ${report.commissionerFit}
-Target Audience: ${report.audience}
-Talent & Access: ${report.talentAccess}`;
+Verdict Reason: ${report.verdictReason}
+Full Story: ${report.fullStory || ''}
+People & Access: ${report.people || ''}
+Broadcaster Fit: ${report.broadcasterFit || ''}
+Commission Check: ${report.commissionCheck || ''}
+Why Now: ${report.whyNow || ''}`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -84,7 +86,6 @@ serve(async (req) => {
 
     if (!idea || !report) throw new Error("Missing idea or report data");
 
-    // If documentType specified, generate single document
     if (documentType) {
       if (!DOCUMENT_PROMPTS[documentType]) throw new Error(`Unknown document type: ${documentType}`);
       const content = await generateDocument(ANTHROPIC_API_KEY, documentType, idea, report);
@@ -93,7 +94,6 @@ serve(async (req) => {
       });
     }
 
-    // Otherwise generate all 6 documents in parallel
     const docTypes = Object.keys(DOCUMENT_PROMPTS);
     const results = await Promise.all(
       docTypes.map(async (dt) => {
