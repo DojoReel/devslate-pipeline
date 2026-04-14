@@ -66,7 +66,7 @@ export function DiscoverIdeaCard({
 
           {/* Full concept summary — no truncation */}
           <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-            {idea.logline} This concept explores a fresh angle on the {idea.genre.toLowerCase()} genre, targeting {idea.targetBroadcaster} audiences with a {idea.format.toLowerCase()} format designed for maximum engagement and commissioning appeal.
+            {idea.hook}
           </p>
 
           {/* Stat grid: 2×2 compact */}
