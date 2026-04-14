@@ -140,13 +140,17 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
                   )}
                   {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                   {(doc.status === 'pending' || doc.status === 'error') && !isGenerating && (
-                    <button
-                      onClick={() => generateDocument(doc.documentType)}
-                      disabled={!!generatingDoc}
-                      className="px-3 md:px-4 py-2 min-h-[44px] rounded-full bg-amber-500 text-primary-foreground text-xs font-bold hover:scale-105 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Generate
-                    </button>
+                    idea.report ? (
+                      <button
+                        onClick={() => generateDocument(doc.documentType)}
+                        disabled={!!generatingDoc}
+                        className="px-3 md:px-4 py-2 min-h-[44px] rounded-full bg-amber-500 text-primary-foreground text-xs font-bold hover:scale-105 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Generate
+                      </button>
+                    ) : (
+                      <span className="text-[10px] md:text-xs text-amber-500 font-medium">Run Deep Dive first</span>
+                    )
                   )}
                 </div>
               </div>
