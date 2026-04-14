@@ -50,9 +50,12 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
 
     try {
       const result = await runBuildRoomDocument(idea, idea.report, docType);
+      console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
 
-      const finalDocs = (idea.buildRoomDocs || currentDocs).map(d =>
-        d.documentType === docType ? { ...d, content: result.content, status: 'complete' as const } : d
+      const docContent = result.content || result.document?.content || (typeof result === 'string' ? result : '');
+
+      const finalDocs = updatedDocs.map(d =>
+        d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
       );
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
     } catch (err) {
