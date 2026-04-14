@@ -44,6 +44,7 @@ export default function CustomPage() {
       targetBroadcaster: broadcaster || 'ABC',
       genre: genre || 'Documentary',
       slateId: 'custom',
+      location: '',
       whyNow: whyNow.trim(),
       peopleAccess: '',
       archiveStatus: '',
