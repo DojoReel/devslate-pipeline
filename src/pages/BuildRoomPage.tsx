@@ -141,8 +141,9 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
               </div>
               {expandedDoc === doc.documentType && doc.status === 'complete' && (
                 <div className="border-t border-border p-4 md:p-6 bg-background">
+                  {console.log('[BuildRoom] Expanded doc object:', JSON.stringify(doc, null, 2)) as any}
                   <div className="buildroom-prose prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-headings:font-bold prose-strong:text-foreground">
-                    <ReactMarkdown>{doc.content}</ReactMarkdown>
+                    <ReactMarkdown>{doc.content || 'No content available'}</ReactMarkdown>
                   </div>
                 </div>
               )}
