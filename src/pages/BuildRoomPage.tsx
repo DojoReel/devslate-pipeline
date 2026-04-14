@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
 import { getGenrePillColor } from '@/lib/idea-meta';
-import { runBuildRoomDocument } from '@/lib/api';
+import { runBuildRoom } from '@/lib/api';
 
 const DOC_TYPES = [
   { type: 'pitchDocument', label: 'Pitch Document' },
@@ -20,7 +20,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const { updatePipelineIdea } = useDevSlate();
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
-  const [generatingDoc, setGeneratingDoc] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [docsExpanded, setDocsExpanded] = useState(false);
 
   const docs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
@@ -36,52 +36,36 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
     setTimeout(() => setCopiedDoc(null), 2000);
   };
 
-  const generateDocument = async (docType: string) => {
-    setGeneratingDoc(docType);
-
+  const generateAllDocuments = async () => {
+    // Skip if any doc is already complete or generating
     const currentDocs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
       documentType: d.type, label: d.label, content: '', status: 'pending' as const,
     }));
+    if (currentDocs.some(d => d.status === 'complete' || d.status === 'generating')) return;
 
-    const updatedDocs = currentDocs.map(d =>
-      d.documentType === docType ? { ...d, status: 'generating' as const } : d
-    );
-    updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: updatedDocs });
+    setGenerating(true);
+
+    // Set all to generating
+    const generatingDocs = currentDocs.map(d => ({ ...d, status: 'generating' as const }));
+    updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: generatingDocs });
 
     try {
-      const result: any = await runBuildRoomDocument(idea, idea.report, docType);
-      console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
+      const documents = await runBuildRoom(idea, idea.report);
+      console.log('[BuildRoom] Batch API result:', JSON.stringify(documents, null, 2));
 
-      // Handle { success: true, documents: [...] } response shape
-      let docContent = '';
-      if (result.documents && Array.isArray(result.documents)) {
-        const matchedDoc = result.documents.find((d: any) => d.documentType === docType);
-        docContent = matchedDoc?.content || result.documents[0]?.content || '';
-      } else {
-        docContent = result.content || (result as any).document?.content || (typeof result === 'string' ? result : '');
-      }
-
-      // If API returned full documents array, merge all of them
-      let finalDocs;
-      if (result.documents && Array.isArray(result.documents)) {
-        finalDocs = updatedDocs.map(d => {
-          const apiDoc = result.documents.find((ad: any) => ad.documentType === d.documentType);
-          return apiDoc ? { ...d, content: apiDoc.content, status: 'complete' as const } : d;
-        });
-      } else {
-        finalDocs = updatedDocs.map(d =>
-          d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
-        );
-      }
+      const finalDocs = generatingDocs.map(d => {
+        const apiDoc = documents?.find((ad: any) => ad.documentType === d.documentType);
+        return apiDoc
+          ? { ...d, content: apiDoc.content, status: 'complete' as const }
+          : d;
+      });
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
     } catch (err) {
-      console.error(`Build room error for ${docType}:`, err);
-      const errorDocs = (idea.buildRoomDocs || currentDocs).map(d =>
-        d.documentType === docType ? { ...d, status: 'error' as const } : d
-      );
+      console.error('Build room batch error:', err);
+      const errorDocs = currentDocs.map(d => ({ ...d, status: 'error' as const }));
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: errorDocs });
     } finally {
-      setGeneratingDoc(null);
+      setGenerating(false);
     }
   };
 
@@ -117,7 +101,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
       <div className={`p-4 md:p-6 pt-0 space-y-2 md:space-y-3 ${docsExpanded ? 'block' : 'hidden md:block'}`}>
         {docs.map(doc => {
           const docMeta = DOC_TYPES.find(d => d.type === doc.documentType);
-          const isGenerating = generatingDoc === doc.documentType || doc.status === 'generating';
+          const isGenerating = generating || doc.status === 'generating';
 
           return (
             <div key={doc.documentType} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
@@ -148,9 +132,9 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
                   )}
                   {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                   {(doc.status === 'pending' || doc.status === 'error') && !isGenerating && (
-                    <button onClick={() => generateDocument(doc.documentType)}
-                      className="px-3 md:px-4 py-2 min-h-[44px] rounded-full bg-amber-500 text-primary-foreground text-xs font-bold hover:scale-105 transition-transform">
-                      Generate
+                    <button onClick={() => generateAllDocuments()}
+                      className="px-3 md:px-4 py-2 min-h-[44px] rounded-full bg-primary text-primary-foreground text-xs font-bold hover:scale-105 transition-transform">
+                      Generate All
                     </button>
                   )}
                 </div>
