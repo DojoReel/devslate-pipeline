@@ -40,7 +40,7 @@ function PipelineCard({
 }) {
   const hasReport = idea.report != null;
   const verdictKey = idea.report?.verdict;
-  const canBuild = verdictKey === 'GREENLIGHT' || verdictKey === 'DEVELOP FURTHER';
+  
   const isBuilt = idea.status === 'built' || idea.status === 'complete' || idea.status === 'building';
   const meta = getIdeaMeta(idea);
   const whyNow = extractWhyNow(idea);
