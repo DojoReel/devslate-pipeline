@@ -50,9 +50,12 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
 
     try {
       const result = await runBuildRoomDocument(idea, idea.report, docType);
+      console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
 
-      const finalDocs = (idea.buildRoomDocs || currentDocs).map(d =>
-        d.documentType === docType ? { ...d, content: result.content, status: 'complete' as const } : d
+      const docContent = result.content || (result as any).document?.content || (typeof result === 'string' ? result : '');
+
+      const finalDocs = updatedDocs.map(d =>
+        d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
       );
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
     } catch (err) {
@@ -138,8 +141,9 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
               </div>
               {expandedDoc === doc.documentType && doc.status === 'complete' && (
                 <div className="border-t border-border p-4 md:p-6 bg-background">
+                  {console.log('[BuildRoom] Expanded doc object:', JSON.stringify(doc, null, 2)) as any}
                   <div className="buildroom-prose prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-headings:font-bold prose-strong:text-foreground">
-                    <ReactMarkdown>{doc.content}</ReactMarkdown>
+                    <ReactMarkdown>{doc.content || 'No content available'}</ReactMarkdown>
                   </div>
                 </div>
               )}
