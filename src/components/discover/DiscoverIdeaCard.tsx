@@ -66,16 +66,17 @@ export function DiscoverIdeaCard({
 
           {/* Full concept summary — no truncation */}
           <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-            {idea.logline} This concept explores a fresh angle on the {idea.genre.toLowerCase()} genre, targeting {idea.targetBroadcaster} audiences with a {idea.format.toLowerCase()} format designed for maximum engagement and commissioning appeal.
+            {idea.hook}
           </p>
 
           {/* Stat grid: 2×2 compact */}
           <div className="grid grid-cols-2 gap-2 mt-3">
             {[
-              { label: 'Format', value: meta.format },
-              { label: 'Funding Path', value: meta.fundingPath },
-              { label: 'Comparable Shows', value: meta.comparables },
-              { label: 'Production Complexity', value: meta.complexity },
+              { label: 'Why Now', value: idea.whyNow },
+              { label: 'People & Access', value: idea.peopleAccess },
+              { label: 'Archive', value: idea.archiveStatus },
+              { label: 'Comparable Shows', value: idea.comparables },
+              { label: 'Commission Check', value: idea.commissionCheck },
             ].map((stat) => (
               <div key={stat.label} className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{stat.label}</p>
@@ -165,15 +166,16 @@ export function DiscoverIdeaCard({
           </p>
 
           <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
-            {idea.logline}
+            {idea.hook}
           </p>
 
           <div className="mb-5 grid grid-cols-2 gap-3">
             {[
-              { label: 'Format', value: meta.format },
-              { label: 'Funding Path', value: meta.fundingPath },
-              { label: 'Comparable Shows', value: meta.comparables },
-              { label: 'Production Complexity', value: meta.complexity },
+              { label: 'Why Now', value: idea.whyNow },
+              { label: 'People & Access', value: idea.peopleAccess },
+              { label: 'Archive', value: idea.archiveStatus },
+              { label: 'Comparable Shows', value: idea.comparables },
+              { label: 'Commission Check', value: idea.commissionCheck },
             ].map((stat) => (
               <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
                 <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
