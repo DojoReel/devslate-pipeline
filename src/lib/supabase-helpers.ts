@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { ShowIdea, PipelineIdea, DeepDiveReport, BuildRoomDocument, SlateId } from '@/types/devslate';
 
 // Field mapping: DB snake_case → App camelCase
