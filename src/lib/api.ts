@@ -1,4 +1,4 @@
-const API_BASE = 'https://pitchfire-api-production.up.railway.app';
+const API_BASE = 'https://bskhuacewntnrocedwkc.supabase.co/functions/v1';
 
 export async function runDeepDive(idea: any): Promise<any> {
   const response = await fetch(`${API_BASE}/deep-dive`, {
