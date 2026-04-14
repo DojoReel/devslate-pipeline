@@ -15,6 +15,7 @@ export interface ShowIdea {
   format: string;
   targetBroadcaster: string;
   genre: string;
+  location: string;
   slateId: SlateId;
   whyNow: string;
   peopleAccess: string;
