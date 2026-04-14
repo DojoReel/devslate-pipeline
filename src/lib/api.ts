@@ -44,3 +44,22 @@ export async function runBuildRoomDocument(idea: any, report: any, documentType:
   const data = await response.json();
   return data;
 }
+
+export async function runBuildRoom(idea: any, report: any): Promise<any[]> {
+  const response = await fetch(`${API_BASE}/build-room`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ideaId: idea.id,
+      title: idea.title,
+      hook: idea.hook,
+      logline: idea.logline,
+      genre: idea.genre,
+      location: idea.location,
+      report,
+    }),
+  });
+  if (!response.ok) throw new Error('Build room request failed');
+  const data = await response.json();
+  return data.documents;
+}
