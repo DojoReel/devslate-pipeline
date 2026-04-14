@@ -49,7 +49,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
     updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: updatedDocs });
 
     try {
-      const result = await runBuildRoomDocument(idea, idea.report, docType);
+      const result: any = await runBuildRoomDocument(idea, idea.report, docType);
       console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
 
       // Handle { success: true, documents: [...] } response shape
