@@ -21,6 +21,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [docsExpanded, setDocsExpanded] = useState(false);
 
   const docs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
     documentType: d.type,
