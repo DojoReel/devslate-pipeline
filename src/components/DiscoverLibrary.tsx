@@ -268,8 +268,15 @@ function SlateSection({
             )}
             <DiscoverIdeaCard
               idea={currentIdea}
-              dragX={dragX}
-              isDragging={isDraggingRef.current}
+              canGoPrev={currentIndex > 0}
+              canGoNext={currentIndex < ideas.length - 1}
+              isAnimating={isAnimating}
+              onPrev={() => navigate('prev')}
+              onNext={() => navigate('next')}
+              onAdd={() => handleAction('add')}
+              onPass={() => handleAction('pass')}
+              showNavigation={false}
+              isMobile={true}
             />
           </div>
         </div>
@@ -287,10 +294,7 @@ function SlateSection({
           <div
             key={idea.id}
             className="w-full shrink-0 relative"
-            style={{
-              height: '520px',
-              ...(isExiting ? getExitStyle() : {}),
-            }}
+            style={isExiting ? getExitStyle() : undefined}
           >
             {isExiting && showFlash && (
               <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
@@ -303,6 +307,15 @@ function SlateSection({
             )}
             <DiscoverIdeaCard
               idea={idea}
+              canGoPrev={index > 0}
+              canGoNext={index < ideas.length - 1}
+              isAnimating={isAnimating}
+              onPrev={() => navigate('prev')}
+              onNext={() => navigate('next')}
+              onAdd={() => handleAction('add')}
+              onPass={() => handleAction('pass')}
+              showNavigation={!isMobile && ideas.length > 1}
+              isMobile={isMobile}
             />
           </div>
         );
@@ -314,7 +327,7 @@ function SlateSection({
     <div>
       <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
       <div
-        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg w-[75%] h-[520px]"
+        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg w-[75%]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
