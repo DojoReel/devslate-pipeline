@@ -33,12 +33,6 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
           </div>
         </div>
 
-        {/* Verdict banner */}
-        <div className={`${verdict.bg} px-4 md:px-8 py-6 md:py-8`}>
-          <h3 className="text-3xl md:text-5xl font-black text-primary-foreground tracking-tight">{verdict.label}</h3>
-          <p className="mt-3 md:mt-4 text-primary-foreground/90 text-sm md:text-lg leading-relaxed font-medium">{report.verdictReason}</p>
-        </div>
-
         {/* Report sections */}
         <div className="p-4 md:p-6 space-y-3 md:space-y-4">
 
