@@ -23,8 +23,8 @@ interface DevSlateContextType {
   sendToBuildRoom: (slateId: SlateId, ideaId: string) => void;
   archiveIdea: (slateId: SlateId, ideaId: string) => void;
   unarchiveIdea: (ideaId: string) => void;
-  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools';
-  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools') => void;
+  currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools' | 'research-agent';
+  setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools' | 'research-agent') => void;
   isLoading: boolean;
 }
 
@@ -42,7 +42,7 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
   const [activeSlate, setActiveSlate] = useState<SlateId>('crime');
   const [slates, setSlates] = useState<Record<SlateId, SlateState>>(emptySlates);
   const [archivedIdeas, setArchivedIdeas] = useState<PipelineIdea[]>([]);
-  const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools'>('discover');
+  const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools' | 'research-agent'>('discover');
   const [isLoading, setIsLoading] = useState(true);
 
   // Load everything from Supabase on mount

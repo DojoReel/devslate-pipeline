@@ -11,6 +11,7 @@ import CustomPage from '@/pages/CustomPage';
 import BuildRoomPage from '@/pages/BuildRoomPage';
 import MarketRadarPage from '@/pages/MarketRadarPage';
 import FundingCalendarPage from '@/pages/FundingCalendarPage';
+import ResearchAgentPage from '@/pages/ResearchAgentPage';
 import ToolsPage from '@/pages/ToolsPage';
 import { SLATE_CONFIGS } from '@/types/devslate';
 import { useState } from 'react';
@@ -38,10 +39,11 @@ function DevSlateApp() {
     buildroom: 'Build Room',
     'market-radar': 'Market Radar',
     'funding-calendar': 'Funding Calendar',
+    'research-agent': 'Research Agent',
     tools: 'Tools',
   };
 
-  const hideSubtitle = currentView === 'custom' || currentView === 'market-radar' || currentView === 'funding-calendar' || currentView === 'tools';
+  const hideSubtitle = currentView === 'custom' || currentView === 'market-radar' || currentView === 'funding-calendar' || currentView === 'tools' || currentView === 'research-agent';
 
   // Active slate label for mobile header
   const activeSlateLabel = SLATE_CONFIGS.find(c => c.id === activeSlate)?.label || 'Slate';
@@ -93,6 +95,7 @@ function DevSlateApp() {
           {currentView === 'buildroom' && <BuildRoomPage />}
           {currentView === 'market-radar' && <MarketRadarPage />}
           {currentView === 'funding-calendar' && <FundingCalendarPage />}
+          {currentView === 'research-agent' && <ResearchAgentPage />}
           {currentView === 'tools' && <ToolsPage />}
         </main>
       </div>
