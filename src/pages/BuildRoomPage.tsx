@@ -5,22 +5,22 @@ import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
 import { getGenrePillColor } from '@/lib/idea-meta';
-import { runBuildRoom } from '@/lib/api';
+import { runBuildRoomDocument } from '@/lib/api';
 
 const DOC_TYPES = [
-  { type: 'pitchDocument', label: 'Pitch Document' },
-  { type: 'budgetEstimate', label: 'Budget Estimate' },
-  { type: 'productionSchedule', label: 'Production Schedule' },
-  { type: 'keyContacts', label: 'Key Contacts' },
-  { type: 'fundingSources', label: 'Funding Sources' },
-  { type: 'sponsorshipDeck', label: 'Sponsorship Deck' },
+  { type: 'one_pager', label: 'One Pager' },
+  { type: 'series_bible', label: 'Series Bible' },
+  { type: 'director_treatment', label: 'Director Treatment' },
+  { type: 'budget_overview', label: 'Budget Overview' },
+  { type: 'funding_strategy', label: 'Funding Strategy' },
+  { type: 'pitch_email', label: 'Commissioner Pitch Email' },
 ];
 
 function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const { updatePipelineIdea } = useDevSlate();
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
+  const [generatingDoc, setGeneratingDoc] = useState<string | null>(null);
   const [docsExpanded, setDocsExpanded] = useState(false);
 
   const docs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
@@ -36,36 +36,44 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
     setTimeout(() => setCopiedDoc(null), 2000);
   };
 
-  const generateAllDocuments = async () => {
-    // Skip if any doc is already complete or generating
+  const generateDocument = async (docType: string) => {
+    if (generatingDoc) return;
+    setGeneratingDoc(docType);
+
     const currentDocs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
       documentType: d.type, label: d.label, content: '', status: 'pending' as const,
     }));
-    if (currentDocs.some(d => d.status === 'complete' || d.status === 'generating')) return;
 
-    setGenerating(true);
-
-    // Set all to generating
-    const generatingDocs = currentDocs.map(d => ({ ...d, status: 'generating' as const }));
-    updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: generatingDocs });
+    const updatedDocs = currentDocs.map(d =>
+      d.documentType === docType ? { ...d, status: 'generating' as const } : d
+    );
+    updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: updatedDocs });
 
     try {
-      const documents = await runBuildRoom(idea, idea.report);
-      console.log('[BuildRoom] Batch API result:', JSON.stringify(documents, null, 2));
+      const result: any = await runBuildRoomDocument(idea, idea.report, docType);
+      console.log('[BuildRoom] API result:', result);
 
-      const finalDocs = generatingDocs.map(d => {
-        const apiDoc = documents?.find((ad: any) => ad.documentType === d.documentType);
-        return apiDoc
-          ? { ...d, content: apiDoc.content, status: 'complete' as const }
-          : d;
-      });
+      // API returns { success: true, documents: [...] } — find the matching doc
+      let content = '';
+      if (result.documents && Array.isArray(result.documents)) {
+        const match = result.documents.find((d: any) => d.documentType === docType);
+        content = match?.content || result.documents[0]?.content || '';
+      } else {
+        content = result.content || '';
+      }
+
+      const finalDocs = updatedDocs.map(d =>
+        d.documentType === docType ? { ...d, content, status: 'complete' as const } : d
+      );
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
     } catch (err) {
-      console.error('Build room batch error:', err);
-      const errorDocs = currentDocs.map(d => ({ ...d, status: 'error' as const }));
+      console.error(`Build room error for ${docType}:`, err);
+      const errorDocs = updatedDocs.map(d =>
+        d.documentType === docType ? { ...d, status: 'error' as const } : d
+      );
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: errorDocs });
     } finally {
-      setGenerating(false);
+      setGeneratingDoc(null);
     }
   };
 
@@ -86,22 +94,22 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
           <p className="text-sm text-muted-foreground mt-1">{idea.format} · {idea.targetBroadcaster}</p>
           <p className="text-xs text-muted-foreground mt-2">{completedCount}/{DOC_TYPES.length} documents generated</p>
 
-          {/* Mobile: collapsible toggle for document generation */}
+          {/* Mobile: collapsible toggle */}
           <button
             onClick={() => setDocsExpanded(!docsExpanded)}
             className="md:hidden flex items-center gap-2 mt-3 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold min-h-[48px] w-full justify-center transition-colors"
           >
             {docsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            Generate Documents
+            Documents
           </button>
         </div>
       </div>
 
-      {/* Document slots — always visible on desktop, collapsible on mobile */}
+      {/* Document slots */}
       <div className={`p-4 md:p-6 pt-0 space-y-2 md:space-y-3 ${docsExpanded ? 'block' : 'hidden md:block'}`}>
         {docs.map(doc => {
           const docMeta = DOC_TYPES.find(d => d.type === doc.documentType);
-          const isGenerating = generating || doc.status === 'generating';
+          const isGenerating = generatingDoc === doc.documentType || doc.status === 'generating';
 
           return (
             <div key={doc.documentType} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
@@ -132,16 +140,18 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
                   )}
                   {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                   {(doc.status === 'pending' || doc.status === 'error') && !isGenerating && (
-                    <button onClick={() => generateAllDocuments()}
-                      className="px-3 md:px-4 py-2 min-h-[44px] rounded-full bg-primary text-primary-foreground text-xs font-bold hover:scale-105 transition-transform">
-                      Generate All
+                    <button
+                      onClick={() => generateDocument(doc.documentType)}
+                      disabled={!!generatingDoc}
+                      className="px-3 md:px-4 py-2 min-h-[44px] rounded-full bg-amber-500 text-primary-foreground text-xs font-bold hover:scale-105 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Generate
                     </button>
                   )}
                 </div>
               </div>
               {expandedDoc === doc.documentType && doc.status === 'complete' && (
                 <div className="border-t border-border p-4 md:p-6 bg-background">
-                  {console.log('[BuildRoom] Expanded doc object:', JSON.stringify(doc, null, 2)) as any}
                   <div className="buildroom-prose prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-headings:font-bold prose-strong:text-foreground">
                     <ReactMarkdown>{doc.content || 'No content available'}</ReactMarkdown>
                   </div>
