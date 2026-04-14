@@ -52,11 +52,27 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
       const result = await runBuildRoomDocument(idea, idea.report, docType);
       console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
 
-      const docContent = result.content || (result as any).document?.content || (typeof result === 'string' ? result : '');
+      // Handle { success: true, documents: [...] } response shape
+      let docContent = '';
+      if (result.documents && Array.isArray(result.documents)) {
+        const matchedDoc = result.documents.find((d: any) => d.documentType === docType);
+        docContent = matchedDoc?.content || result.documents[0]?.content || '';
+      } else {
+        docContent = result.content || (result as any).document?.content || (typeof result === 'string' ? result : '');
+      }
 
-      const finalDocs = updatedDocs.map(d =>
-        d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
-      );
+      // If API returned full documents array, merge all of them
+      let finalDocs;
+      if (result.documents && Array.isArray(result.documents)) {
+        finalDocs = updatedDocs.map(d => {
+          const apiDoc = result.documents.find((ad: any) => ad.documentType === d.documentType);
+          return apiDoc ? { ...d, content: apiDoc.content, status: 'complete' as const } : d;
+        });
+      } else {
+        finalDocs = updatedDocs.map(d =>
+          d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
+        );
+      }
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
     } catch (err) {
       console.error(`Build room error for ${docType}:`, err);
