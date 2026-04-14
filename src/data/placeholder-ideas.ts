@@ -12,6 +12,7 @@ export const PLACEHOLDER_IDEAS: Record<SlateId, ShowIdea[]> = {
       format: '3 × 60min Limited Series',
       targetBroadcaster: 'ABC / SBS',
       genre: 'Crime × First Nations',
+      location: 'Bourke, NSW — Remote outback',
       slateId: 'crime',
       whyNow: 'The coronial findings were handed down in 2022 and have never been the subject of a documentary. Families are now searching for each other.',
       peopleAccess: 'Coronial records public. Several affected families have spoken to journalists. Key postmaster deceased — family members located in Bourke.',
