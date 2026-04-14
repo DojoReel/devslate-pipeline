@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
 import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
+import { runDeepDive } from '@/lib/api';
 
 const VERDICT_BORDER: Record<string, string> = {
   'GREENLIGHT': 'border-l-verdict-green',
@@ -176,22 +177,38 @@ export function PipelineView() {
     ? archivedIdeas
     : slates[activeTab].pipeline;
 
-  const runDeepDive = async (idea: PipelineIdea) => {
+  const handleDeepDive = async (idea: PipelineIdea) => {
     setLoadingId(idea.id);
     updatePipelineIdea(idea.slateId, idea.id, { status: 'researching' });
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deep-dive`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({ title: idea.title, logline: idea.logline, format: idea.format, targetBroadcaster: idea.targetBroadcaster, genre: idea.genre, hook: idea.hook, whyNow: idea.whyNow, peopleAccess: idea.peopleAccess, comparables: idea.comparables }),
+      const report = await runDeepDive(idea);
+      updatePipelineIdea(idea.slateId, idea.id, {
+        status: 'researched',
+        report: {
+          ideaId: idea.id,
+          verdict: report.verdict,
+          verdictReason: report.verdictReason || report.verdictRationale || '',
+          storyVerified: report.storyVerified ?? false,
+          verifiedDetail: report.verifiedDetail || '',
+          fullStory: report.fullStory || '',
+          people: report.people || report.talentAccess || '',
+          archive: report.archive || '',
+          rightsDetail: report.rightsDetail || '',
+          commissionCheck: report.commissionCheck || report.competitiveLandscape || '',
+          broadcasterFit: report.broadcasterFit || report.commissionerFit || '',
+          formatRecommendation: report.formatRecommendation || '',
+          whyNow: report.whyNow || report.audience || '',
+          redFlags: report.redFlags || '',
+          sources: report.sources || '',
+          generatedAt: new Date().toISOString(),
+        },
       });
-      if (!response.ok) throw new Error('Deep dive failed');
-      const report = await response.json();
-      updatePipelineIdea(idea.slateId, idea.id, { status: 'researched', report: { ...report, ideaId: idea.id, generatedAt: new Date().toISOString() } });
     } catch (err) {
       console.error('Deep dive error:', err);
       updatePipelineIdea(idea.slateId, idea.id, { status: 'swiped' });
-    } finally { setLoadingId(null); }
+    } finally {
+      setLoadingId(null);
+    }
   };
 
   const handleSendToBuildRoom = (idea: PipelineIdea) => {
@@ -244,7 +261,7 @@ export function PipelineView() {
           {filteredIdeas.map(idea => (
             <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id}
               isArchived={activeTab === 'archived'}
-              onDeepDive={() => runDeepDive(idea)}
+              onDeepDive={() => handleDeepDive(idea)}
               onViewResearch={() => setSelectedIdea(idea)}
               onSendToBuildRoom={() => handleSendToBuildRoom(idea)}
               onViewBuildRoom={() => setCurrentView('buildroom')}
