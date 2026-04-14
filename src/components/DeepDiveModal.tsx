@@ -9,13 +9,6 @@ interface DeepDiveModalProps {
 }
 
 export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
-  const verdictConfig: Record<string, { bg: string; label: string }> = {
-    'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },
-    'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER' },
-    'PASS': { bg: 'bg-verdict-red', label: 'PASS' },
-  };
-  const verdict = verdictConfig[report.verdict] || verdictConfig['PASS'];
-
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-foreground/50 backdrop-blur-sm md:p-4" onClick={onClose}>
       <div className="bg-card border border-border rounded-t-2xl md:rounded-2xl w-full md:max-w-3xl max-h-[95vh] md:max-h-[90vh] overflow-y-auto animate-fade-in shadow-2xl" onClick={e => e.stopPropagation()}>
