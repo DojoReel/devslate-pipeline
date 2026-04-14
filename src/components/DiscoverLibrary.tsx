@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { ShowIdea, SLATE_CONFIGS } from '@/types/devslate';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { preloadImage } from './UnsplashImage';
 import { DiscoverIdeaCard } from './discover/DiscoverIdeaCard';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -401,9 +401,40 @@ export function DiscoverLibrary() {
     );
   }
 
+  // "All" section: first idea from each non-custom slate, shuffled once
+  const allIdeas = useMemo(() => {
+    const picks: ShowIdea[] = [];
+    for (const config of DISCOVER_SLATES) {
+      const deck = slates[config.id].deck;
+      if (deck.length > 0) picks.push(deck[0]);
+    }
+    // Fisher-Yates shuffle
+    for (let i = picks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [picks[i], picks[j]] = [picks[j], picks[i]];
+    }
+    return picks;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Filter allIdeas to only include ideas still present in their slate decks
+  const filteredAllIdeas = allIdeas.filter((idea) =>
+    slates[idea.slateId].deck.some((d) => d.id === idea.id)
+  );
+
   // Desktop: all slates stacked
   return (
     <div className="animate-fade-in space-y-12">
+      {filteredAllIdeas.length > 0 && (
+        <SlateSection
+          key="all"
+          label="All"
+          ideas={filteredAllIdeas}
+          onAdd={handleAdd}
+          onPass={handlePass}
+          isMobile={false}
+        />
+      )}
       {DISCOVER_SLATES.map((config) => {
         const ideas = slates[config.id].deck;
         if (ideas.length === 0) return null;
