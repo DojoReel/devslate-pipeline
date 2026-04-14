@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
 import { getGenrePillColor } from '@/lib/idea-meta';
 import { runBuildRoomDocument } from '@/lib/api';
+import { upsertBuildDoc } from '@/lib/supabase-helpers';
 
 const DOC_TYPES = [
   { type: 'one_pager', label: 'One Pager' },
@@ -66,6 +67,9 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
         d.documentType === docType ? { ...d, content, status: 'complete' as const } : d
       );
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
+      // Persist completed doc to Supabase
+      const completedDoc = finalDocs.find(d => d.documentType === docType);
+      if (completedDoc) upsertBuildDoc(idea.id, completedDoc);
     } catch (err) {
       console.error(`Build room error for ${docType}:`, err);
       const errorDocs = updatedDocs.map(d =>

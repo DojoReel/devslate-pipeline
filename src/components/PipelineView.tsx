@@ -6,6 +6,7 @@ import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
 import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 import { runDeepDive } from '@/lib/api';
+import { upsertReport } from '@/lib/supabase-helpers';
 
 const VERDICT_BORDER: Record<string, string> = {
   'GREENLIGHT': 'border-l-verdict-green',
@@ -180,26 +181,29 @@ export function PipelineView() {
     updatePipelineIdea(idea.slateId, idea.id, { status: 'researching' });
     try {
       const report = await runDeepDive(idea);
+      const mappedReport = {
+        ideaId: idea.id,
+        verdict: report.verdict,
+        verdictReason: report.verdictReason || report.verdictRationale || '',
+        storyVerified: report.storyVerified ?? false,
+        verifiedDetail: report.verifiedDetail || '',
+        fullStory: report.fullStory || '',
+        people: report.people || report.talentAccess || '',
+        archive: report.archive || '',
+        rightsDetail: report.rightsDetail || '',
+        commissionCheck: report.commissionCheck || report.competitiveLandscape || '',
+        broadcasterFit: report.broadcasterFit || report.commissionerFit || '',
+        formatRecommendation: report.formatRecommendation || '',
+        whyNow: report.whyNow || report.audience || '',
+        redFlags: report.redFlags || '',
+        sources: report.sources || '',
+        generatedAt: new Date().toISOString(),
+      };
+      // Persist report to Supabase
+      upsertReport(idea.id, mappedReport);
       updatePipelineIdea(idea.slateId, idea.id, {
         status: 'researched',
-        report: {
-          ideaId: idea.id,
-          verdict: report.verdict,
-          verdictReason: report.verdictReason || report.verdictRationale || '',
-          storyVerified: report.storyVerified ?? false,
-          verifiedDetail: report.verifiedDetail || '',
-          fullStory: report.fullStory || '',
-          people: report.people || report.talentAccess || '',
-          archive: report.archive || '',
-          rightsDetail: report.rightsDetail || '',
-          commissionCheck: report.commissionCheck || report.competitiveLandscape || '',
-          broadcasterFit: report.broadcasterFit || report.commissionerFit || '',
-          formatRecommendation: report.formatRecommendation || '',
-          whyNow: report.whyNow || report.audience || '',
-          redFlags: report.redFlags || '',
-          sources: report.sources || '',
-          generatedAt: new Date().toISOString(),
-        },
+        report: mappedReport,
       });
     } catch (err) {
       console.error('Deep dive error:', err);

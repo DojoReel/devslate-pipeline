@@ -16,8 +16,19 @@ import { SLATE_CONFIGS } from '@/types/devslate';
 import { useState } from 'react';
 
 function DevSlateApp() {
-  const { activeSlate, slates, currentView } = useDevSlate();
+  const { activeSlate, slates, currentView, isLoading } = useDevSlate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Clapperboard className="w-12 h-12 text-primary animate-pulse" />
+          <p className="text-sm text-muted-foreground font-medium">Loading your slates…</p>
+        </div>
+      </div>
+    );
+  }
 
   const viewTitles: Record<string, string> = {
     discover: 'Discover',
