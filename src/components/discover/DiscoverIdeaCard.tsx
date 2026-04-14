@@ -101,12 +101,8 @@ export function DiscoverIdeaCard({
             ))}
           </div>
 
-          {/* Sources footnote */}
-          {idea.sources && (
-            <p className="mt-3 text-[10px] italic text-muted-foreground">
-              Sources: {idea.sources}
-            </p>
-          )}
+
+
 
           {/* Buttons: side by side — Pass 40%, Add 60% */}
           <div className="flex gap-2 mt-4">
@@ -207,12 +203,8 @@ export function DiscoverIdeaCard({
           </div>
         </div>
 
-        {/* Sources footnote */}
-        {idea.sources && (
-          <p className="mb-4 text-[11px] italic text-muted-foreground">
-            Sources: {idea.sources}
-          </p>
-        )}
+
+
 
         <div className="flex flex-wrap items-center gap-3">
           <button
