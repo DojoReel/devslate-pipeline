@@ -20,8 +20,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const { updatePipelineIdea } = useDevSlate();
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [copiedDoc, setCopiedDoc] = useState<string | null>(null);
-  const [generatingDoc, setGeneratingDoc] = useState<string | null>(null);
-  const [docsExpanded, setDocsExpanded] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const docs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
     documentType: d.type,
@@ -36,52 +35,36 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
     setTimeout(() => setCopiedDoc(null), 2000);
   };
 
-  const generateDocument = async (docType: string) => {
-    setGeneratingDoc(docType);
-
+  const generateAllDocuments = async () => {
+    // Skip if any doc is already complete or generating
     const currentDocs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
       documentType: d.type, label: d.label, content: '', status: 'pending' as const,
     }));
+    if (currentDocs.some(d => d.status === 'complete' || d.status === 'generating')) return;
 
-    const updatedDocs = currentDocs.map(d =>
-      d.documentType === docType ? { ...d, status: 'generating' as const } : d
-    );
-    updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: updatedDocs });
+    setGenerating(true);
+
+    // Set all to generating
+    const generatingDocs = currentDocs.map(d => ({ ...d, status: 'generating' as const }));
+    updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: generatingDocs });
 
     try {
-      const result: any = await runBuildRoomDocument(idea, idea.report, docType);
-      console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
+      const documents = await runBuildRoom(idea, idea.report);
+      console.log('[BuildRoom] Batch API result:', JSON.stringify(documents, null, 2));
 
-      // Handle { success: true, documents: [...] } response shape
-      let docContent = '';
-      if (result.documents && Array.isArray(result.documents)) {
-        const matchedDoc = result.documents.find((d: any) => d.documentType === docType);
-        docContent = matchedDoc?.content || result.documents[0]?.content || '';
-      } else {
-        docContent = result.content || (result as any).document?.content || (typeof result === 'string' ? result : '');
-      }
-
-      // If API returned full documents array, merge all of them
-      let finalDocs;
-      if (result.documents && Array.isArray(result.documents)) {
-        finalDocs = updatedDocs.map(d => {
-          const apiDoc = result.documents.find((ad: any) => ad.documentType === d.documentType);
-          return apiDoc ? { ...d, content: apiDoc.content, status: 'complete' as const } : d;
-        });
-      } else {
-        finalDocs = updatedDocs.map(d =>
-          d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
-        );
-      }
+      const finalDocs = generatingDocs.map(d => {
+        const apiDoc = documents?.find((ad: any) => ad.documentType === d.documentType);
+        return apiDoc
+          ? { ...d, content: apiDoc.content, status: 'complete' as const }
+          : d;
+      });
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: finalDocs });
     } catch (err) {
-      console.error(`Build room error for ${docType}:`, err);
-      const errorDocs = (idea.buildRoomDocs || currentDocs).map(d =>
-        d.documentType === docType ? { ...d, status: 'error' as const } : d
-      );
+      console.error('Build room batch error:', err);
+      const errorDocs = currentDocs.map(d => ({ ...d, status: 'error' as const }));
       updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: errorDocs });
     } finally {
-      setGeneratingDoc(null);
+      setGenerating(false);
     }
   };
 
