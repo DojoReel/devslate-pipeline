@@ -101,7 +101,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
       <div className={`p-4 md:p-6 pt-0 space-y-2 md:space-y-3 ${docsExpanded ? 'block' : 'hidden md:block'}`}>
         {docs.map(doc => {
           const docMeta = DOC_TYPES.find(d => d.type === doc.documentType);
-          const isGenerating = generatingDoc === doc.documentType || doc.status === 'generating';
+          const isGenerating = generating || doc.status === 'generating';
 
           return (
             <div key={doc.documentType} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
