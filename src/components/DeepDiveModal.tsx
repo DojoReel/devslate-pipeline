@@ -9,13 +9,6 @@ interface DeepDiveModalProps {
 }
 
 export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
-  const verdictConfig: Record<string, { bg: string; label: string }> = {
-    'GREENLIGHT': { bg: 'bg-verdict-green', label: 'GREENLIGHT' },
-    'DEVELOP FURTHER': { bg: 'bg-verdict-amber', label: 'DEVELOP FURTHER' },
-    'PASS': { bg: 'bg-verdict-red', label: 'PASS' },
-  };
-  const verdict = verdictConfig[report.verdict] || verdictConfig['PASS'];
-
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-foreground/50 backdrop-blur-sm md:p-4" onClick={onClose}>
       <div className="bg-card border border-border rounded-t-2xl md:rounded-2xl w-full md:max-w-3xl max-h-[95vh] md:max-h-[90vh] overflow-y-auto animate-fade-in shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -31,12 +24,6 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
             <p className="text-primary-foreground/70 text-xs md:text-sm font-medium">{idea.format} · {idea.targetBroadcaster}</p>
             <h2 className="text-xl md:text-2xl font-extrabold text-primary-foreground mt-1">{idea.title}</h2>
           </div>
-        </div>
-
-        {/* Verdict banner */}
-        <div className={`${verdict.bg} px-4 md:px-8 py-6 md:py-8`}>
-          <h3 className="text-3xl md:text-5xl font-black text-primary-foreground tracking-tight">{verdict.label}</h3>
-          <p className="mt-3 md:mt-4 text-primary-foreground/90 text-sm md:text-lg leading-relaxed font-medium">{report.verdictReason}</p>
         </div>
 
         {/* Report sections */}
