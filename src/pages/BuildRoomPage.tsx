@@ -52,7 +52,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
       const result = await runBuildRoomDocument(idea, idea.report, docType);
       console.log('[BuildRoom] API result for', docType, JSON.stringify(result, null, 2));
 
-      const docContent = result.content || result.document?.content || (typeof result === 'string' ? result : '');
+      const docContent = result.content || (result as any).document?.content || (typeof result === 'string' ? result : '');
 
       const finalDocs = updatedDocs.map(d =>
         d.documentType === docType ? { ...d, content: docContent, status: 'complete' as const } : d
