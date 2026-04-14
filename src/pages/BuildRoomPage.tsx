@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
 import { getGenrePillColor } from '@/lib/idea-meta';
-import { runBuildRoomDocument } from '@/lib/api';
+import { runBuildRoom } from '@/lib/api';
 
 const DOC_TYPES = [
   { type: 'pitchDocument', label: 'Pitch Document' },
