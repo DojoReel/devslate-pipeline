@@ -1,5 +1,5 @@
 import { PipelineIdea, DeepDiveReport } from '@/types/devslate';
-import { X, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { UnsplashImage } from './UnsplashImage';
 
 interface DeepDiveModalProps {
@@ -74,6 +74,16 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
               <p className="text-sm text-muted-foreground leading-relaxed">{report.sources}</p>
             </Section>
           )}
+
+          <div className="flex justify-center pt-2">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/20 hover:bg-foreground/40 text-foreground text-sm font-medium transition-colors backdrop-blur-sm min-h-[44px]"
+            >
+              <Download className="w-4 h-4" />
+              Download PDF
+            </button>
+          </div>
 
           <p className="text-xs text-muted-foreground pt-2 text-center">
             Generated {new Date(report.generatedAt).toLocaleString()}
