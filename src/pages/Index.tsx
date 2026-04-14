@@ -1,4 +1,4 @@
-import { DevSlateProvider, useDevSlate } from '@/context/DevSlateContext';
+import { useDevSlate } from '@/context/DevSlateContext';
 import { DiscoverLibrary } from '@/components/DiscoverLibrary';
 import { PipelineView } from '@/components/PipelineView';
 import { PassedView } from '@/components/PassedView';
@@ -102,10 +102,6 @@ function DevSlateApp() {
   );
 }
 
-const Index = () => (
-  <DevSlateProvider>
-    <DevSlateApp />
-  </DevSlateProvider>
-);
+const Index = () => <DevSlateApp />;
 
 export default Index;
