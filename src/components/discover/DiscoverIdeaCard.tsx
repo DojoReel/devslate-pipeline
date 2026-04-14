@@ -1,7 +1,14 @@
 import { ShowIdea } from '@/types/devslate';
-import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { UnsplashImage } from '@/components/UnsplashImage';
-import { extractWhyNow, getGenrePillColor, getIdeaMeta } from '@/lib/idea-meta';
+import { getGenrePillColor } from '@/lib/idea-meta';
+
+function getRightsColor(rightsStatus: string): string {
+  const lower = rightsStatus.toLowerCase();
+  if (lower.includes('clear') || lower.includes('no rights')) return 'text-emerald-500';
+  if (lower.includes('complex') || lower.includes('negotiate') || lower.includes('negotiable')) return 'text-amber-500';
+  return 'text-muted-foreground';
+}
 
 interface DiscoverIdeaCardProps {
   idea: ShowIdea;
@@ -28,8 +35,12 @@ export function DiscoverIdeaCard({
   showNavigation,
   isMobile,
 }: DiscoverIdeaCardProps) {
-  const whyNow = extractWhyNow(idea);
-  const meta = getIdeaMeta(idea);
+  const statBubbles = [
+    { label: 'Why Now', value: idea.whyNow },
+    { label: 'People & Access', value: idea.peopleAccess },
+    { label: 'Archive', value: idea.archiveStatus },
+    { label: 'Comparable Shows', value: idea.comparables },
+  ];
 
   if (isMobile) {
     return (
@@ -60,9 +71,20 @@ export function DiscoverIdeaCard({
 
         {/* Info panel — continuous scroll */}
         <div className="flex flex-col p-4 overflow-hidden">
-          <p className="text-[13px] text-muted-foreground">
-            {idea.format} · {idea.targetBroadcaster}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+            <span>{idea.format} · {idea.targetBroadcaster}</span>
+            {idea.location && (
+              <span className="inline-flex items-center gap-1 text-[11px]">
+                <MapPin className="h-3 w-3" />
+                {idea.location}
+              </span>
+            )}
+            {idea.rightsStatus && (
+              <span className={`text-[11px] font-medium ${getRightsColor(idea.rightsStatus)}`}>
+                {idea.rightsStatus}
+              </span>
+            )}
+          </div>
 
           {/* Full concept summary — no truncation */}
           <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
@@ -71,13 +93,7 @@ export function DiscoverIdeaCard({
 
           {/* Stat grid: 2×2 compact */}
           <div className="grid grid-cols-2 gap-2 mt-3">
-            {[
-              { label: 'Why Now', value: idea.whyNow },
-              { label: 'People & Access', value: idea.peopleAccess },
-              { label: 'Archive', value: idea.archiveStatus },
-              { label: 'Comparable Shows', value: idea.comparables },
-              { label: 'Commission Check', value: idea.commissionCheck },
-            ].map((stat) => (
+            {statBubbles.map((stat) => (
               <div key={stat.label} className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{stat.label}</p>
                 <p className="text-xs font-semibold leading-snug text-foreground">{stat.value}</p>
@@ -85,11 +101,12 @@ export function DiscoverIdeaCard({
             ))}
           </div>
 
-          {/* Why Now: full text */}
-          <div className="flex items-start gap-2 mt-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 shrink-0 pt-0.5">Why Now?</span>
-            <p className="text-[13px] leading-snug text-foreground">{whyNow}</p>
-          </div>
+          {/* Sources footnote */}
+          {idea.sources && (
+            <p className="mt-3 text-[10px] italic text-muted-foreground">
+              Sources: {idea.sources}
+            </p>
+          )}
 
           {/* Buttons: side by side — Pass 40%, Add 60% */}
           <div className="flex gap-2 mt-4">
@@ -161,36 +178,43 @@ export function DiscoverIdeaCard({
             {idea.title}
           </h3>
 
-          <p className="mb-4 text-sm text-muted-foreground">
-            {idea.format} · {idea.targetBroadcaster}
-          </p>
+          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span>{idea.format} · {idea.targetBroadcaster}</span>
+            {idea.location && (
+              <span className="inline-flex items-center gap-1 text-xs">
+                <MapPin className="h-3 w-3" />
+                {idea.location}
+              </span>
+            )}
+            {idea.rightsStatus && (
+              <span className={`text-xs font-medium ${getRightsColor(idea.rightsStatus)}`}>
+                {idea.rightsStatus}
+              </span>
+            )}
+          </div>
 
           <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
             {idea.hook}
           </p>
 
           <div className="mb-5 grid grid-cols-2 gap-3">
-            {[
-              { label: 'Why Now', value: idea.whyNow },
-              { label: 'People & Access', value: idea.peopleAccess },
-              { label: 'Archive', value: idea.archiveStatus },
-              { label: 'Comparable Shows', value: idea.comparables },
-              { label: 'Commission Check', value: idea.commissionCheck },
-            ].map((stat) => (
+            {statBubbles.map((stat) => (
               <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
                 <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
                 <p className="text-[13px] font-semibold leading-snug text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>
-
-          <div className="rounded-xl bg-muted/50 p-4">
-            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Why Now?</p>
-            <p className="text-sm leading-relaxed text-foreground">{whyNow}</p>
-          </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+        {/* Sources footnote */}
+        {idea.sources && (
+          <p className="mb-4 text-[11px] italic text-muted-foreground">
+            Sources: {idea.sources}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={onPass}
             disabled={isAnimating}
