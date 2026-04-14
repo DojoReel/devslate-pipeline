@@ -261,7 +261,7 @@ export function PipelineView() {
           {filteredIdeas.map(idea => (
             <PipelineCard key={idea.id} idea={idea} isLoading={loadingId === idea.id}
               isArchived={activeTab === 'archived'}
-              onDeepDive={() => runDeepDive(idea)}
+              onDeepDive={() => handleDeepDive(idea)}
               onViewResearch={() => setSelectedIdea(idea)}
               onSendToBuildRoom={() => handleSendToBuildRoom(idea)}
               onViewBuildRoom={() => setCurrentView('buildroom')}

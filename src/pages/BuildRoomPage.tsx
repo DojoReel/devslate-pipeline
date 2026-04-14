@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
 import { getGenrePillColor } from '@/lib/idea-meta';
+import { runBuildRoomDocument } from '@/lib/api';
 
 const DOC_TYPES = [
   { type: 'pitchDocument', label: 'Pitch Document' },
@@ -48,20 +49,7 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
     updatePipelineIdea(idea.slateId, idea.id, { buildRoomDocs: updatedDocs });
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/build-room`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          idea: { title: idea.title, logline: idea.logline, format: idea.format, targetBroadcaster: idea.targetBroadcaster, genre: idea.genre },
-          report: idea.report,
-          documentType: docType,
-        }),
-      });
-      if (!response.ok) throw new Error(`Failed: ${docType}`);
-      const result = await response.json();
+      const result = await runBuildRoomDocument(idea, idea.report, docType);
 
       const finalDocs = (idea.buildRoomDocs || currentDocs).map(d =>
         d.documentType === docType ? { ...d, content: result.content, status: 'complete' as const } : d
