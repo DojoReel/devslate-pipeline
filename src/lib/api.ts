@@ -25,7 +25,7 @@ export async function runDeepDive(idea: any): Promise<any> {
   return data.report;
 }
 
-export async function runBuildRoom(idea: any, report: any): Promise<any[]> {
+export async function runBuildRoomDocument(idea: any, report: any, documentType: string): Promise<{ content: string }> {
   const response = await fetch(`${API_BASE}/build-room`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
