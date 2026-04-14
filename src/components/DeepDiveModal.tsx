@@ -17,9 +17,15 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
         <div className="relative w-full h-36 md:h-48 overflow-hidden rounded-t-2xl">
           <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" className="w-full h-full object-cover" alt={idea.title} />
           <div className="absolute inset-0 gradient-scrim" />
-          <button onClick={onClose} className="absolute top-3 md:top-4 right-3 md:right-4 p-2 rounded-full bg-foreground/20 hover:bg-foreground/40 text-primary-foreground transition-colors backdrop-blur-sm min-w-[44px] min-h-[44px] flex items-center justify-center">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="absolute top-3 md:top-4 right-3 md:right-4 flex items-center gap-2">
+            <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground/20 hover:bg-foreground/40 text-primary-foreground text-xs font-medium transition-colors backdrop-blur-sm min-h-[36px]">
+              <Download className="w-3.5 h-3.5" />
+              PDF
+            </button>
+            <button onClick={onClose} className="p-2 rounded-full bg-foreground/20 hover:bg-foreground/40 text-primary-foreground transition-colors backdrop-blur-sm min-w-[44px] min-h-[44px] flex items-center justify-center">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
           <div className="absolute bottom-3 md:bottom-4 left-4 md:left-6 right-4 md:right-6">
             <p className="text-primary-foreground/70 text-xs md:text-sm font-medium">{idea.format} · {idea.targetBroadcaster}</p>
             <h2 className="text-xl md:text-2xl font-extrabold text-primary-foreground mt-1">{idea.title}</h2>
@@ -75,15 +81,6 @@ export function DeepDiveModal({ idea, report, onClose }: DeepDiveModalProps) {
             </Section>
           )}
 
-          <div className="flex justify-center pt-2">
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/20 hover:bg-foreground/40 text-foreground text-sm font-medium transition-colors backdrop-blur-sm min-h-[44px]"
-            >
-              <Download className="w-4 h-4" />
-              Download PDF
-            </button>
-          </div>
 
           <p className="text-xs text-muted-foreground pt-2 text-center">
             Generated {new Date(report.generatedAt).toLocaleString()}
