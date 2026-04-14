@@ -14,7 +14,245 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      build_room_documents: {
+        Row: {
+          content: string
+          created_at: string
+          document_type: string
+          id: string
+          idea_id: string
+          label: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          document_type?: string
+          id?: string
+          idea_id: string
+          label?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          document_type?: string
+          id?: string
+          idea_id?: string
+          label?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_room_documents_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deep_dive_reports: {
+        Row: {
+          archive: string
+          broadcaster_fit: string
+          commission_check: string
+          created_at: string
+          format_recommendation: string
+          full_story: string
+          generated_at: string
+          id: string
+          idea_id: string
+          people: string
+          red_flags: string
+          rights_detail: string
+          sources: string
+          story_verified: boolean
+          verdict: string
+          verdict_reason: string
+          verified_detail: string
+          why_now: string
+        }
+        Insert: {
+          archive?: string
+          broadcaster_fit?: string
+          commission_check?: string
+          created_at?: string
+          format_recommendation?: string
+          full_story?: string
+          generated_at?: string
+          id?: string
+          idea_id: string
+          people?: string
+          red_flags?: string
+          rights_detail?: string
+          sources?: string
+          story_verified?: boolean
+          verdict?: string
+          verdict_reason?: string
+          verified_detail?: string
+          why_now?: string
+        }
+        Update: {
+          archive?: string
+          broadcaster_fit?: string
+          commission_check?: string
+          created_at?: string
+          format_recommendation?: string
+          full_story?: string
+          generated_at?: string
+          id?: string
+          idea_id?: string
+          people?: string
+          red_flags?: string
+          rights_detail?: string
+          sources?: string
+          story_verified?: boolean
+          verdict?: string
+          verdict_reason?: string
+          verified_detail?: string
+          why_now?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deep_dive_reports_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: true
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          archive_status: string
+          commission_check: string
+          comparables: string
+          created_at: string
+          format: string
+          genre: string
+          hook: string
+          id: string
+          location: string
+          logline: string
+          people_access: string
+          rights_status: string
+          slate_id: string
+          sources: string
+          target_broadcaster: string
+          title: string
+          why_now: string
+        }
+        Insert: {
+          archive_status?: string
+          commission_check?: string
+          comparables?: string
+          created_at?: string
+          format?: string
+          genre?: string
+          hook?: string
+          id?: string
+          location?: string
+          logline?: string
+          people_access?: string
+          rights_status?: string
+          slate_id?: string
+          sources?: string
+          target_broadcaster?: string
+          title: string
+          why_now?: string
+        }
+        Update: {
+          archive_status?: string
+          commission_check?: string
+          comparables?: string
+          created_at?: string
+          format?: string
+          genre?: string
+          hook?: string
+          id?: string
+          location?: string
+          logline?: string
+          people_access?: string
+          rights_status?: string
+          slate_id?: string
+          sources?: string
+          target_broadcaster?: string
+          title?: string
+          why_now?: string
+        }
+        Relationships: []
+      }
+      user_decisions: {
+        Row: {
+          created_at: string
+          decision: string
+          id: string
+          idea_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          id?: string
+          idea_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          id?: string
+          idea_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_decisions_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_pipeline: {
+        Row: {
+          created_at: string
+          id: string
+          idea_id: string
+          notes: string[]
+          slate_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idea_id: string
+          notes?: string[]
+          slate_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idea_id?: string
+          notes?: string[]
+          slate_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_pipeline_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: true
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
