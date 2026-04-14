@@ -1,3 +1,4 @@
+// DevSlate context — loads all data from Supabase on mount
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { SlateId, SlateState, ShowIdea, PipelineIdea, SLATE_CONFIGS } from '@/types/devslate';
 import {
