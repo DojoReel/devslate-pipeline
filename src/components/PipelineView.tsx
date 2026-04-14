@@ -40,7 +40,7 @@ function PipelineCard({
 }) {
   const hasReport = idea.report != null;
   const verdictKey = idea.report?.verdict;
-  const canBuild = verdictKey === 'GREENLIGHT' || verdictKey === 'DEVELOP FURTHER';
+  
   const isBuilt = idea.status === 'built' || idea.status === 'complete' || idea.status === 'building';
   const meta = getIdeaMeta(idea);
   const whyNow = extractWhyNow(idea);
@@ -129,15 +129,13 @@ function PipelineCard({
                 {idea.status === 'researched' && hasReport && (
                   <>
                     <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
-                      className={`flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform ${!canBuild ? 'flex-1' : ''}`}>
+                      className="flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
                       <Eye className="w-4 h-4" /> View Research
                     </button>
-                    {canBuild && (
-                      <button onClick={(e) => { e.stopPropagation(); onSendToBuildRoom(); }}
-                        className="flex-1 flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
-                        Send to Build Room <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
+                    <button onClick={(e) => { e.stopPropagation(); onSendToBuildRoom(); }}
+                      className="flex-1 flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      Send to Build Room <ArrowRight className="w-4 h-4" />
+                    </button>
                   </>
                 )}
                 {isBuilt && hasReport && (
