@@ -116,16 +116,6 @@ export function AppSidebar() {
         </div>
       </nav>
 
-      {/* Reset */}
-      <div className="px-3 py-4 border-t border-sidebar-border">
-        <button
-          onClick={() => resetSlate(activeSlate)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Reset Slate
-        </button>
-      </div>
     </aside>
   );
 }

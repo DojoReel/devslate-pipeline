@@ -327,7 +327,7 @@ function SlateSection({
     <div>
       <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
       <div
-        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg w-[75%]"
+        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg w-full"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
