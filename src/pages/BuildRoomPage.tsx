@@ -59,6 +59,43 @@ function DeepDiveTab({ report }: { report?: DeepDiveReport }) {
   );
 }
 
+function IdeaSummaryTab({ idea }: { idea: PipelineIdea }) {
+  const fields = [
+    { label: 'Logline', value: idea.logline },
+    { label: 'Why Now', value: idea.whyNow },
+    { label: 'People & Access', value: idea.peopleAccess },
+    { label: 'Archive', value: idea.archiveStatus },
+    { label: 'Rights Status', value: idea.rightsStatus },
+    { label: 'Comparable Shows', value: idea.comparables },
+    { label: 'Commission Check', value: idea.commissionCheck },
+    { label: 'Sources', value: idea.sources },
+    { label: 'Format', value: idea.format },
+    { label: 'Target Broadcaster', value: idea.targetBroadcaster },
+    { label: 'Genre', value: idea.genre },
+    { label: 'Location', value: idea.location },
+  ].filter(f => f.value && f.value.trim());
+
+  if (fields.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+        <Info className="w-8 h-8 mb-3 opacity-40" />
+        <p className="text-sm font-semibold text-foreground">No idea details available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+      {fields.map(field => (
+        <div key={field.label} className="border border-border rounded-xl p-4 bg-background">
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{field.label}</h4>
+          <p className="text-sm text-foreground leading-relaxed">{field.value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const { updatePipelineIdea } = useDevSlate();
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
