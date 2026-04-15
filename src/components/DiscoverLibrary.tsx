@@ -371,6 +371,23 @@ export function DiscoverLibrary() {
   const handleAdd = (idea: ShowIdea) => swipeRight(idea.slateId, idea);
   const handlePass = (idea: ShowIdea) => swipeLeft(idea.slateId, idea);
 
+  // "All" section: first idea from each non-custom slate, shuffled once
+  // MUST be called before any conditional returns to keep hook order stable
+  const allIdeas = useMemo(() => {
+    const picks: ShowIdea[] = [];
+    for (const config of DISCOVER_SLATES) {
+      const deck = slates[config.id].deck;
+      if (deck.length > 0) picks.push(deck[0]);
+    }
+    // Fisher-Yates shuffle
+    for (let i = picks.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [picks[i], picks[j]] = [picks[j], picks[i]];
+    }
+    return picks;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Mobile: single slate, single card
   if (isMobile) {
     const ideas = slates[activeSlate].deck;
@@ -400,22 +417,6 @@ export function DiscoverLibrary() {
       </div>
     );
   }
-
-  // "All" section: first idea from each non-custom slate, shuffled once
-  const allIdeas = useMemo(() => {
-    const picks: ShowIdea[] = [];
-    for (const config of DISCOVER_SLATES) {
-      const deck = slates[config.id].deck;
-      if (deck.length > 0) picks.push(deck[0]);
-    }
-    // Fisher-Yates shuffle
-    for (let i = picks.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [picks[i], picks[j]] = [picks[j], picks[i]];
-    }
-    return picks;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Filter allIdeas to only include ideas still present in their slate decks
   const filteredAllIdeas = allIdeas.filter((idea) =>
