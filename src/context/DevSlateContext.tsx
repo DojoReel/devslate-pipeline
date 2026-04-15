@@ -300,6 +300,24 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const clearAll = useCallback(async () => {
+    setIsLoading(true);
+    await clearAllDecisions();
+    const data = await loadAllData();
+    const ideasBySlate: Record<string, ShowIdea[]> = {};
+    for (const idea of data.ideas) {
+      if (!ideasBySlate[idea.slateId]) ideasBySlate[idea.slateId] = [];
+      ideasBySlate[idea.slateId].push(idea);
+    }
+    const fresh = emptySlates();
+    for (const config of SLATE_CONFIGS) {
+      fresh[config.id] = { config, deck: ideasBySlate[config.id] || [], pipeline: [], passed: [] };
+    }
+    setSlates(fresh);
+    setArchivedIdeas([]);
+    setIsLoading(false);
+  }, []);
+
   return (
     <DevSlateContext.Provider value={{
       activeSlate, setActiveSlate,
@@ -308,6 +326,7 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
       updatePipelineIdea, restoreToPipeline, resetSlate,
       addCustomIdea, sendToBuildRoom,
       archiveIdea, unarchiveIdea,
+      clearAll,
       currentView, setCurrentView,
       isLoading,
     }}>
