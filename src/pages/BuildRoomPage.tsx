@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, BuildRoomDocument, DeepDiveReport, SLATE_CONFIGS } from '@/types/devslate';
-import { Hammer, Loader2, FileText, Copy, Check, ChevronDown, ChevronUp, BookOpen, Files } from 'lucide-react';
+import { Hammer, Loader2, FileText, Copy, Check, ChevronDown, ChevronUp, BookOpen, Files, Info } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
@@ -17,7 +17,7 @@ const DOC_TYPES = [
   { type: 'pitch_email', label: 'Commissioner Pitch Email' },
 ];
 
-type TabId = 'documents' | 'deep-dive';
+type TabId = 'documents' | 'deep-dive' | 'idea-summary';
 
 function DeepDiveTab({ report }: { report?: DeepDiveReport }) {
   if (!report) {
@@ -53,6 +53,43 @@ function DeepDiveTab({ report }: { report?: DeepDiveReport }) {
           <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground">
             <ReactMarkdown>{section.content}</ReactMarkdown>
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function IdeaSummaryTab({ idea }: { idea: PipelineIdea }) {
+  const fields = [
+    { label: 'Logline', value: idea.logline },
+    { label: 'Why Now', value: idea.whyNow },
+    { label: 'People & Access', value: idea.peopleAccess },
+    { label: 'Archive', value: idea.archiveStatus },
+    { label: 'Rights Status', value: idea.rightsStatus },
+    { label: 'Comparable Shows', value: idea.comparables },
+    { label: 'Commission Check', value: idea.commissionCheck },
+    { label: 'Sources', value: idea.sources },
+    { label: 'Format', value: idea.format },
+    { label: 'Target Broadcaster', value: idea.targetBroadcaster },
+    { label: 'Genre', value: idea.genre },
+    { label: 'Location', value: idea.location },
+  ].filter(f => f.value && f.value.trim());
+
+  if (fields.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+        <Info className="w-8 h-8 mb-3 opacity-40" />
+        <p className="text-sm font-semibold text-foreground">No idea details available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+      {fields.map(field => (
+        <div key={field.label} className="border border-border rounded-xl p-4 bg-background">
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{field.label}</h4>
+          <p className="text-sm text-foreground leading-relaxed">{field.value}</p>
         </div>
       ))}
     </div>
@@ -180,11 +217,24 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
             <BookOpen className="w-4 h-4" />
             Deep Dive Report
           </button>
+          <button
+            onClick={() => setActiveTab('idea-summary')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${
+              activeTab === 'idea-summary'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Info className="w-4 h-4" />
+            Idea Summary
+          </button>
         </div>
 
         <div className="p-4 md:p-6 pt-4">
           {activeTab === 'deep-dive' ? (
             <DeepDiveTab report={idea.report} />
+          ) : activeTab === 'idea-summary' ? (
+            <IdeaSummaryTab idea={idea} />
           ) : (
             <>
               {/* Collapsible toggle for document list */}
