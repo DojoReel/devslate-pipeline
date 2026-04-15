@@ -24,12 +24,16 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
   const [generatingDoc, setGeneratingDoc] = useState<string | null>(null);
   const [docsExpanded, setDocsExpanded] = useState(false);
 
-  const docs = idea.buildRoomDocs || DOC_TYPES.map(d => ({
-    documentType: d.type,
-    label: d.label,
-    content: '',
-    status: 'pending' as const,
-  }));
+  // Always show all 6 doc types, merging any existing docs from DB/state
+  const docs = DOC_TYPES.map(d => {
+    const existing = (idea.buildRoomDocs || []).find(bd => bd.documentType === d.type);
+    return existing || {
+      documentType: d.type,
+      label: d.label,
+      content: '',
+      status: 'pending' as const,
+    };
+  });
 
   const handleCopy = async (content: string, docType: string) => {
     await navigator.clipboard.writeText(content);
