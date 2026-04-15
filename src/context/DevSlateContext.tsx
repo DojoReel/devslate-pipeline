@@ -8,6 +8,7 @@ import {
   insertPipeline,
   updatePipelineStatus,
   deletePipelineRow,
+  clearAllDecisions,
 } from '@/lib/supabase-helpers';
 
 interface DevSlateContextType {
@@ -20,6 +21,7 @@ interface DevSlateContextType {
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
   restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
+  clearAll: () => Promise<void>;
   addCustomIdea: (idea: ShowIdea) => void;
   sendToBuildRoom: (slateId: SlateId, ideaId: string) => void;
   archiveIdea: (slateId: SlateId, ideaId: string) => void;
