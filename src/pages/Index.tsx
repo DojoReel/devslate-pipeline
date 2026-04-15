@@ -49,7 +49,7 @@ function DevSlateApp() {
   const activeSlateLabel = SLATE_CONFIGS.find(c => c.id === activeSlate)?.label || 'Slate';
 
   return (
-    <div className="min-h-screen bg-background flex overflow-x-hidden">
+    <div className="bg-background flex overflow-x-hidden">
       <AppSidebar />
 
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
