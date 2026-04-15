@@ -11,6 +11,8 @@ const SLATES = [
   { slateId: 'history', genre: 'History & Archive' },
   { slateId: 'science', genre: 'Science & Technology' },
   { slateId: 'social', genre: 'Social Issues' },
+  { slateId: 'cooking', genre: 'Cooking & Food' },
+  { slateId: 'travel', genre: 'Travel & Adventure' },
   { slateId: 'firstnations', genre: 'First Nations' },
 ] as const;
 

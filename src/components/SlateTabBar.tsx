@@ -11,8 +11,10 @@ const SHORT_LABELS: Record<SlateId, string> = {
   history: 'History',
   science: 'Science',
   social: 'Social',
-  firstnations: '1st Nations',
+  cooking: 'Cooking',
+  travel: 'Travel',
   custom: 'Custom',
+  firstnations: '1st Nations',
 };
 
 export function SlateTabBar() {
