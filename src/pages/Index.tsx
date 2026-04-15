@@ -5,7 +5,6 @@ import { PassedView } from '@/components/PassedView';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { MobileSlateDrawer } from '@/components/MobileSlateDrawer';
-import { ViewSwitcher } from '@/components/ViewSwitcher';
 import { Clapperboard, ChevronRight } from 'lucide-react';
 import CustomPage from '@/pages/CustomPage';
 import BuildRoomPage from '@/pages/BuildRoomPage';
@@ -72,11 +71,6 @@ function DevSlateApp() {
 
         {/* Mobile slate bottom sheet */}
         <MobileSlateDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-
-        {/* Desktop view switcher */}
-        <div className="hidden md:block border-b border-border bg-card">
-          <ViewSwitcher />
-        </div>
 
         {/* Content header — hidden on mobile for discover */}
         {!hideSubtitle && (
