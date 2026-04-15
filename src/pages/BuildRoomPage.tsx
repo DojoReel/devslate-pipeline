@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, BuildRoomDocument, DeepDiveReport, SLATE_CONFIGS } from '@/types/devslate';
-import { Hammer, Loader2, FileText, Copy, Check, ChevronDown, ChevronUp, BookOpen, Files } from 'lucide-react';
+import { Hammer, Loader2, FileText, Copy, Check, ChevronDown, ChevronUp, BookOpen, Files, Info } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { UnsplashImage } from '@/components/UnsplashImage';
