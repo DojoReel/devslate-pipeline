@@ -12,6 +12,8 @@ const SHORT_LABELS: Record<SlateId, string> = {
   science: 'Science',
   social: 'Social',
   firstnations: '1st Nations',
+  cooking: 'Cooking',
+  travel: 'Travel',
   custom: 'Custom',
 };
 
