@@ -385,7 +385,8 @@ export function DiscoverLibrary() {
       [picks[i], picks[j]] = [picks[j], picks[i]];
     }
     return picks;
-  }, [slates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Mobile: single slate, single card
   if (isMobile) {

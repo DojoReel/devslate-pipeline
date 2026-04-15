@@ -1,5 +1,4 @@
 // DevSlate context — loads all data from Supabase on mount
-// Force clean rebuild
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { SlateId, SlateState, ShowIdea, PipelineIdea, SLATE_CONFIGS } from '@/types/devslate';
 import {
@@ -8,7 +7,6 @@ import {
   insertPipeline,
   updatePipelineStatus,
   deletePipelineRow,
-  clearAllDecisions,
 } from '@/lib/supabase-helpers';
 
 interface DevSlateContextType {
@@ -21,7 +19,6 @@ interface DevSlateContextType {
   updatePipelineIdea: (slateId: SlateId, ideaId: string, updates: Partial<PipelineIdea>) => void;
   restoreToPipeline: (slateId: SlateId, ideaId: string) => void;
   resetSlate: (slateId: SlateId) => void;
-  clearAll: () => Promise<void>;
   addCustomIdea: (idea: ShowIdea) => void;
   sendToBuildRoom: (slateId: SlateId, ideaId: string) => void;
   archiveIdea: (slateId: SlateId, ideaId: string) => void;
@@ -300,24 +297,6 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const clearAll = useCallback(async () => {
-    setIsLoading(true);
-    await clearAllDecisions();
-    const data = await loadAllData();
-    const ideasBySlate: Record<string, ShowIdea[]> = {};
-    for (const idea of data.ideas) {
-      if (!ideasBySlate[idea.slateId]) ideasBySlate[idea.slateId] = [];
-      ideasBySlate[idea.slateId].push(idea);
-    }
-    const fresh = emptySlates();
-    for (const config of SLATE_CONFIGS) {
-      fresh[config.id] = { config, deck: ideasBySlate[config.id] || [], pipeline: [], passed: [] };
-    }
-    setSlates(fresh);
-    setArchivedIdeas([]);
-    setIsLoading(false);
-  }, []);
-
   return (
     <DevSlateContext.Provider value={{
       activeSlate, setActiveSlate,
@@ -326,7 +305,6 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
       updatePipelineIdea, restoreToPipeline, resetSlate,
       addCustomIdea, sendToBuildRoom,
       archiveIdea, unarchiveIdea,
-      clearAll,
       currentView, setCurrentView,
       isLoading,
     }}>

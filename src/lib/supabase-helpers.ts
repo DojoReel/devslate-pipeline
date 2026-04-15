@@ -151,12 +151,3 @@ export async function deletePipelineRow(ideaId: string) {
   const { error } = await supabase.from('user_pipeline').delete().eq('idea_id', ideaId);
   if (error) console.error('deletePipelineRow error:', error);
 }
-
-export async function clearAllDecisions() {
-  const [d1, d2] = await Promise.all([
-    supabase.from('user_decisions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-    supabase.from('user_pipeline').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-  ]);
-  if (d1.error) console.error('clearAllDecisions (decisions):', d1.error);
-  if (d2.error) console.error('clearAllDecisions (pipeline):', d2.error);
-}

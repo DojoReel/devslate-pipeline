@@ -1,11 +1,11 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, RotateCcw, Clapperboard, Palette, Hammer, PackageOpen, Radio, CalendarDays, PlusCircle, FlaskConical, Trash2 } from 'lucide-react';
+import { Layers, GitBranch, RotateCcw, Clapperboard, Palette, Hammer, PackageOpen, Radio, CalendarDays, PlusCircle, FlaskConical } from 'lucide-react';
 
 type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'research-agent';
 
 export function AppSidebar() {
-  const { activeSlate, currentView, setCurrentView, slates, resetSlate, clearAll } = useDevSlate();
+  const { activeSlate, currentView, setCurrentView, slates, resetSlate } = useDevSlate();
 
   const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
@@ -116,21 +116,14 @@ export function AppSidebar() {
         </div>
       </nav>
 
-      {/* Footer actions */}
-      <div className="px-3 py-4 border-t border-sidebar-border flex flex-col gap-1">
+      {/* Reset */}
+      <div className="px-3 py-4 border-t border-sidebar-border">
         <button
           onClick={() => resetSlate(activeSlate)}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           Reset Slate
-        </button>
-        <button
-          onClick={() => { if (window.confirm('Clear all swipe decisions and pipeline data? All ideas will reappear in Discover.')) clearAll(); }}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-all"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          Clear All Decisions
         </button>
       </div>
     </aside>
