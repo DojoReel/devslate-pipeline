@@ -1,4 +1,4 @@
-export type SlateId = 'crime' | 'environment' | 'sport' | 'culture' | 'character' | 'political' | 'history' | 'science' | 'social' | 'firstnations' | 'custom';
+export type SlateId = 'crime' | 'environment' | 'sport' | 'culture' | 'character' | 'political' | 'history' | 'science' | 'social' | 'firstnations' | 'cooking' | 'travel' | 'custom';
 
 export interface SlateConfig {
   id: SlateId;
@@ -79,5 +79,7 @@ export const SLATE_CONFIGS: SlateConfig[] = [
   { id: 'science', label: 'Science & Technology', colorVar: '--slate-science', description: 'Discovery, innovation, research' },
   { id: 'social', label: 'Social Issues', colorVar: '--slate-social', description: 'Inequality, health, housing, justice' },
   { id: 'firstnations', label: 'First Nations', colorVar: '--slate-firstnations', description: 'Indigenous stories and perspectives' },
+  { id: 'cooking', label: 'Cooking & Food', colorVar: '--slate-cooking', description: 'Food, chefs, produce, culinary journeys' },
+  { id: 'travel', label: 'Travel & Adventure', colorVar: '--slate-travel', description: 'Places, journeys, adventure, exploration' },
   { id: 'custom', label: 'Custom', colorVar: '--slate-custom', description: 'Your directed research brief' },
 ];

@@ -12,6 +12,8 @@ const SLATES = [
   { slateId: 'science', genre: 'Science & Technology' },
   { slateId: 'social', genre: 'Social Issues' },
   { slateId: 'firstnations', genre: 'First Nations' },
+  { slateId: 'cooking', genre: 'Cooking & Food' },
+  { slateId: 'travel', genre: 'Travel & Adventure' },
 ] as const;
 
 type SlateStatus = 'idle' | 'running' | 'complete' | 'error';
