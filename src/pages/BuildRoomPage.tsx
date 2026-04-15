@@ -217,11 +217,24 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
             <BookOpen className="w-4 h-4" />
             Deep Dive Report
           </button>
+          <button
+            onClick={() => setActiveTab('idea-summary')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-colors ${
+              activeTab === 'idea-summary'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Info className="w-4 h-4" />
+            Idea Summary
+          </button>
         </div>
 
         <div className="p-4 md:p-6 pt-4">
           {activeTab === 'deep-dive' ? (
             <DeepDiveTab report={idea.report} />
+          ) : activeTab === 'idea-summary' ? (
+            <IdeaSummaryTab idea={idea} />
           ) : (
             <>
               {/* Collapsible toggle for document list */}
