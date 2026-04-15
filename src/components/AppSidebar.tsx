@@ -1,11 +1,11 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, RotateCcw, Clapperboard, Palette, Hammer, PackageOpen, Radio, CalendarDays, PlusCircle, FlaskConical } from 'lucide-react';
+import { Layers, GitBranch, Clapperboard, Palette, Hammer, PackageOpen, Radio, CalendarDays, PlusCircle, FlaskConical } from 'lucide-react';
 
 type ViewId = 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'research-agent';
 
 export function AppSidebar() {
-  const { activeSlate, currentView, setCurrentView, slates, resetSlate } = useDevSlate();
+  const { activeSlate, currentView, setCurrentView, slates } = useDevSlate();
 
   const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
