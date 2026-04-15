@@ -78,7 +78,7 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-sidebar text-sidebar-foreground shrink-0 h-screen sticky top-0">
+    <aside className="hidden md:flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
       {/* Brand */}
       <div className="px-6 py-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
