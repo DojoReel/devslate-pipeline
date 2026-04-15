@@ -17,7 +17,7 @@ const DOC_TYPES = [
   { type: 'pitch_email', label: 'Commissioner Pitch Email' },
 ];
 
-type TabId = 'documents' | 'deep-dive';
+type TabId = 'documents' | 'deep-dive' | 'idea-summary';
 
 function DeepDiveTab({ report }: { report?: DeepDiveReport }) {
   if (!report) {
