@@ -36,10 +36,10 @@ export function DiscoverIdeaCard({
   isMobile,
 }: DiscoverIdeaCardProps) {
   const statBubbles = [
-    { label: 'Why Now', value: idea.whyNow },
-    { label: 'People & Access', value: idea.peopleAccess },
-    { label: 'Archive', value: idea.archiveStatus },
-    { label: 'Comparable Shows', value: idea.comparables },
+    { label: 'Why Now', value: idea.whyNow, tint: 'bg-amber-500/[0.08]' },
+    { label: 'People & Access', value: idea.peopleAccess, tint: 'bg-blue-500/[0.08]' },
+    { label: 'Archive', value: idea.archiveStatus, tint: 'bg-emerald-500/[0.08]' },
+    { label: 'Comparable Shows', value: idea.comparables, tint: 'bg-purple-500/[0.08]' },
   ];
 
   if (isMobile) {
@@ -94,9 +94,9 @@ export function DiscoverIdeaCard({
           {/* Stat grid: 2×2 compact */}
           <div className="grid grid-cols-2 gap-2 mt-3">
             {statBubbles.map((stat) => (
-              <div key={stat.label} className="rounded-lg bg-muted/40 p-2.5">
+              <div key={stat.label} className={`rounded-lg p-2.5 ${stat.tint}`}>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{stat.label}</p>
-                <p className="text-xs font-semibold leading-snug text-foreground">{stat.value}</p>
+                <p className="text-xs font-normal leading-snug text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>
@@ -164,7 +164,7 @@ export function DiscoverIdeaCard({
         </>
       )}
 
-      <div className="flex w-[55%] flex-col justify-between p-8">
+      <div className="flex w-[55%] flex-col justify-between p-8 sticky top-0 self-start max-h-screen overflow-y-auto">
         <div>
           <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
@@ -195,9 +195,9 @@ export function DiscoverIdeaCard({
 
           <div className="mb-5 grid grid-cols-2 gap-3">
             {statBubbles.map((stat) => (
-              <div key={stat.label} className="rounded-lg bg-muted/40 p-3">
+              <div key={stat.label} className={`rounded-lg p-3 ${stat.tint}`}>
                 <p className="mb-1 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                <p className="text-[13px] font-semibold leading-snug text-foreground">{stat.value}</p>
+                <p className="text-[13px] font-normal leading-snug text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>
