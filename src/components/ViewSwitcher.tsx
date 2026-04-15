@@ -1,9 +1,9 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { SLATE_CONFIGS } from '@/types/devslate';
-import { Layers, GitBranch, PackageOpen, RotateCcw, Hammer } from 'lucide-react';
+import { Layers, GitBranch, PackageOpen, Hammer } from 'lucide-react';
 
 export function ViewSwitcher() {
-  const { currentView, setCurrentView, slates, activeSlate, resetSlate } = useDevSlate();
+  const { currentView, setCurrentView, slates } = useDevSlate();
 
   const totalDeck = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].deck.length, 0);
   const totalPipeline = SLATE_CONFIGS.reduce((sum, c) => sum + slates[c.id].pipeline.length, 0);
@@ -17,7 +17,7 @@ export function ViewSwitcher() {
   ];
 
   return (
-    <div className="flex items-center justify-between px-6 py-3">
+    <div className="flex items-center px-6 py-3">
       <div className="flex items-center gap-1 bg-surface-1 rounded-2xl p-1 border border-border">
         {views.map(view => (
           <button
@@ -37,15 +37,6 @@ export function ViewSwitcher() {
           </button>
         ))}
       </div>
-
-      <button
-        onClick={() => resetSlate(activeSlate)}
-        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-all border border-transparent hover:border-border"
-        title="Reset this slate"
-      >
-        <RotateCcw className="w-3.5 h-3.5" />
-        Reset
-      </button>
     </div>
   );
 }
