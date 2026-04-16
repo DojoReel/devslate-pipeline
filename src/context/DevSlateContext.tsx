@@ -304,6 +304,7 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
       archiveIdea, unarchiveIdea,
       currentView, setCurrentView,
       isLoading,
+      refreshData: hydrateFromDb,
     }}>
       {children}
     </DevSlateContext.Provider>
