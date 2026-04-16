@@ -8,17 +8,17 @@ import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 import { runDeepDive } from '@/lib/api';
 import { upsertReport } from '@/lib/supabase-helpers';
 
-const VERDICT_BORDER: Record<string, string> = {
-  'GREENLIGHT': 'border-l-green-500',
-  'DEVELOP FURTHER': 'border-l-red-500',
-  'PASS': 'border-l-gray-500',
+/** Single source of truth: verdict → colour classes */
+const VERDICT_COLORS: Record<string, { border: string; dot: string; bg: string }> = {
+  'GREENLIGHT':      { border: 'border-l-green-500',  dot: 'bg-green-500',  bg: 'bg-green-500' },
+  'DEVELOP FURTHER': { border: 'border-l-red-500',    dot: 'bg-red-500',    bg: 'bg-red-500' },
+  'PASS':            { border: 'border-l-gray-500',   dot: 'bg-gray-500',   bg: 'bg-gray-500' },
 };
 
-const VERDICT_DOT: Record<string, string> = {
-  'GREENLIGHT': 'bg-green-500',
-  'DEVELOP FURTHER': 'bg-red-500',
-  'PASS': 'bg-gray-500',
-};
+function getVerdictColor(verdict?: string) {
+  if (!verdict || !VERDICT_COLORS[verdict]) return null;
+  return VERDICT_COLORS[verdict];
+}
 
 const TAB_OPTIONS: { id: 'all' | 'archived' | SlateId; label: string }[] = [
   { id: 'all', label: 'Show All' },
@@ -40,13 +40,13 @@ function PipelineCard({
   isArchived?: boolean;
 }) {
   const hasReport = idea.report != null;
-  const verdictKey = idea.report?.verdict;
+  const vc = getVerdictColor(idea.report?.verdict);
   
   const isBuilt = idea.status === 'built' || idea.status === 'complete' || idea.status === 'building';
   const meta = getIdeaMeta(idea);
   const whyNow = extractWhyNow(idea);
 
-  const borderClass = hasReport ? `border-l-[6px] ${VERDICT_BORDER[verdictKey!]}` : 'border-l-[6px] border-l-border';
+  const borderClass = vc ? `border-l-[6px] ${vc.border}` : 'border-l-[6px] border-l-border';
 
   return (
     <div className={`relative flex flex-col md:flex-row w-full bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${borderClass} ${isArchived ? 'opacity-70' : ''}`}>
@@ -65,7 +65,7 @@ function PipelineCard({
       <div className="relative w-full h-48 md:w-[45%] md:h-auto shrink-0 overflow-hidden">
         <UnsplashImage genre={idea.genre} keyword={idea.title} orientation="landscape" logline={idea.logline} className="absolute inset-0 w-full h-full object-cover" alt={idea.title} />
         {isBuilt && (
-          <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-teal-600 text-primary-foreground text-xs font-bold">BUILT</div>
+          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full ${vc?.bg || 'bg-slate-600'} text-white text-xs font-bold`}>BUILT</div>
         )}
       </div>
 
@@ -77,8 +77,8 @@ function PipelineCard({
           </span>
 
           <div className="flex items-center gap-2.5 mb-2 md:mb-3">
-            {hasReport && (
-              <span className={`w-3 h-3 rounded-full shrink-0 ${VERDICT_DOT[verdictKey!]}`} />
+            {vc && (
+              <span className={`w-3 h-3 rounded-full shrink-0 ${vc.dot}`} />
             )}
             <h3 className="text-xl md:text-[32px] font-extrabold text-foreground leading-tight">{idea.title}</h3>
           </div>
@@ -130,11 +130,11 @@ function PipelineCard({
                 {idea.status === 'researched' && hasReport && (
                   <>
                     <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
-                      className="flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      className={`flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full ${vc?.bg || 'bg-green-500'} text-white text-sm font-bold hover:scale-105 transition-transform`}>
                       <Eye className="w-4 h-4" /> View Research
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); onSendToBuildRoom(); }}
-                      className="flex-1 flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-amber-500 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      className="flex-1 flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-foreground text-background text-sm font-bold hover:scale-105 transition-transform">
                       Send to Build Room <ArrowRight className="w-4 h-4" />
                     </button>
                   </>
@@ -142,11 +142,11 @@ function PipelineCard({
                 {isBuilt && hasReport && (
                   <>
                     <button onClick={(e) => { e.stopPropagation(); onViewResearch(); }}
-                      className="flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-verdict-green text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      className={`flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full ${vc?.bg || 'bg-green-500'} text-white text-sm font-bold hover:scale-105 transition-transform`}>
                       <Eye className="w-4 h-4" /> View Research
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); onViewBuildRoom(); }}
-                      className="flex-1 flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-slate-700 text-primary-foreground text-sm font-bold hover:scale-105 transition-transform">
+                      className="flex-1 flex items-center justify-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-slate-700 text-white text-sm font-bold hover:scale-105 transition-transform">
                       <Hammer className="w-4 h-4" /> View in Build Room <ArrowRight className="w-4 h-4" />
                     </button>
                   </>
