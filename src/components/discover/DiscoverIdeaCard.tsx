@@ -162,7 +162,7 @@ export function DiscoverIdeaCard({
         </>
       )}
 
-      <div className="flex w-[55%] flex-col justify-between p-8 sticky top-0 self-start max-h-screen overflow-y-auto">
+      <div className="flex flex-1 flex-col justify-between p-8 sticky top-0 self-start max-h-screen overflow-y-auto min-w-0">
         <div>
           <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
