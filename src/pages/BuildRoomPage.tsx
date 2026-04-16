@@ -256,8 +256,8 @@ function BuildRoomIdeaCard({ idea }: { idea: PipelineIdea }) {
                       <div key={doc.documentType} className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                         <div className="flex items-center justify-between p-3 md:p-4 gap-2">
                           <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
-                            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                              <FileText className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+                            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                              <FileText className={`w-3.5 h-3.5 md:w-4 md:h-4 ${doc.status === 'complete' ? 'text-green-500' : 'text-primary'}`} />
                             </div>
                             <div className="min-w-0">
                               <span className="font-bold text-foreground text-xs md:text-sm block truncate">{docMeta?.label || doc.label}</span>
