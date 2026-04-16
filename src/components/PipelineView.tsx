@@ -9,15 +9,15 @@ import { runDeepDive } from '@/lib/api';
 import { upsertReport } from '@/lib/supabase-helpers';
 
 const VERDICT_BORDER: Record<string, string> = {
-  'GREENLIGHT': 'border-l-verdict-green',
-  'DEVELOP FURTHER': 'border-l-verdict-amber',
-  'PASS': 'border-l-verdict-red',
+  'GREENLIGHT': 'border-l-green-500',
+  'DEVELOP FURTHER': 'border-l-red-500',
+  'PASS': 'border-l-gray-500',
 };
 
 const VERDICT_DOT: Record<string, string> = {
-  'GREENLIGHT': 'bg-verdict-green',
-  'DEVELOP FURTHER': 'bg-verdict-amber',
-  'PASS': 'bg-verdict-red',
+  'GREENLIGHT': 'bg-green-500',
+  'DEVELOP FURTHER': 'bg-red-500',
+  'PASS': 'bg-gray-500',
 };
 
 const TAB_OPTIONS: { id: 'all' | 'archived' | SlateId; label: string }[] = [
@@ -261,13 +261,13 @@ export function PipelineView() {
 
       {/* Deep Dive filter toggle */}
       {activeTab !== 'archived' && (
-        <div className="flex items-center gap-2 mb-4 md:mb-6">
+        <div className="flex items-center gap-2 mb-4 md:mb-6 pt-2 border-t border-border/50">
           <button
             onClick={() => setDeepDiveFilter(false)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
               !deepDiveFilter
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'bg-transparent border border-border text-muted-foreground hover:text-foreground'
+                ? 'bg-foreground text-background shadow-md'
+                : 'bg-white text-foreground border border-border hover:bg-muted'
             }`}
           >
             All Ideas
@@ -276,11 +276,11 @@ export function PipelineView() {
             onClick={() => setDeepDiveFilter(true)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
               deepDiveFilter
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'bg-transparent border border-border text-muted-foreground hover:text-foreground'
+                ? 'bg-green-500 text-white shadow-md'
+                : 'bg-white text-foreground border border-border hover:bg-muted'
             }`}
           >
-            Deep Dive Done
+            Deep Dive Completed
           </button>
         </div>
       )}

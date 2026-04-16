@@ -24,7 +24,7 @@ export function BuildRoomModal({ idea, report, documents, isGenerating, onClose 
 
   const completedCount = documents.filter(d => d.status === 'complete').length;
   const totalCount = documents.length;
-  const verdictBg = report.verdict === 'GREENLIGHT' ? 'bg-verdict-green' : report.verdict === 'DEVELOP FURTHER' ? 'bg-verdict-amber' : 'bg-verdict-red';
+  const verdictBg = report.verdict === 'GREENLIGHT' ? 'bg-green-500' : report.verdict === 'DEVELOP FURTHER' ? 'bg-red-500' : 'bg-gray-500';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 backdrop-blur-sm p-4" onClick={onClose}>
