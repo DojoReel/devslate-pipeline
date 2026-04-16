@@ -334,7 +334,7 @@ function SlateSection({
   );
 
   return (
-    <div className="max-w-[900px] mx-auto">
+    <div className="max-w-[900px]">
       <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
       <div
         className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg w-full"
@@ -435,7 +435,7 @@ export function DiscoverLibrary() {
 
   // Desktop: all slates stacked
   return (
-    <div className="animate-fade-in space-y-12 px-6">
+    <div className="animate-fade-in space-y-12 pl-8 pr-6">
       {filteredAllIdeas.length > 0 && (
         <SlateSection
           key="all"
