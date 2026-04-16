@@ -46,85 +46,82 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
   const [currentView, setCurrentView] = useState<'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools' | 'research-agent'>('discover');
   const [isLoading, setIsLoading] = useState(true);
 
+  const hydrateFromDb = useCallback(async () => {
+    try {
+      const data = await loadAllData();
+
+      const decisionMap = new Set<string>();
+      const leftSwipedSet = new Set<string>();
+      for (const d of data.decisions) {
+        decisionMap.add(d.idea_id);
+        if (d.decision === 'swiped_left') leftSwipedSet.add(d.idea_id);
+      }
+
+      const ideasBySlate: Record<string, ShowIdea[]> = {};
+      for (const idea of data.ideas) {
+        if (!ideasBySlate[idea.slateId]) ideasBySlate[idea.slateId] = [];
+        ideasBySlate[idea.slateId].push(idea);
+      }
+
+      const pipelineBySlate: Record<string, PipelineIdea[]> = {};
+      const archivedList: PipelineIdea[] = [];
+      const ideaLookup = new Map(data.ideas.map(i => [i.id, i]));
+
+      for (const row of data.pipelineRows) {
+        const idea = ideaLookup.get(row.idea_id);
+        if (!idea) continue;
+        const report = data.reports.get(row.idea_id);
+        const docs = data.buildDocs.get(row.idea_id);
+        const pipelineIdea: PipelineIdea = {
+          ...idea,
+          status: row.status as PipelineIdea['status'],
+          notes: row.notes,
+          report,
+          buildRoomDocs: docs,
+        };
+
+        if (row.status === 'archived') {
+          archivedList.push(pipelineIdea);
+        } else {
+          const sid = row.slate_id || idea.slateId;
+          if (!pipelineBySlate[sid]) pipelineBySlate[sid] = [];
+          pipelineBySlate[sid].push(pipelineIdea);
+        }
+      }
+
+      const passedBySlate: Record<string, ShowIdea[]> = {};
+      for (const ideaId of leftSwipedSet) {
+        const idea = ideaLookup.get(ideaId);
+        if (!idea) continue;
+        if (!passedBySlate[idea.slateId]) passedBySlate[idea.slateId] = [];
+        passedBySlate[idea.slateId].push(idea);
+      }
+
+      const newSlates = emptySlates();
+      for (const config of SLATE_CONFIGS) {
+        const allIdeas = ideasBySlate[config.id] || [];
+        const deck = allIdeas.filter(i => !decisionMap.has(i.id));
+        newSlates[config.id] = {
+          config,
+          deck,
+          pipeline: pipelineBySlate[config.id] || [],
+          passed: passedBySlate[config.id] || [],
+        };
+      }
+
+      setSlates(newSlates);
+      setArchivedIdeas(archivedList);
+    } catch (err) {
+      console.error('Failed to load data from Supabase:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Load everything from Supabase on mount
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await loadAllData();
-
-        // Build sets for quick lookup
-        const decisionMap = new Set<string>();
-        const leftSwipedSet = new Set<string>();
-        for (const d of data.decisions) {
-          decisionMap.add(d.idea_id);
-          if (d.decision === 'swiped_left') leftSwipedSet.add(d.idea_id);
-        }
-
-        // Group ideas by slate
-        const ideasBySlate: Record<string, ShowIdea[]> = {};
-        for (const idea of data.ideas) {
-          if (!ideasBySlate[idea.slateId]) ideasBySlate[idea.slateId] = [];
-          ideasBySlate[idea.slateId].push(idea);
-        }
-
-        // Build pipeline ideas from user_pipeline rows
-        const pipelineBySlate: Record<string, PipelineIdea[]> = {};
-        const archivedList: PipelineIdea[] = [];
-        const ideaLookup = new Map(data.ideas.map(i => [i.id, i]));
-
-        for (const row of data.pipelineRows) {
-          const idea = ideaLookup.get(row.idea_id);
-          if (!idea) continue;
-          const report = data.reports.get(row.idea_id);
-          const docs = data.buildDocs.get(row.idea_id);
-          const pipelineIdea: PipelineIdea = {
-            ...idea,
-            status: row.status as PipelineIdea['status'],
-            notes: row.notes,
-            report,
-            buildRoomDocs: docs,
-          };
-
-          if (row.status === 'archived') {
-            archivedList.push(pipelineIdea);
-          } else {
-            const sid = row.slate_id || idea.slateId;
-            if (!pipelineBySlate[sid]) pipelineBySlate[sid] = [];
-            pipelineBySlate[sid].push(pipelineIdea);
-          }
-        }
-
-        // Build passed ideas (swiped left but not in pipeline)
-        const passedBySlate: Record<string, ShowIdea[]> = {};
-        for (const ideaId of leftSwipedSet) {
-          const idea = ideaLookup.get(ideaId);
-          if (!idea) continue;
-          if (!passedBySlate[idea.slateId]) passedBySlate[idea.slateId] = [];
-          passedBySlate[idea.slateId].push(idea);
-        }
-
-        // Build slate state
-        const newSlates = emptySlates();
-        for (const config of SLATE_CONFIGS) {
-          const allIdeas = ideasBySlate[config.id] || [];
-          // Deck = ideas not yet swiped (no decision recorded)
-          const deck = allIdeas.filter(i => !decisionMap.has(i.id));
-          newSlates[config.id] = {
-            config,
-            deck,
-            pipeline: pipelineBySlate[config.id] || [],
-            passed: passedBySlate[config.id] || [],
-          };
-        }
-
-        setSlates(newSlates);
-        setArchivedIdeas(archivedList);
-      } catch (err) {
-        console.error('Failed to load data from Supabase:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
+    hydrateFromDb();
+  }, [hydrateFromDb]);
   }, []);
 
   const swipeRight = useCallback((slateId: SlateId, idea: ShowIdea) => {
