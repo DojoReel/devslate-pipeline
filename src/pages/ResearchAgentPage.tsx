@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { FlaskConical, Play, Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { useDevSlate } from '@/context/DevSlateContext';
 
 const SLATES = [
   { slateId: 'crime', genre: 'Crime & Justice' },
@@ -28,6 +29,7 @@ interface SlateResult {
 const ENDPOINT = 'https://bskhuacewntnrocedwkc.supabase.co/functions/v1/research';
 
 export default function ResearchAgentPage() {
+  const { refreshData } = useDevSlate();
   const [results, setResults] = useState<Record<string, SlateResult>>(() => {
     const init: Record<string, SlateResult> = {};
     SLATES.forEach(s => { init[s.slateId] = { status: 'idle', count: null, elapsed: 0 }; });
@@ -57,6 +59,7 @@ export default function ResearchAgentPage() {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       if (data.success) {
         setResults(prev => ({ ...prev, [slateId]: { status: 'complete', count: data.count ?? data.ideas?.length ?? 0, elapsed } }));
+        refreshData();
       } else {
         setResults(prev => ({ ...prev, [slateId]: { status: 'error', count: null, elapsed, error: data.error || 'Unknown error' } }));
       }
@@ -65,7 +68,7 @@ export default function ResearchAgentPage() {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       setResults(prev => ({ ...prev, [slateId]: { status: 'error', count: null, elapsed, error: err.message } }));
     }
-  }, []);
+  }, [refreshData]);
 
   const researchAll = useCallback(() => {
     SLATES.forEach(s => {
