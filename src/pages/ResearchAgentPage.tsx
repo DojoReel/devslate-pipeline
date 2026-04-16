@@ -68,7 +68,7 @@ export default function ResearchAgentPage() {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       setResults(prev => ({ ...prev, [slateId]: { status: 'error', count: null, elapsed, error: err.message } }));
     }
-  }, []);
+  }, [refreshData]);
 
   const researchAll = useCallback(() => {
     SLATES.forEach(s => {
