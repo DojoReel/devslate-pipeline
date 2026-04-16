@@ -122,7 +122,6 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     hydrateFromDb();
   }, [hydrateFromDb]);
-  }, []);
 
   const swipeRight = useCallback((slateId: SlateId, idea: ShowIdea) => {
     // Persist to Supabase
