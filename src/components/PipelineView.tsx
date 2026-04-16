@@ -11,7 +11,7 @@ import { upsertReport } from '@/lib/supabase-helpers';
 /** Single source of truth: verdict → colour classes */
 const VERDICT_COLORS: Record<string, { border: string; dot: string; bg: string }> = {
   'GREENLIGHT':      { border: 'border-l-green-500',  dot: 'bg-green-500',  bg: 'bg-green-500' },
-  'DEVELOP FURTHER': { border: 'border-l-red-500',    dot: 'bg-red-500',    bg: 'bg-red-500' },
+  'DEVELOP FURTHER': { border: 'border-l-slate-400',  dot: 'bg-slate-400',  bg: 'bg-slate-400' },
   'PASS':            { border: 'border-l-gray-500',   dot: 'bg-gray-500',   bg: 'bg-gray-500' },
 };
 

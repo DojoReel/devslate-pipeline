@@ -72,9 +72,14 @@ export function DevSlateProvider({ children }: { children: ReactNode }) {
         if (!idea) continue;
         const report = data.reports.get(row.idea_id);
         const docs = data.buildDocs.get(row.idea_id);
+        // Database state wins: if a report exists with a verdict, force status to 'researched'
+        let status = row.status as PipelineIdea['status'];
+        if (report && report.verdict && (status === 'researching' || status === 'swiped')) {
+          status = 'researched';
+        }
         const pipelineIdea: PipelineIdea = {
           ...idea,
-          status: row.status as PipelineIdea['status'],
+          status,
           notes: row.notes,
           report,
           buildRoomDocs: docs,
