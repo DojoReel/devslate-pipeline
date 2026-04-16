@@ -53,8 +53,8 @@
 
     /* Verdict colors */
     --verdict-green: 142 71% 45%;
-    --verdict-amber: 142 71% 45%;
-    --verdict-red: 0 84% 60%;
+    --verdict-amber: 0 84% 60%;
+    --verdict-red: 220 9% 46%;
 
     /* Sidebar — deep navy */
     --sidebar-background: 240 33% 14%;
