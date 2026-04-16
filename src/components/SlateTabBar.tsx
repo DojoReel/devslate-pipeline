@@ -3,18 +3,14 @@ import { SLATE_CONFIGS, SlateId } from '@/types/devslate';
 
 const SHORT_LABELS: Record<SlateId, string> = {
   crime: 'Crime',
-  environment: 'Environ',
+  food: 'Food',
   sport: 'Sport',
-  culture: 'Culture',
-  character: 'Character',
-  political: 'Political',
-  history: 'History',
-  science: 'Science',
-  social: 'Social',
-  cooking: 'Cooking',
   travel: 'Travel',
+  character: 'Character',
+  culture: 'Culture',
+  business: 'Business',
+  society: 'Society',
   custom: 'Custom',
-  firstnations: '1st Nations',
 };
 
 export function SlateTabBar() {

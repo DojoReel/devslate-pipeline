@@ -4,17 +4,13 @@ import { useDevSlate } from '@/context/DevSlateContext';
 
 const SLATES = [
   { slateId: 'crime', genre: 'Crime & Justice' },
-  { slateId: 'environment', genre: 'Environment' },
-  { slateId: 'sport', genre: 'Sport' },
-  { slateId: 'culture', genre: 'Culture & Identity' },
-  { slateId: 'character', genre: 'Character & Community' },
-  { slateId: 'political', genre: 'Political & Power' },
-  { slateId: 'history', genre: 'History & Archive' },
-  { slateId: 'science', genre: 'Science & Technology' },
-  { slateId: 'social', genre: 'Social Issues' },
-  { slateId: 'cooking', genre: 'Cooking & Food' },
+  { slateId: 'food', genre: 'Food & Lifestyle' },
+  { slateId: 'sport', genre: 'Sport & Competition' },
   { slateId: 'travel', genre: 'Travel & Adventure' },
-  { slateId: 'firstnations', genre: 'First Nations' },
+  { slateId: 'character', genre: 'Character' },
+  { slateId: 'culture', genre: 'Culture & Subcultures' },
+  { slateId: 'business', genre: 'Business, Tech & Power' },
+  { slateId: 'society', genre: 'Environment & Society' },
 ] as const;
 
 type SlateStatus = 'idle' | 'running' | 'complete' | 'error';
