@@ -131,7 +131,7 @@ export function DiscoverIdeaCard({
   // Desktop layout
   return (
     <div className="relative flex w-full bg-card">
-      <div className="relative w-[45%] shrink-0 overflow-hidden">
+      <div className="relative w-[420px] shrink-0 overflow-hidden">
         <UnsplashImage
           genre={idea.genre}
           keyword={idea.title}
@@ -162,7 +162,7 @@ export function DiscoverIdeaCard({
         </>
       )}
 
-      <div className="flex w-[55%] flex-col justify-between p-8 sticky top-0 self-start max-h-screen overflow-y-auto">
+      <div className="flex flex-1 flex-col justify-between p-8 sticky top-0 self-start max-h-screen overflow-y-auto min-w-0">
         <div>
           <span className={`mb-4 inline-block rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm ${getGenrePillColor(idea.genre)}`}>
             {idea.genre}
