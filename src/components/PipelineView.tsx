@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore, Filter } from 'lucide-react';
+import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
