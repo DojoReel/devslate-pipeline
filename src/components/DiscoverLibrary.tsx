@@ -334,7 +334,7 @@ function SlateSection({
   );
 
   return (
-    <div>
+    <div className="max-w-[900px] mx-auto">
       <h2 className="mb-6 text-[24px] font-bold text-foreground">{label}</h2>
       <div
         className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-lg w-full"
