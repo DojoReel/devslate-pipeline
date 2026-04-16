@@ -435,7 +435,7 @@ export function DiscoverLibrary() {
 
   // Desktop: all slates stacked
   return (
-    <div className="animate-fade-in space-y-12">
+    <div className="animate-fade-in space-y-12 px-6">
       {filteredAllIdeas.length > 0 && (
         <SlateSection
           key="all"

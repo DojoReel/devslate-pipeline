@@ -131,7 +131,7 @@ export function DiscoverIdeaCard({
   // Desktop layout
   return (
     <div className="relative flex w-full bg-card">
-      <div className="relative w-[45%] shrink-0 overflow-hidden">
+      <div className="relative w-[420px] shrink-0 overflow-hidden">
         <UnsplashImage
           genre={idea.genre}
           keyword={idea.title}
