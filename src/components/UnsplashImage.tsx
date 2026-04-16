@@ -3,16 +3,30 @@ import { useState, useEffect, useRef } from 'react';
 
 const PEXELS_API_KEY = 'O4WvLbQPYGhTqHbbQsluFi6K1TydEqFPXB5EndiwvAuwC20Ivlz0pxyt';
 
-// Module-level cache so images persist across re-renders and remounts
+// Module-level cache keyed by idea title (stable identifier)
 const imageCache = new Map<string, string>();
 
-/** Resolve a Pexels image URL for a given keyword+genre. Returns cached if available. Uses logline for better relevance. */
-export function resolveImageUrl(keyword: string, genre: string, logline?: string): Promise<string> {
-  if (imageCache.has(keyword)) return Promise.resolve(imageCache.get(keyword)!);
+// Hydrate from localStorage on load
+try {
+  const stored = localStorage.getItem('pitchfire_image_cache');
+  if (stored) {
+    const entries: [string, string][] = JSON.parse(stored);
+    for (const [k, v] of entries) imageCache.set(k, v);
+  }
+} catch { /* ignore */ }
 
-  // Use logline for more relevant image search when available
-  const searchText = logline && logline.length > 10 ? logline : keyword;
-  const query = encodeURIComponent(buildPexelsQuery(searchText, genre));
+function persistCache() {
+  try {
+    const entries = Array.from(imageCache.entries());
+    localStorage.setItem('pitchfire_image_cache', JSON.stringify(entries));
+  } catch { /* ignore */ }
+}
+
+/** Resolve a Pexels image URL. Logline is REQUIRED for relevant search. Cache key is the idea title. */
+export function resolveImageUrl(cacheKey: string, genre: string, logline: string): Promise<string> {
+  if (imageCache.has(cacheKey)) return Promise.resolve(imageCache.get(cacheKey)!);
+
+  const query = encodeURIComponent(buildPexelsQuery(logline, genre));
   const randomPage = Math.floor(Math.random() * 3) + 1;
 
   return fetch(`https://api.pexels.com/v1/search?query=${query}&orientation=landscape&per_page=1&page=${randomPage}`, {
@@ -21,20 +35,22 @@ export function resolveImageUrl(keyword: string, genre: string, logline?: string
     .then(r => r.json())
     .then(data => {
       const url = data?.photos?.[0]?.src?.landscape;
-      const final = url || getPicsumUrl(keyword);
-      imageCache.set(keyword, final);
+      const final = url || getPicsumUrl(cacheKey);
+      imageCache.set(cacheKey, final);
+      persistCache();
       return final;
     })
     .catch(() => {
-      const fallback = getPicsumUrl(keyword);
-      imageCache.set(keyword, fallback);
+      const fallback = getPicsumUrl(cacheKey);
+      imageCache.set(cacheKey, fallback);
+      persistCache();
       return fallback;
     });
 }
 
 /** Preload an image into browser cache */
 export function preloadImage(keyword: string, genre: string, logline?: string): void {
-  resolveImageUrl(keyword, genre, logline).then(url => {
+  resolveImageUrl(keyword, genre, logline || keyword).then(url => {
     const img = new Image();
     img.src = url;
   });
@@ -93,10 +109,10 @@ export function UnsplashImage({ genre, keyword, className = '', alt = '', loglin
     }
     fetched.current = true;
 
-    resolveImageUrl(keyword, genre, logline).then(url => {
+    resolveImageUrl(cacheKey, genre, logline || keyword).then(url => {
       setSrc(url);
     });
-  }, [cacheKey, keyword, genre, src]);
+  }, [cacheKey, keyword, genre, logline, src]);
 
   const gradient = getGenreGradient(genre);
 
