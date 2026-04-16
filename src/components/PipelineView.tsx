@@ -219,7 +219,7 @@ export function PipelineView() {
         researchTimers.current.delete(idea.id);
       }
     }
-  }, [slates, updatePipelineIdea]);
+  }, [slates, updatePipelineIdea, refreshData]);
 
   const handleDeepDive = async (idea: PipelineIdea) => {
     setLoadingId(idea.id);
