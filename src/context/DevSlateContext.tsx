@@ -26,6 +26,7 @@ interface DevSlateContextType {
   currentView: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools' | 'research-agent';
   setCurrentView: (view: 'discover' | 'pipeline' | 'passed' | 'custom' | 'buildroom' | 'market-radar' | 'funding-calendar' | 'tools' | 'research-agent') => void;
   isLoading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const DevSlateContext = createContext<DevSlateContextType | null>(null);
