@@ -8,32 +8,52 @@ export function getPicsumUrl(title: string, width = 800, height = 500): string {
   return `https://picsum.photos/seed/${toSlug(title)}/${width}/${height}`;
 }
 
-/** Build a Pexels search query from title + genre */
-const KEYWORD_OVERRIDES: Record<string, string> = {
-  'Outback Medics': 'outback australia remote medical helicopter',
-  'First Languages': 'aboriginal indigenous australia language',
-  'The Ballot': 'australia election voting parliament',
-  'Reef Patrol': 'great barrier reef coral underwater',
-  'New Roots': 'refugee australia community multicultural',
-  'Cold Cases Reloaded': 'forensic detective crime investigation',
-  'Hustle Sydney': 'sydney entrepreneur business startup',
-  'Underground Kings': 'opal mining outback underground',
-  'The Algorithm': 'social media technology digital screen',
-  'Fight Camp': 'boxing training athlete ring',
-  'Grassroots': 'community sport australia local football',
-  'The Draft': 'australian football draft young athlete',
-  'Wave Hunters': 'surfing big wave ocean australia',
-  'Pacific Rising': 'pacific island ocean climate',
-  'Silk Road Kitchens': 'central asian cuisine food market',
-  'Border Towns': 'border town community frontier',
-  'Pitch Lab': 'television production studio creative',
-};
+/** Stop words to strip when extracting visual keywords */
+const STOP_WORDS = new Set([
+  'the','a','an','is','are','was','were','it','that','this','of','in','to','and',
+  'for','on','with','at','by','from','as','or','but','not','be','been','being',
+  'have','has','had','do','does','did','will','would','could','should','can',
+  'may','might','shall','about','into','through','during','before','after',
+  'above','below','between','under','over','out','up','down','off','then',
+  'than','too','very','just','also','only','own','same','so','no','nor',
+  'each','every','all','both','few','more','most','other','some','such',
+  'what','which','who','whom','how','when','where','why','if','because',
+  'while','although','though','since','until','unless','whether','once',
+  'their','there','they','them','its','his','her','she','he','we','you',
+  'our','your','my','me','him','us','i','new','one','two','three','four',
+  'first','second','last','next','many','much','still','even','back','get',
+  'got','make','made','take','come','go','goes','went','find','found',
+  'know','known','think','see','look','want','give','use','tell','say',
+  'said','try','need','feel','become','leave','put','mean','keep','let',
+  'begin','show','hear','play','run','move','live','believe','bring','happen',
+  'must','really','already','yet','never','always','sometimes','often',
+  'series','show','shows','story','stories','follows','explores','reveals',
+  'uncovers','behind','scenes','world','inside','deep','dive','into',
+]);
 
-export function buildPexelsQuery(title: string, genre: string): string {
-  if (KEYWORD_OVERRIDES[title]) return KEYWORD_OVERRIDES[title];
-  const titleWords = title.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
-  const genreWords = genre.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
-  return [...titleWords, ...genreWords].slice(0, 5).join(' ');
+/**
+ * Extract 3-4 visually descriptive keywords from logline text.
+ * Focuses on nouns/descriptors that describe setting, subject, environment.
+ */
+export function extractVisualKeywords(logline: string): string[] {
+  const text = logline.slice(0, 150).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  const words = text.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+  // Deduplicate while preserving order
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const w of words) {
+    if (!seen.has(w)) { seen.add(w); unique.push(w); }
+  }
+  return unique.slice(0, 4);
+}
+
+/** Build a Pexels search query — uses logline keywords, never the title */
+export function buildPexelsQuery(logline: string, genre: string): string {
+  const keywords = extractVisualKeywords(logline);
+  if (keywords.length >= 2) return keywords.join(' ');
+  // Fallback: use genre words if logline is too short
+  const genreWords = genre.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+  return [...keywords, ...genreWords].slice(0, 4).join(' ');
 }
 
 /** Gradient fallback per genre family */
