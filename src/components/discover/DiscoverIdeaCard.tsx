@@ -38,8 +38,6 @@ export function DiscoverIdeaCard({
   const statBubbles = [
     { label: 'Why Now', value: idea.whyNow, tint: 'bg-amber-500/[0.08]' },
     { label: 'People & Access', value: idea.peopleAccess, tint: 'bg-blue-500/[0.08]' },
-    { label: 'Archive', value: idea.archiveStatus, tint: 'bg-emerald-500/[0.08]' },
-    { label: 'Comparable Shows', value: idea.comparables, tint: 'bg-purple-500/[0.08]' },
   ];
 
   if (isMobile) {
