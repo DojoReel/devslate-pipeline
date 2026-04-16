@@ -162,7 +162,7 @@ function PipelineCard({
 }
 
 export function PipelineView() {
-  const { slates, updatePipelineIdea, sendToBuildRoom, archiveIdea, unarchiveIdea, archivedIdeas, setCurrentView } = useDevSlate();
+  const { slates, updatePipelineIdea, sendToBuildRoom, archiveIdea, unarchiveIdea, archivedIdeas, setCurrentView, refreshData } = useDevSlate();
   const [activeTab, setActiveTab] = useState<'all' | 'archived' | SlateId>('all');
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -204,8 +204,6 @@ export function PipelineView() {
             .eq('idea_id', idea.id)
             .maybeSingle();
           if (data?.verdict) {
-            // Report exists — trigger full refresh
-            const { refreshData } = ctx!;
             refreshData();
           } else {
             // No report after 90s — reset to swiped
