@@ -261,13 +261,13 @@ export function PipelineView() {
 
       {/* Deep Dive filter toggle */}
       {activeTab !== 'archived' && (
-        <div className="flex items-center gap-2 mb-4 md:mb-6">
+        <div className="flex items-center gap-2 mb-4 md:mb-6 pt-2 border-t border-border/50">
           <button
             onClick={() => setDeepDiveFilter(false)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
               !deepDiveFilter
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'bg-transparent border border-border text-muted-foreground hover:text-foreground'
+                ? 'bg-foreground text-background shadow-md'
+                : 'bg-white text-foreground border border-border hover:bg-muted'
             }`}
           >
             All Ideas
@@ -276,11 +276,11 @@ export function PipelineView() {
             onClick={() => setDeepDiveFilter(true)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
               deepDiveFilter
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'bg-transparent border border-border text-muted-foreground hover:text-foreground'
+                ? 'bg-green-500 text-white shadow-md'
+                : 'bg-white text-foreground border border-border hover:bg-muted'
             }`}
           >
-            Deep Dive Done
+            Deep Dive Completed
           </button>
         </div>
       )}
