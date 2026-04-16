@@ -75,7 +75,7 @@ export const SLATE_CONFIGS: SlateConfig[] = [
   { id: 'travel', label: 'Travel & Adventure', colorVar: '--slate-travel', description: 'Journeys with purpose, remote locations, character-led exploration' },
   { id: 'character', label: 'Character', colorVar: '--slate-character', description: 'Singular compelling individuals, obsession stories, unusual lives' },
   { id: 'culture', label: 'Culture & Subcultures', colorVar: '--slate-culture', description: 'Underground communities, creative scenes, unique social worlds' },
-  { id: 'business', label: 'Business, Tech & Power', colorVar: '--slate-business', description: 'Startups, entrepreneurs, AI, political power, decision-makers' },
+  { id: 'business', label: 'Business, Tech & Science', colorVar: '--slate-business', description: 'Startups, entrepreneurs, AI, science breakthroughs, decision-makers' },
   { id: 'society', label: 'Environment & Society', colorVar: '--slate-society', description: 'People vs systems, environmental conflict, communities under pressure' },
   { id: 'custom', label: 'Custom', colorVar: '--slate-custom', description: 'Your directed research brief' },
 ];
