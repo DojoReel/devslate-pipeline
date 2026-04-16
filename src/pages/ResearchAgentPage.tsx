@@ -29,6 +29,7 @@ interface SlateResult {
 const ENDPOINT = 'https://bskhuacewntnrocedwkc.supabase.co/functions/v1/research';
 
 export default function ResearchAgentPage() {
+  const { refreshData } = useDevSlate();
   const [results, setResults] = useState<Record<string, SlateResult>>(() => {
     const init: Record<string, SlateResult> = {};
     SLATES.forEach(s => { init[s.slateId] = { status: 'idle', count: null, elapsed: 0 }; });
