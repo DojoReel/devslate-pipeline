@@ -1,17 +1,18 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
 import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
 import { getGenrePillColor, extractWhyNow, getIdeaMeta } from '@/lib/idea-meta';
 import { runDeepDive } from '@/lib/api';
 import { upsertReport } from '@/lib/supabase-helpers';
+import { supabase } from '@/lib/supabase';
 
 /** Single source of truth: verdict → colour classes */
 const VERDICT_COLORS: Record<string, { border: string; dot: string; bg: string }> = {
   'GREENLIGHT':      { border: 'border-l-green-500',  dot: 'bg-green-500',  bg: 'bg-green-500' },
-  'DEVELOP FURTHER': { border: 'border-l-red-500',    dot: 'bg-red-500',    bg: 'bg-red-500' },
+  'DEVELOP FURTHER': { border: 'border-l-slate-400',  dot: 'bg-slate-400',  bg: 'bg-slate-400' },
   'PASS':            { border: 'border-l-gray-500',   dot: 'bg-gray-500',   bg: 'bg-gray-500' },
 };
 
@@ -161,7 +162,7 @@ function PipelineCard({
 }
 
 export function PipelineView() {
-  const { slates, updatePipelineIdea, sendToBuildRoom, archiveIdea, unarchiveIdea, archivedIdeas, setCurrentView } = useDevSlate();
+  const { slates, updatePipelineIdea, sendToBuildRoom, archiveIdea, unarchiveIdea, archivedIdeas, setCurrentView, refreshData } = useDevSlate();
   const [activeTab, setActiveTab] = useState<'all' | 'archived' | SlateId>('all');
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -186,6 +187,39 @@ export function PipelineView() {
     ideas.reverse();
     return ideas;
   }, [baseIdeas, deepDiveFilter, activeTab]);
+
+  // 90-second timeout: reset stuck "researching" cards
+  const researchTimers = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    // Check for any cards stuck in 'researching' and set a 90s timeout
+    const allIdeas = SLATE_CONFIGS.flatMap(c => slates[c.id].pipeline);
+    for (const idea of allIdeas) {
+      if (idea.status === 'researching' && !researchTimers.current.has(idea.id)) {
+        const timer = window.setTimeout(async () => {
+          // Check DB one more time before resetting
+          const { data } = await supabase
+            .from('deep_dive_reports')
+            .select('verdict')
+            .eq('idea_id', idea.id)
+            .maybeSingle();
+          if (data?.verdict) {
+            refreshData();
+          } else {
+            // No report after 90s — reset to swiped
+            updatePipelineIdea(idea.slateId, idea.id, { status: 'swiped' });
+          }
+          researchTimers.current.delete(idea.id);
+        }, 90_000);
+        researchTimers.current.set(idea.id, timer);
+      }
+      // Clear timer if no longer researching
+      if (idea.status !== 'researching' && researchTimers.current.has(idea.id)) {
+        window.clearTimeout(researchTimers.current.get(idea.id)!);
+        researchTimers.current.delete(idea.id);
+      }
+    }
+  }, [slates, updatePipelineIdea, refreshData]);
 
   const handleDeepDive = async (idea: PipelineIdea) => {
     setLoadingId(idea.id);
