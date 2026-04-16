@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { FlaskConical, Play, Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { useDevSlate } from '@/context/DevSlateContext';
 
 const SLATES = [
   { slateId: 'crime', genre: 'Crime & Justice' },
