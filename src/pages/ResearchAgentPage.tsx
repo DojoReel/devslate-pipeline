@@ -9,7 +9,7 @@ const SLATES = [
   { slateId: 'travel', genre: 'Travel & Adventure' },
   { slateId: 'character', genre: 'Character' },
   { slateId: 'culture', genre: 'Culture & Subcultures' },
-  { slateId: 'business', genre: 'Business, Tech & Power' },
+  { slateId: 'business', genre: 'Business, Tech & Science' },
   { slateId: 'society', genre: 'Environment & Society' },
 ] as const;
 

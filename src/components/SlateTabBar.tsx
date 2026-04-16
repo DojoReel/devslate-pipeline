@@ -8,7 +8,7 @@ const SHORT_LABELS: Record<SlateId, string> = {
   travel: 'Travel',
   character: 'Character',
   culture: 'Culture',
-  business: 'Business',
+  business: 'BizTech',
   society: 'Society',
   custom: 'Custom',
 };
