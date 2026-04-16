@@ -59,6 +59,7 @@ export default function ResearchAgentPage() {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       if (data.success) {
         setResults(prev => ({ ...prev, [slateId]: { status: 'complete', count: data.count ?? data.ideas?.length ?? 0, elapsed } }));
+        refreshData();
       } else {
         setResults(prev => ({ ...prev, [slateId]: { status: 'error', count: null, elapsed, error: data.error || 'Unknown error' } }));
       }
