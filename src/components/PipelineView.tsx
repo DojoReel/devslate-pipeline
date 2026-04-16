@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore, Filter } from 'lucide-react';
+import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
@@ -263,15 +263,24 @@ export function PipelineView() {
       {activeTab !== 'archived' && (
         <div className="flex items-center gap-2 mb-4 md:mb-6">
           <button
-            onClick={() => setDeepDiveFilter(!deepDiveFilter)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-              deepDiveFilter
-                ? 'bg-green-500 text-white shadow-md'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            onClick={() => setDeepDiveFilter(false)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              !deepDiveFilter
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'bg-transparent border border-border text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Filter className="w-3.5 h-3.5" />
-            {deepDiveFilter ? 'Deep Dive Complete' : 'All'}
+            All Ideas
+          </button>
+          <button
+            onClick={() => setDeepDiveFilter(true)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              deepDiveFilter
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'bg-transparent border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Deep Dive Done
           </button>
         </div>
       )}

@@ -25,7 +25,7 @@ interface SlateResult {
 const ENDPOINT = 'https://bskhuacewntnrocedwkc.supabase.co/functions/v1/research';
 
 export default function ResearchAgentPage() {
-  const { refreshData } = useDevSlate();
+  const { refreshData, setActiveSlate, setCurrentView } = useDevSlate();
   const [results, setResults] = useState<Record<string, SlateResult>>(() => {
     const init: Record<string, SlateResult> = {};
     SLATES.forEach(s => { init[s.slateId] = { status: 'idle', count: null, elapsed: 0 }; });
@@ -55,7 +55,9 @@ export default function ResearchAgentPage() {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       if (data.success) {
         setResults(prev => ({ ...prev, [slateId]: { status: 'complete', count: data.count ?? data.ideas?.length ?? 0, elapsed } }));
-        refreshData();
+        await refreshData();
+        // Auto-navigate to the slate in Discover view
+        setActiveSlate(slateId as any);
       } else {
         setResults(prev => ({ ...prev, [slateId]: { status: 'error', count: null, elapsed, error: data.error || 'Unknown error' } }));
       }

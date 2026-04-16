@@ -93,7 +93,9 @@ function SlateSection({
 
   const navigateTo = useCallback((targetIndex: number) => {
     if (isAnimating) return;
-    if (targetIndex < 0 || targetIndex >= ideas.length || targetIndex === currentIndex) return;
+    if (targetIndex < 0 || targetIndex >= ideas.length) return;
+    // Allow looping: if same index (shouldn't happen), skip
+    if (targetIndex === currentIndex) return;
 
     setIsAnimating(true);
     setPhase({ type: 'slide', direction: targetIndex > currentIndex ? 'next' : 'prev', targetIndex });
@@ -107,8 +109,16 @@ function SlateSection({
   }, [clearHandles, currentIndex, ideas.length, isAnimating]);
 
   const navigate = useCallback((dir: 'next' | 'prev') => {
-    navigateTo(dir === 'next' ? currentIndex + 1 : currentIndex - 1);
-  }, [currentIndex, navigateTo]);
+    const nextIdx = dir === 'next' ? currentIndex + 1 : currentIndex - 1;
+    // Loop: wrap around at boundaries
+    if (nextIdx >= ideas.length) {
+      navigateTo(0);
+    } else if (nextIdx < 0) {
+      navigateTo(ideas.length - 1);
+    } else {
+      navigateTo(nextIdx);
+    }
+  }, [currentIndex, ideas.length, navigateTo]);
 
   const handleAction = useCallback((action: ActionType) => {
     if (isAnimating) return;
@@ -268,8 +278,8 @@ function SlateSection({
             )}
             <DiscoverIdeaCard
               idea={currentIdea}
-              canGoPrev={currentIndex > 0}
-              canGoNext={currentIndex < ideas.length - 1}
+              canGoPrev={ideas.length > 1}
+              canGoNext={ideas.length > 1}
               isAnimating={isAnimating}
               onPrev={() => navigate('prev')}
               onNext={() => navigate('next')}
@@ -307,8 +317,8 @@ function SlateSection({
             )}
             <DiscoverIdeaCard
               idea={idea}
-              canGoPrev={index > 0}
-              canGoNext={index < ideas.length - 1}
+              canGoPrev={ideas.length > 1}
+              canGoNext={ideas.length > 1}
               isAnimating={isAnimating}
               onPrev={() => navigate('prev')}
               onNext={() => navigate('next')}

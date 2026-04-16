@@ -48,12 +48,12 @@ function DevSlateApp() {
   const activeSlateLabel = SLATE_CONFIGS.find(c => c.id === activeSlate)?.label || 'Slate';
 
   return (
-    <div className="bg-background flex items-start overflow-x-hidden">
-      <div className="hidden md:block sticky top-0 h-screen overflow-y-auto shrink-0 self-start">
+    <div className="bg-background flex overflow-x-hidden">
+      <div className="hidden md:block shrink-0" style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: '280px', overflowY: 'auto', zIndex: 50 }}>
         <AppSidebar />
       </div>
 
-      <div className="flex-1 flex flex-col min-h-screen min-w-0">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 md:ml-[280px]">
         {/* Mobile header — logo + slates button */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-sidebar shrink-0">
           <div className="flex items-center gap-2.5">
