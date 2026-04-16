@@ -6,11 +6,13 @@ const PEXELS_API_KEY = 'O4WvLbQPYGhTqHbbQsluFi6K1TydEqFPXB5EndiwvAuwC20Ivlz0pxyt
 // Module-level cache so images persist across re-renders and remounts
 const imageCache = new Map<string, string>();
 
-/** Resolve a Pexels image URL for a given keyword+genre. Returns cached if available. */
-export function resolveImageUrl(keyword: string, genre: string): Promise<string> {
+/** Resolve a Pexels image URL for a given keyword+genre. Returns cached if available. Uses logline for better relevance. */
+export function resolveImageUrl(keyword: string, genre: string, logline?: string): Promise<string> {
   if (imageCache.has(keyword)) return Promise.resolve(imageCache.get(keyword)!);
 
-  const query = encodeURIComponent(buildPexelsQuery(keyword, genre));
+  // Use logline for more relevant image search when available
+  const searchText = logline && logline.length > 10 ? logline : keyword;
+  const query = encodeURIComponent(buildPexelsQuery(searchText, genre));
   const randomPage = Math.floor(Math.random() * 3) + 1;
 
   return fetch(`https://api.pexels.com/v1/search?query=${query}&orientation=landscape&per_page=1&page=${randomPage}`, {
@@ -31,8 +33,8 @@ export function resolveImageUrl(keyword: string, genre: string): Promise<string>
 }
 
 /** Preload an image into browser cache */
-export function preloadImage(keyword: string, genre: string): void {
-  resolveImageUrl(keyword, genre).then(url => {
+export function preloadImage(keyword: string, genre: string, logline?: string): void {
+  resolveImageUrl(keyword, genre, logline).then(url => {
     const img = new Image();
     img.src = url;
   });
@@ -56,7 +58,7 @@ interface UnsplashImageProps {
   showLoadingState?: boolean;
 }
 
-export function UnsplashImage({ genre, keyword, className = '', alt = '', onImageReady, showLoadingState = false }: UnsplashImageProps) {
+export function UnsplashImage({ genre, keyword, className = '', alt = '', logline, onImageReady, showLoadingState = false }: UnsplashImageProps) {
   const cacheKey = keyword;
   const [src, setSrc] = useState<string | null>(imageCache.get(cacheKey) ?? null);
   const [loaded, setLoaded] = useState(!!imageCache.get(cacheKey));
@@ -91,7 +93,7 @@ export function UnsplashImage({ genre, keyword, className = '', alt = '', onImag
     }
     fetched.current = true;
 
-    resolveImageUrl(keyword, genre).then(url => {
+    resolveImageUrl(keyword, genre, logline).then(url => {
       setSrc(url);
     });
   }, [cacheKey, keyword, genre, src]);

@@ -1,6 +1,6 @@
 import { useDevSlate } from '@/context/DevSlateContext';
 import { PipelineIdea, SLATE_CONFIGS, SlateId } from '@/types/devslate';
-import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore } from 'lucide-react';
+import { Loader2, FileText, Telescope, Eye, ArrowRight, Hammer, Archive, ArchiveRestore, Filter } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { DeepDiveModal } from './DeepDiveModal';
 import { UnsplashImage } from './UnsplashImage';
@@ -46,7 +46,7 @@ function PipelineCard({
   const meta = getIdeaMeta(idea);
   const whyNow = extractWhyNow(idea);
 
-  const borderClass = hasReport ? `border-l-4 ${VERDICT_BORDER[verdictKey!]}` : 'border-l-4 border-l-border';
+  const borderClass = hasReport ? `border-l-[6px] ${VERDICT_BORDER[verdictKey!]}` : 'border-l-[6px] border-l-border';
 
   return (
     <div className={`relative flex flex-col md:flex-row w-full bg-card rounded-2xl border border-border overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${borderClass} ${isArchived ? 'opacity-70' : ''}`}>
@@ -165,16 +165,27 @@ export function PipelineView() {
   const [activeTab, setActiveTab] = useState<'all' | 'archived' | SlateId>('all');
   const [selectedIdea, setSelectedIdea] = useState<PipelineIdea | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [deepDiveFilter, setDeepDiveFilter] = useState(false);
 
   const allPipelineIdeas = useMemo(() => {
     return SLATE_CONFIGS.flatMap(c => slates[c.id].pipeline);
   }, [slates]);
 
-  const filteredIdeas = activeTab === 'all'
+  const baseIdeas = activeTab === 'all'
     ? allPipelineIdeas
     : activeTab === 'archived'
     ? archivedIdeas
     : slates[activeTab].pipeline;
+
+  const filteredIdeas = useMemo(() => {
+    let ideas = [...baseIdeas];
+    if (deepDiveFilter && activeTab !== 'archived') {
+      ideas = ideas.filter(i => i.report != null);
+    }
+    // Sort by most recently added (reverse array order — newest first)
+    ideas.reverse();
+    return ideas;
+  }, [baseIdeas, deepDiveFilter, activeTab]);
 
   const handleDeepDive = async (idea: PipelineIdea) => {
     setLoadingId(idea.id);
@@ -221,7 +232,7 @@ export function PipelineView() {
   return (
     <>
       {/* Scrollable tab strip on mobile */}
-      <div className="flex items-center gap-2 mb-6 md:mb-8 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
+      <div className="flex items-center gap-2 mb-4 md:mb-6 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
         {TAB_OPTIONS.map(tab => {
           const isActive = activeTab === tab.id;
           const count = tab.id === 'all'
@@ -247,6 +258,23 @@ export function PipelineView() {
           );
         })}
       </div>
+
+      {/* Deep Dive filter toggle */}
+      {activeTab !== 'archived' && (
+        <div className="flex items-center gap-2 mb-4 md:mb-6">
+          <button
+            onClick={() => setDeepDiveFilter(!deepDiveFilter)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              deepDiveFilter
+                ? 'bg-green-500 text-white shadow-md'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            {deepDiveFilter ? 'Deep Dive Complete' : 'All'}
+          </button>
+        </div>
+      )}
 
       {filteredIdeas.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 md:h-96 text-muted-foreground animate-fade-in">
