@@ -9,15 +9,15 @@ import { runDeepDive } from '@/lib/api';
 import { upsertReport } from '@/lib/supabase-helpers';
 
 const VERDICT_BORDER: Record<string, string> = {
-  'GREENLIGHT': 'border-l-verdict-green',
-  'DEVELOP FURTHER': 'border-l-verdict-amber',
-  'PASS': 'border-l-verdict-red',
+  'GREENLIGHT': 'border-l-green-500',
+  'DEVELOP FURTHER': 'border-l-red-500',
+  'PASS': 'border-l-gray-500',
 };
 
 const VERDICT_DOT: Record<string, string> = {
-  'GREENLIGHT': 'bg-verdict-green',
-  'DEVELOP FURTHER': 'bg-verdict-amber',
-  'PASS': 'bg-verdict-red',
+  'GREENLIGHT': 'bg-green-500',
+  'DEVELOP FURTHER': 'bg-red-500',
+  'PASS': 'bg-gray-500',
 };
 
 const TAB_OPTIONS: { id: 'all' | 'archived' | SlateId; label: string }[] = [
