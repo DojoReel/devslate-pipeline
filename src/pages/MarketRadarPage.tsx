@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Radio } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Radio, RefreshCw, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Category = 'COMMISSION' | 'RATINGS' | 'FORMAT TREND' | 'INDUSTRY NEWS';
 
@@ -9,7 +11,9 @@ interface RadarItem {
   headline: string;
   summary: string;
   broadcaster: string;
-  date: string;
+  published_date: string;
+  source_url: string | null;
+  created_at: string;
 }
 
 const CATEGORY_COLORS: Record<Category, string> = {
@@ -19,59 +23,6 @@ const CATEGORY_COLORS: Record<Category, string> = {
   'INDUSTRY NEWS': 'bg-muted-foreground text-primary-foreground',
 };
 
-const PLACEHOLDER_ITEMS: RadarItem[] = [
-  {
-    id: '1', category: 'COMMISSION', headline: 'ABC Greenlights Four-Part Indigenous Land Rights Doc',
-    summary: 'ABC Factual has commissioned "Sovereign Ground", a four-part documentary series exploring contemporary Indigenous land rights battles across three states. Production begins Q3 2026 with Blackfella Films attached.',
-    broadcaster: 'ABC', date: '2026-04-08',
-  },
-  {
-    id: '2', category: 'COMMISSION', headline: 'SBS Orders Climate Migration Series from Matchbox',
-    summary: 'SBS has greenlit "Rising Tides", a six-part observational series following Pacific Islander families relocating to regional Australia. The commission includes an international pre-sale to BBC Three.',
-    broadcaster: 'SBS', date: '2026-04-05',
-  },
-  {
-    id: '3', category: 'RATINGS', headline: 'ABC Documentary Slate Hits Five-Year Ratings High',
-    summary: 'ABC\'s Tuesday documentary slot averaged 780,000 metro viewers across Q1 2026, the strongest quarter since 2021. "Outback ER" led the charge with 1.1M consolidated viewers for its premiere.',
-    broadcaster: 'ABC', date: '2026-04-03',
-  },
-  {
-    id: '4', category: 'RATINGS', headline: 'Stan Originals Struggle Against Netflix Unscripted Push',
-    summary: 'Stan\'s unscripted originals saw a 12% decline in completion rates in Q1, while Netflix Australia\'s local commissions grew viewership by 23%. Industry analysts point to scheduling and marketing gaps.',
-    broadcaster: 'Stan', date: '2026-03-30',
-  },
-  {
-    id: '5', category: 'FORMAT TREND', headline: 'Social Experiment Formats Surge Across Australian FTA',
-    summary: 'Social experiment formats now account for 18% of all new unscripted commissions in Australia, up from 9% in 2024. Networks cite strong 16-39 demo performance and social media talkability as key drivers.',
-    broadcaster: 'Industry-wide', date: '2026-04-06',
-  },
-  {
-    id: '6', category: 'FORMAT TREND', headline: 'Renovation Fatigue: Home Reno Formats See Third Consecutive Decline',
-    summary: 'Home renovation formats dropped another 15% in average audience year-on-year. Network 10 has shelved two reno pilots while Nine has reduced "The Block" to a single annual season.',
-    broadcaster: 'Network 10 / Nine', date: '2026-03-28',
-  },
-  {
-    id: '7', category: 'INDUSTRY NEWS', headline: 'Screen Australia Announces $45M Documentary Fund for 2026-27',
-    summary: 'Screen Australia has unveiled a record $45M allocation for documentary production across the 2026-27 financial year, with priority streams for First Nations, climate, and regional stories.',
-    broadcaster: 'Screen Australia', date: '2026-04-01',
-  },
-  {
-    id: '8', category: 'INDUSTRY NEWS', headline: 'MIPCOM 2026: Australian Factual Commands Record International Interest',
-    summary: 'Early MIPCOM registrations suggest Australian factual content is the fastest-growing category in international format sales, driven by unique wildlife, Indigenous culture, and adventure content.',
-    broadcaster: 'MIPCOM', date: '2026-03-25',
-  },
-  {
-    id: '9', category: 'COMMISSION', headline: 'Fox Sports Commissions Behind-the-Scenes AFL Draft Series',
-    summary: 'Fox Sports has ordered an eight-part observational series embedded with three AFL clubs during the 2026 draft period. The series will follow prospects, recruiters, and families through the selection process.',
-    broadcaster: 'Fox Sports', date: '2026-04-07',
-  },
-  {
-    id: '10', category: 'INDUSTRY NEWS', headline: 'NITV Expands Commissioning Budget by 30%',
-    summary: 'NITV has announced a significant expansion of its commissioning budget for 2026-27, with a focus on language preservation documentaries and First Nations-led factual entertainment.',
-    broadcaster: 'NITV / SBS', date: '2026-03-20',
-  },
-];
-
 const FILTER_OPTIONS: { label: string; value: Category | 'ALL' }[] = [
   { label: 'All', value: 'ALL' },
   { label: 'Commissions', value: 'COMMISSION' },
@@ -80,19 +31,80 @@ const FILTER_OPTIONS: { label: string; value: Category | 'ALL' }[] = [
   { label: 'Industry News', value: 'INDUSTRY NEWS' },
 ];
 
+const SEARCH_FN_URL = 'https://bskhuacewntnrocedwkc.supabase.co/functions/v1/search-market-radar';
+
+function formatAuDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export default function MarketRadarPage() {
   const [filter, setFilter] = useState<Category | 'ALL'>('ALL');
+  const [items, setItems] = useState<RadarItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filtered = filter === 'ALL' ? PLACEHOLDER_ITEMS : PLACEHOLDER_ITEMS.filter(i => i.category === filter);
+  const fetchItems = useCallback(async () => {
+    setError(null);
+    const { data, error: fetchErr } = await (supabase as any)
+      .from('market_radar_items')
+      .select('*')
+      .order('published_date', { ascending: false })
+      .limit(50);
+
+    if (fetchErr) {
+      setError(fetchErr.message);
+      setItems([]);
+    } else {
+      setItems((data || []) as RadarItem[]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setError(null);
+    try {
+      const res = await fetch(SEARCH_FN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error(`Search failed (${res.status})`);
+      await res.text();
+      await fetchItems();
+    } catch (e: any) {
+      setError(e?.message || 'Failed to refresh');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const filtered = filter === 'ALL' ? items : items.filter(i => i.category === filter);
+
+  const lastUpdated = items.length > 0
+    ? formatAuDate(items[0].created_at)
+    : '—';
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-start justify-between mb-2">
+      <div className="flex items-start justify-between mb-2 gap-3">
         <div className="flex items-center gap-3">
           <Radio className="w-7 h-7 text-primary" />
           <h1 className="text-2xl font-extrabold text-foreground">Market Radar</h1>
         </div>
-        <p className="text-xs text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-muted-foreground">Last updated: {lastUpdated}</p>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
       <p className="text-sm text-muted-foreground mb-6">What's getting made right now in Australian unscripted television</p>
 
@@ -113,26 +125,79 @@ export default function MarketRadarPage() {
         ))}
       </div>
 
-      {/* Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered.map(item => (
-          <div key={item.id} className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[item.category]}`}>
-                {item.category}
-              </span>
-              <span className="text-[11px] text-muted-foreground">
-                {new Date(item.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-foreground leading-snug mb-2">{item.headline}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed flex-1">{item.summary}</p>
-            <div className="mt-4 pt-3 border-t border-border">
-              <span className="text-[11px] font-semibold text-muted-foreground">{item.broadcaster}</span>
-            </div>
+      {/* Error state */}
+      {error && !loading && (
+        <div className="flex items-start gap-3 p-4 mb-6 bg-destructive/10 border border-destructive/30 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-destructive">Couldn't load market intelligence</p>
+            <p className="text-xs text-destructive/80 mt-1">{error}</p>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <Skeleton className="h-3 w-full mb-1.5" />
+              <Skeleton className="h-3 w-5/6 mb-1.5" />
+              <Skeleton className="h-3 w-2/3 mb-4" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !error && items.length === 0 && (
+        <div className="text-center py-16 px-6 bg-card border border-border rounded-xl">
+          <Radio className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+          <p className="text-sm font-semibold text-foreground mb-1">No market intelligence yet</p>
+          <p className="text-xs text-muted-foreground">Run a search to populate.</p>
+        </div>
+      )}
+
+      {/* Cards grid */}
+      {!loading && filtered.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map(item => (
+            <div key={item.id} className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[item.category] || CATEGORY_COLORS['INDUSTRY NEWS']}`}>
+                  {item.category}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {new Date(item.published_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+              {item.source_url ? (
+                <a
+                  href={item.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-bold text-foreground leading-snug mb-2 hover:text-primary transition-colors"
+                >
+                  {item.headline}
+                </a>
+              ) : (
+                <h3 className="text-sm font-bold text-foreground leading-snug mb-2">{item.headline}</h3>
+              )}
+              <p className="text-xs text-muted-foreground leading-relaxed flex-1">{item.summary}</p>
+              <div className="mt-4 pt-3 border-t border-border">
+                <span className="text-[11px] font-semibold text-muted-foreground">{item.broadcaster}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
