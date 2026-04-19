@@ -16,7 +16,10 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const ALLOWED_CATEGORIES = ["SCREEN AGENCY", "BROADCASTER", "INTERNATIONAL", "CO-PRODUCTION"];
 
-const SYSTEM_PROMPT = `You are a funding intelligence analyst tracking grant deadlines and broadcaster pitch windows for the Australian unscripted (factual / reality / documentary) TV industry.
+function buildSystemPrompt(today: string, sixMonthsOut: string): string {
+  return `You are a funding intelligence analyst tracking grant deadlines and broadcaster pitch windows for the Australian unscripted (factual / reality / documentary) TV industry.
+
+TODAY'S DATE IS ${today}. All deadline values MUST be FUTURE dates between ${today} and ${sixMonthsOut}. Do NOT use 2023 or 2024 dates — use dates relative to ${today}.
 
 Generate 10 realistic, plausible upcoming funding opportunities with deadlines in the next 6 months. Cover screen agencies (Screen Australia, Screen NSW, VicScreen, Screen Queensland, SAFC, Screenwest, Screen Tasmania, Screen Territory), broadcasters (ABC, SBS, NITV), international markets (MIPCOM, Series Mania, Sunny Side of the Doc, Sheffield DocFest), and co-production funds.
 
@@ -25,13 +28,19 @@ Return ONLY a JSON array — no prose, no markdown fences. Each item:
   "funder": "Org name",
   "program": "Specific program name",
   "amount": "Funding range or 'Licence fee negotiable' or 'Market event'",
-  "deadline": "YYYY-MM-DD within the next 6 months",
+  "deadline": "YYYY-MM-DD between ${today} and ${sixMonthsOut}",
   "category": "SCREEN AGENCY" | "BROADCASTER" | "INTERNATIONAL" | "CO-PRODUCTION",
   "link": null
 }`;
+}
 
 async function runSearch() {
   try {
+    const today = new Date().toISOString().slice(0, 10);
+    const sixMonthsOutDate = new Date();
+    sixMonthsOutDate.setMonth(sixMonthsOutDate.getMonth() + 6);
+    const sixMonthsOut = sixMonthsOutDate.toISOString().slice(0, 10);
+
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -41,8 +50,8 @@ async function runSearch() {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: "Generate 10 upcoming funding deadlines now." },
+          { role: "system", content: buildSystemPrompt(today, sixMonthsOut) },
+          { role: "user", content: `Today is ${today}. Generate 10 upcoming funding deadlines with dates between ${today} and ${sixMonthsOut}.` },
         ],
       }),
     });
@@ -69,18 +78,33 @@ async function runSearch() {
       return;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    const todayDate = new Date(today);
+
     const rows = items
       .filter((i) => i && i.funder && ALLOWED_CATEGORIES.includes(i.category))
-      .map((i) => ({
-        funder: String(i.funder).slice(0, 200),
-        program: String(i.program || "").slice(0, 300),
-        amount: String(i.amount || "").slice(0, 200),
-        deadline:
-          i.deadline && /^\d{4}-\d{2}-\d{2}$/.test(i.deadline) ? i.deadline : today,
-        category: i.category,
-        link: i.link ?? null,
-      }));
+      .map((i) => {
+        let dl = sixMonthsOut;
+        if (i.deadline && /^\d{4}-\d{2}-\d{2}$/.test(i.deadline)) {
+          const d = new Date(i.deadline);
+          if (d < todayDate || d > sixMonthsOutDate) {
+            // Clamp to a random day in the next 6 months
+            const offset = 7 + Math.floor(Math.random() * 170);
+            const clamped = new Date(todayDate);
+            clamped.setDate(clamped.getDate() + offset);
+            dl = clamped.toISOString().slice(0, 10);
+          } else {
+            dl = i.deadline;
+          }
+        }
+        return {
+          funder: String(i.funder).slice(0, 200),
+          program: String(i.program || "").slice(0, 300),
+          amount: String(i.amount || "").slice(0, 200),
+          deadline: dl,
+          category: i.category,
+          link: i.link ?? null,
+        };
+      });
 
     if (rows.length === 0) {
       console.error("No valid rows after filtering");

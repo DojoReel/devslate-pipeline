@@ -16,7 +16,10 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const ALLOWED_CATEGORIES = ["COMMISSION", "RATINGS", "FORMAT TREND", "INDUSTRY NEWS"];
 
-const SYSTEM_PROMPT = `You are a market intelligence analyst for the Australian unscripted (factual / reality / documentary) TV industry.
+function buildSystemPrompt(today: string): string {
+  return `You are a market intelligence analyst for the Australian unscripted (factual / reality / documentary) TV industry.
+
+TODAY'S DATE IS ${today}. All published_date values MUST be within the 30 days BEFORE ${today} (i.e. between 30 days ago and ${today}). Do NOT use 2023 or 2024 dates — use dates relative to ${today}.
 
 Generate 8 realistic, plausible market intelligence items as if pulled from trade press in the last 30 days. Cover commissions, ratings, format trends, and industry news from broadcasters like ABC, SBS, Nine, Seven, Network 10, Stan, Foxtel, Binge, NITV, Screen Australia.
 
@@ -26,12 +29,14 @@ Return ONLY a JSON array — no prose, no markdown fences. Each item:
   "headline": "8-14 word trade-press headline",
   "summary": "2 sentences with concrete detail (titles, prodcos, episode counts, audience numbers)",
   "broadcaster": "Network or org name",
-  "published_date": "YYYY-MM-DD within the last 30 days",
+  "published_date": "YYYY-MM-DD within 30 days before ${today}",
   "source_url": null
 }`;
+}
 
 async function runSearch() {
   try {
+    const today = new Date().toISOString().slice(0, 10);
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -41,8 +46,8 @@ async function runSearch() {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: "Generate 8 items now." },
+          { role: "system", content: buildSystemPrompt(today) },
+          { role: "user", content: `Today is ${today}. Generate 8 items now with published_date values within 30 days before today.` },
         ],
       }),
     });
@@ -69,20 +74,34 @@ async function runSearch() {
       return;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    const todayDate = new Date(today);
+    const thirtyDaysAgo = new Date(todayDate);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const rows = items
       .filter((i) => i && i.headline && ALLOWED_CATEGORIES.includes(i.category))
-      .map((i) => ({
-        category: i.category,
-        headline: String(i.headline).slice(0, 300),
-        summary: String(i.summary || "").slice(0, 1200),
-        broadcaster: String(i.broadcaster || "").slice(0, 120),
-        published_date:
-          i.published_date && /^\d{4}-\d{2}-\d{2}$/.test(i.published_date)
-            ? i.published_date
-            : today,
-        source_url: i.source_url ?? null,
-      }));
+      .map((i) => {
+        let pd = today;
+        if (i.published_date && /^\d{4}-\d{2}-\d{2}$/.test(i.published_date)) {
+          const d = new Date(i.published_date);
+          if (d > todayDate || d < thirtyDaysAgo) {
+            const offset = Math.floor(Math.random() * 30);
+            const clamped = new Date(todayDate);
+            clamped.setDate(clamped.getDate() - offset);
+            pd = clamped.toISOString().slice(0, 10);
+          } else {
+            pd = i.published_date;
+          }
+        }
+        return {
+          category: i.category,
+          headline: String(i.headline).slice(0, 300),
+          summary: String(i.summary || "").slice(0, 1200),
+          broadcaster: String(i.broadcaster || "").slice(0, 120),
+          published_date: pd,
+          source_url: i.source_url ?? null,
+        };
+      });
 
     if (rows.length === 0) {
       console.error("No valid rows after filtering");
