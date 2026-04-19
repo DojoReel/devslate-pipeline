@@ -136,7 +136,7 @@ export default function MarketRadarPage() {
       </div>
       <p className="text-sm text-muted-foreground mb-6">What's getting made right now in Australian unscripted television</p>
 
-      {/* Filter pills */}
+      {/* Filter pills + count */}
       <div className="flex items-center gap-2 mb-8 flex-wrap">
         {FILTER_OPTIONS.map(opt => (
           <button
