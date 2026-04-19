@@ -1,8 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Radio, RotateCcw, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from 'react';
+import { Radio, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 type Category = 'COMMISSION' | 'RATINGS' | 'FORMAT TREND' | 'INDUSTRY NEWS';
 
@@ -12,16 +11,16 @@ interface RadarItem {
   headline: string;
   summary: string;
   broadcaster: string;
-  published_date: string;
   source_url: string | null;
+  published_date: string;
   created_at: string;
 }
 
 const CATEGORY_COLORS: Record<Category, string> = {
-  'COMMISSION': 'bg-verdict-green text-primary-foreground',
-  'RATINGS': 'bg-blue-500 text-primary-foreground',
-  'FORMAT TREND': 'bg-purple-500 text-primary-foreground',
-  'INDUSTRY NEWS': 'bg-muted-foreground text-primary-foreground',
+  'COMMISSION': 'bg-green-500 text-white',
+  'RATINGS': 'bg-blue-500 text-white',
+  'FORMAT TREND': 'bg-purple-500 text-white',
+  'INDUSTRY NEWS': 'bg-gray-500 text-white',
 };
 
 const FILTER_OPTIONS: { label: string; value: Category | 'ALL' }[] = [
@@ -34,84 +33,66 @@ const FILTER_OPTIONS: { label: string; value: Category | 'ALL' }[] = [
 
 const SEARCH_FN_URL = 'https://bskhuacewntnrocedwkc.supabase.co/functions/v1/search-market-radar';
 
-function formatAuDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function sixMonthsAgoIso(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 6);
-  return d.toISOString().slice(0, 10);
-}
-
 export default function MarketRadarPage() {
-  const [filter, setFilter] = useState<Category | 'ALL'>('ALL');
   const [items, setItems] = useState<RadarItem[]>([]);
+  const [filter, setFilter] = useState<Category | 'ALL'>('ALL');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
 
-  const fetchItems = useCallback(async (): Promise<RadarItem[]> => {
-    setError(null);
-    const { data, error: fetchErr } = await (supabase as any)
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const { data, error } = await (supabase as any)
       .from('market_radar_items')
       .select('*')
-      .gte('published_date', sixMonthsAgoIso())
+      .gte('published_date', sixMonthsAgo.toISOString().split('T')[0])
       .order('published_date', { ascending: false })
       .limit(60);
-
-    if (fetchErr) {
-      setError(fetchErr.message);
-      setItems([]);
-      setLoading(false);
-      return [];
+    if (error) {
+      console.error('Supabase fetch error:', error);
+    } else {
+      setItems((data || []) as RadarItem[]);
     }
-    const rows = (data || []) as RadarItem[];
-    setItems(rows);
     setLoading(false);
-    return rows;
   }, []);
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    setError(null);
-    const baselineCount = items.length;
-    const baselineId = items[0]?.id ?? null;
+    let batch = 0;
+    let totalInserted = 0;
     try {
-      const res = await fetch(SEARCH_FN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok && res.status !== 202) throw new Error(`Search failed (${res.status})`);
-      await res.text();
-
-      // Function runs in the background — poll for new rows for up to ~25s
-      const start = Date.now();
-      let latest: RadarItem[] = items;
-      while (Date.now() - start < 25000) {
-        await new Promise((r) => setTimeout(r, 3000));
-        const rows = await fetchItems();
-        if (rows.length > 0 && rows[0].id !== baselineId) {
-          latest = rows;
-          break;
-        }
+      // Safety cap to avoid infinite loop
+      for (let i = 0; i < 20; i++) {
+        const res = await fetch(SEARCH_FN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ batch }),
+        });
+        const result = await res.json().catch(() => ({} as any));
+        totalInserted += result?.inserted || 0;
+        if (result?.done || result?.nextBatch === null || result?.nextBatch === undefined) break;
+        batch = result.nextBatch;
       }
-      const newCount = Math.max(0, latest.length - baselineCount);
-      toast.success(newCount > 0 ? `Found ${newCount} new item${newCount === 1 ? '' : 's'}` : 'Search complete');
-    } catch (e: any) {
-      const msg = e?.message || 'Failed to refresh';
-      setError(msg);
-      toast.error('Refresh failed', { description: msg });
-    } finally {
-      setRefreshing(false);
+      await fetchItems();
+      toast({ title: 'Market Radar updated', description: `${totalInserted} new items added` });
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Refresh failed', description: 'Check console for details', variant: 'destructive' });
     }
+    setRefreshing(false);
   };
 
   const filtered = filter === 'ALL' ? items : items.filter(i => i.category === filter);
 
-  const lastUpdated = items.length > 0 ? formatAuDate(items[0].created_at) : null;
+  const lastUpdated = items.length > 0
+    ? new Date(items[0].created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
 
   return (
     <div className="animate-fade-in">
@@ -130,13 +111,14 @@ export default function MarketRadarPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? 'Searching...' : 'Refresh'}
           </button>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground mb-6">What's getting made right now in Australian unscripted television</p>
+      <p className="text-sm text-muted-foreground mb-6">
+        What's getting made right now in Australian unscripted television
+      </p>
 
-      {/* Filter pills + count */}
       <div className="flex items-center gap-2 mb-8 flex-wrap">
         {FILTER_OPTIONS.map(opt => (
           <button
@@ -158,53 +140,29 @@ export default function MarketRadarPage() {
         )}
       </div>
 
-      {/* Error state */}
-      {error && !loading && (
-        <div className="flex items-start gap-3 p-4 mb-6 bg-destructive/10 border border-destructive/30 rounded-xl">
-          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-destructive">Couldn't load market intelligence</p>
-            <p className="text-xs text-destructive/80 mt-1">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Loading state */}
-      {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-3/4 mb-4" />
-              <Skeleton className="h-3 w-full mb-1.5" />
-              <Skeleton className="h-3 w-5/6 mb-1.5" />
-              <Skeleton className="h-3 w-2/3 mb-4" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && !error && items.length === 0 && (
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      ) : items.length === 0 ? (
         <div className="text-center py-16 px-6 bg-card border border-border rounded-xl">
           <Radio className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
           <p className="text-sm font-semibold text-foreground mb-1">No market intelligence yet</p>
-          <p className="text-xs text-muted-foreground">Click Refresh to run your first search.</p>
+          <p className="text-xs text-muted-foreground">
+            Click Refresh to run your first search for real industry news.
+          </p>
         </div>
-      )}
-
-      {/* Cards grid */}
-      {!loading && filtered.length > 0 && (
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map(item => (
-            <div key={item.id} className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div
+              key={item.id}
+              className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col"
+            >
               <div className="flex items-center justify-between mb-3">
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${CATEGORY_COLORS[item.category] || CATEGORY_COLORS['INDUSTRY NEWS']}`}>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    CATEGORY_COLORS[item.category] || CATEGORY_COLORS['INDUSTRY NEWS']
+                  }`}
+                >
                   {item.category}
                 </span>
                 <span className="text-[11px] text-muted-foreground">
