@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Radio, RotateCcw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 type Category = 'COMMISSION' | 'RATINGS' | 'FORMAT TREND' | 'INDUSTRY NEWS';
