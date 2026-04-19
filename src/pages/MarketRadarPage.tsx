@@ -151,6 +151,11 @@ export default function MarketRadarPage() {
             {opt.label}
           </button>
         ))}
+        {!loading && (
+          <span className="ml-2 text-xs font-semibold text-muted-foreground">
+            {filtered.length} {filtered.length === 1 ? 'story' : 'stories'}
+          </span>
+        )}
       </div>
 
       {/* Error state */}
