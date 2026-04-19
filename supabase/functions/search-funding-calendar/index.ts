@@ -16,7 +16,10 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const ALLOWED_CATEGORIES = ["SCREEN AGENCY", "BROADCASTER", "INTERNATIONAL", "CO-PRODUCTION"];
 
-const SYSTEM_PROMPT = `You are a funding intelligence analyst tracking grant deadlines and broadcaster pitch windows for the Australian unscripted (factual / reality / documentary) TV industry.
+function buildSystemPrompt(today: string, sixMonthsOut: string): string {
+  return `You are a funding intelligence analyst tracking grant deadlines and broadcaster pitch windows for the Australian unscripted (factual / reality / documentary) TV industry.
+
+TODAY'S DATE IS ${today}. All deadline values MUST be FUTURE dates between ${today} and ${sixMonthsOut}. Do NOT use 2023 or 2024 dates — use dates relative to ${today}.
 
 Generate 10 realistic, plausible upcoming funding opportunities with deadlines in the next 6 months. Cover screen agencies (Screen Australia, Screen NSW, VicScreen, Screen Queensland, SAFC, Screenwest, Screen Tasmania, Screen Territory), broadcasters (ABC, SBS, NITV), international markets (MIPCOM, Series Mania, Sunny Side of the Doc, Sheffield DocFest), and co-production funds.
 
@@ -25,10 +28,11 @@ Return ONLY a JSON array — no prose, no markdown fences. Each item:
   "funder": "Org name",
   "program": "Specific program name",
   "amount": "Funding range or 'Licence fee negotiable' or 'Market event'",
-  "deadline": "YYYY-MM-DD within the next 6 months",
+  "deadline": "YYYY-MM-DD between ${today} and ${sixMonthsOut}",
   "category": "SCREEN AGENCY" | "BROADCASTER" | "INTERNATIONAL" | "CO-PRODUCTION",
   "link": null
 }`;
+}
 
 async function runSearch() {
   try {
