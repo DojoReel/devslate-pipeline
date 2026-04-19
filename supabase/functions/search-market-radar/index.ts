@@ -16,7 +16,10 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const ALLOWED_CATEGORIES = ["COMMISSION", "RATINGS", "FORMAT TREND", "INDUSTRY NEWS"];
 
-const SYSTEM_PROMPT = `You are a market intelligence analyst for the Australian unscripted (factual / reality / documentary) TV industry.
+function buildSystemPrompt(today: string): string {
+  return `You are a market intelligence analyst for the Australian unscripted (factual / reality / documentary) TV industry.
+
+TODAY'S DATE IS ${today}. All published_date values MUST be within the 30 days BEFORE ${today} (i.e. between 30 days ago and ${today}). Do NOT use 2023 or 2024 dates — use dates relative to ${today}.
 
 Generate 8 realistic, plausible market intelligence items as if pulled from trade press in the last 30 days. Cover commissions, ratings, format trends, and industry news from broadcasters like ABC, SBS, Nine, Seven, Network 10, Stan, Foxtel, Binge, NITV, Screen Australia.
 
@@ -26,9 +29,10 @@ Return ONLY a JSON array — no prose, no markdown fences. Each item:
   "headline": "8-14 word trade-press headline",
   "summary": "2 sentences with concrete detail (titles, prodcos, episode counts, audience numbers)",
   "broadcaster": "Network or org name",
-  "published_date": "YYYY-MM-DD within the last 30 days",
+  "published_date": "YYYY-MM-DD within 30 days before ${today}",
   "source_url": null
 }`;
+}
 
 async function runSearch() {
   try {
