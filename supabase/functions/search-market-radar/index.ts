@@ -36,6 +36,7 @@ Return ONLY a JSON array — no prose, no markdown fences. Each item:
 
 async function runSearch() {
   try {
+    const today = new Date().toISOString().slice(0, 10);
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -45,8 +46,8 @@ async function runSearch() {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: "Generate 8 items now." },
+          { role: "system", content: buildSystemPrompt(today) },
+          { role: "user", content: `Today is ${today}. Generate 8 items now with published_date values within 30 days before today.` },
         ],
       }),
     });
