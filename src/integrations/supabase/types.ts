@@ -186,6 +186,39 @@ export type Database = {
         }
         Relationships: []
       }
+      market_radar_items: {
+        Row: {
+          broadcaster: string
+          category: string
+          created_at: string
+          headline: string
+          id: string
+          published_date: string
+          source_url: string | null
+          summary: string
+        }
+        Insert: {
+          broadcaster?: string
+          category: string
+          created_at?: string
+          headline: string
+          id?: string
+          published_date?: string
+          source_url?: string | null
+          summary?: string
+        }
+        Update: {
+          broadcaster?: string
+          category?: string
+          created_at?: string
+          headline?: string
+          id?: string
+          published_date?: string
+          source_url?: string | null
+          summary?: string
+        }
+        Relationships: []
+      }
       user_decisions: {
         Row: {
           created_at: string
