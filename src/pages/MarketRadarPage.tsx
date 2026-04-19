@@ -64,26 +64,20 @@ export default function MarketRadarPage() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    let batch = 0;
-    let totalInserted = 0;
     try {
-      // Safety cap to avoid infinite loop
-      for (let i = 0; i < 20; i++) {
-        const res = await fetch(SEARCH_FN_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ batch }),
-        });
-        const result = await res.json().catch(() => ({} as any));
-        totalInserted += result?.inserted || 0;
-        if (result?.done || result?.nextBatch === null || result?.nextBatch === undefined) break;
-        batch = result.nextBatch;
-      }
+      const res = await fetch(
+        SEARCH_FN_URL,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+      );
+      const result = await res.json();
       await fetchItems();
-      toast({ title: 'Market Radar updated', description: `${totalInserted} new items added` });
+      toast({
+        title: 'Market Radar updated',
+        description: result.inserted > 0 ? `${result.inserted} new stories added` : 'Already up to date',
+      });
     } catch (e) {
       console.error(e);
-      toast({ title: 'Refresh failed', description: 'Check console for details', variant: 'destructive' });
+      toast({ title: 'Refresh failed', variant: 'destructive' });
     }
     setRefreshing(false);
   };
