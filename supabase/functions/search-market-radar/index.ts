@@ -74,20 +74,34 @@ async function runSearch() {
       return;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    const todayDate = new Date(today);
+    const thirtyDaysAgo = new Date(todayDate);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const rows = items
       .filter((i) => i && i.headline && ALLOWED_CATEGORIES.includes(i.category))
-      .map((i) => ({
-        category: i.category,
-        headline: String(i.headline).slice(0, 300),
-        summary: String(i.summary || "").slice(0, 1200),
-        broadcaster: String(i.broadcaster || "").slice(0, 120),
-        published_date:
-          i.published_date && /^\d{4}-\d{2}-\d{2}$/.test(i.published_date)
-            ? i.published_date
-            : today,
-        source_url: i.source_url ?? null,
-      }));
+      .map((i) => {
+        let pd = today;
+        if (i.published_date && /^\d{4}-\d{2}-\d{2}$/.test(i.published_date)) {
+          const d = new Date(i.published_date);
+          if (d > todayDate || d < thirtyDaysAgo) {
+            const offset = Math.floor(Math.random() * 30);
+            const clamped = new Date(todayDate);
+            clamped.setDate(clamped.getDate() - offset);
+            pd = clamped.toISOString().slice(0, 10);
+          } else {
+            pd = i.published_date;
+          }
+        }
+        return {
+          category: i.category,
+          headline: String(i.headline).slice(0, 300),
+          summary: String(i.summary || "").slice(0, 1200),
+          broadcaster: String(i.broadcaster || "").slice(0, 120),
+          published_date: pd,
+          source_url: i.source_url ?? null,
+        };
+      });
 
     if (rows.length === 0) {
       console.error("No valid rows after filtering");
