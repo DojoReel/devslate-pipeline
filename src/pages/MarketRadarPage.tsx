@@ -71,9 +71,24 @@ export default function MarketRadarPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!res.ok) throw new Error(`Search failed (${res.status})`);
+      if (!res.ok && res.status !== 202) throw new Error(`Search failed (${res.status})`);
       await res.text();
-      await fetchItems();
+
+      // Function runs in the background — poll for new rows for up to ~25s
+      const baselineId = items[0]?.id ?? null;
+      const start = Date.now();
+      while (Date.now() - start < 25000) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const { data } = await (supabase as any)
+          .from('market_radar_items')
+          .select('*')
+          .order('published_date', { ascending: false })
+          .limit(50);
+        if (data && data.length > 0 && data[0].id !== baselineId) {
+          setItems(data as RadarItem[]);
+          break;
+        }
+      }
     } catch (e: any) {
       setError(e?.message || 'Failed to refresh');
     } finally {
