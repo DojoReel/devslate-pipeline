@@ -126,6 +126,39 @@ export type Database = {
           },
         ]
       }
+      funding_calendar_items: {
+        Row: {
+          amount: string
+          category: string
+          created_at: string
+          deadline: string
+          funder: string
+          id: string
+          link: string | null
+          program: string
+        }
+        Insert: {
+          amount?: string
+          category: string
+          created_at?: string
+          deadline: string
+          funder: string
+          id?: string
+          link?: string | null
+          program?: string
+        }
+        Update: {
+          amount?: string
+          category?: string
+          created_at?: string
+          deadline?: string
+          funder?: string
+          id?: string
+          link?: string | null
+          program?: string
+        }
+        Relationships: []
+      }
       ideas: {
         Row: {
           archive_status: string

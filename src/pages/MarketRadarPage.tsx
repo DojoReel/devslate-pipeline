@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Radio, RefreshCw, AlertCircle } from 'lucide-react';
+import { Radio, RotateCcw, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -37,6 +38,12 @@ function formatAuDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function sixMonthsAgoIso(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 6);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function MarketRadarPage() {
   const [filter, setFilter] = useState<Category | 'ALL'>('ALL');
   const [items, setItems] = useState<RadarItem[]>([]);
@@ -44,21 +51,25 @@ export default function MarketRadarPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (): Promise<RadarItem[]> => {
     setError(null);
     const { data, error: fetchErr } = await (supabase as any)
       .from('market_radar_items')
       .select('*')
+      .gte('published_date', sixMonthsAgoIso())
       .order('published_date', { ascending: false })
-      .limit(50);
+      .limit(60);
 
     if (fetchErr) {
       setError(fetchErr.message);
       setItems([]);
-    } else {
-      setItems((data || []) as RadarItem[]);
+      setLoading(false);
+      return [];
     }
+    const rows = (data || []) as RadarItem[];
+    setItems(rows);
     setLoading(false);
+    return rows;
   }, []);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
@@ -66,6 +77,8 @@ export default function MarketRadarPage() {
   const handleRefresh = async () => {
     setRefreshing(true);
     setError(null);
+    const baselineCount = items.length;
+    const baselineId = items[0]?.id ?? null;
     try {
       const res = await fetch(SEARCH_FN_URL, {
         method: 'POST',
@@ -75,22 +88,22 @@ export default function MarketRadarPage() {
       await res.text();
 
       // Function runs in the background — poll for new rows for up to ~25s
-      const baselineId = items[0]?.id ?? null;
       const start = Date.now();
+      let latest: RadarItem[] = items;
       while (Date.now() - start < 25000) {
         await new Promise((r) => setTimeout(r, 3000));
-        const { data } = await (supabase as any)
-          .from('market_radar_items')
-          .select('*')
-          .order('published_date', { ascending: false })
-          .limit(50);
-        if (data && data.length > 0 && data[0].id !== baselineId) {
-          setItems(data as RadarItem[]);
+        const rows = await fetchItems();
+        if (rows.length > 0 && rows[0].id !== baselineId) {
+          latest = rows;
           break;
         }
       }
+      const newCount = Math.max(0, latest.length - baselineCount);
+      toast.success(newCount > 0 ? `Found ${newCount} new item${newCount === 1 ? '' : 's'}` : 'Search complete');
     } catch (e: any) {
-      setError(e?.message || 'Failed to refresh');
+      const msg = e?.message || 'Failed to refresh';
+      setError(msg);
+      toast.error('Refresh failed', { description: msg });
     } finally {
       setRefreshing(false);
     }
@@ -98,9 +111,7 @@ export default function MarketRadarPage() {
 
   const filtered = filter === 'ALL' ? items : items.filter(i => i.category === filter);
 
-  const lastUpdated = items.length > 0
-    ? formatAuDate(items[0].created_at)
-    : '—';
+  const lastUpdated = items.length > 0 ? formatAuDate(items[0].created_at) : null;
 
   return (
     <div className="animate-fade-in">
@@ -110,13 +121,15 @@ export default function MarketRadarPage() {
           <h1 className="text-2xl font-extrabold text-foreground">Market Radar</h1>
         </div>
         <div className="flex items-center gap-3">
-          <p className="text-xs text-muted-foreground">Last updated: {lastUpdated}</p>
+          {lastUpdated && (
+            <p className="text-xs text-muted-foreground">Last updated: {lastUpdated}</p>
+          )}
           <button
             onClick={handleRefresh}
             disabled={refreshing}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
@@ -176,7 +189,7 @@ export default function MarketRadarPage() {
         <div className="text-center py-16 px-6 bg-card border border-border rounded-xl">
           <Radio className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
           <p className="text-sm font-semibold text-foreground mb-1">No market intelligence yet</p>
-          <p className="text-xs text-muted-foreground">Run a search to populate.</p>
+          <p className="text-xs text-muted-foreground">Click Refresh to run your first search.</p>
         </div>
       )}
 
