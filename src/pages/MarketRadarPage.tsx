@@ -136,7 +136,7 @@ export default function MarketRadarPage() {
       </div>
       <p className="text-sm text-muted-foreground mb-6">What's getting made right now in Australian unscripted television</p>
 
-      {/* Filter pills */}
+      {/* Filter pills + count */}
       <div className="flex items-center gap-2 mb-8 flex-wrap">
         {FILTER_OPTIONS.map(opt => (
           <button
@@ -151,6 +151,11 @@ export default function MarketRadarPage() {
             {opt.label}
           </button>
         ))}
+        {!loading && (
+          <span className="ml-2 text-xs font-semibold text-muted-foreground">
+            {filtered.length} {filtered.length === 1 ? 'story' : 'stories'}
+          </span>
+        )}
       </div>
 
       {/* Error state */}
